@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1677FF"/>
+    </marker>
+    <marker id="arrRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/>
+    </marker>
+    <marker id="arrGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#16A34A"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="760" fill="#FFFFFF"/>
+  <text x="40" y="40" font-size="19" font-weight="700" fill="#0F172A">摄入流水线（六条建图入口之一）· Excel 摄入审核流完整状态机</text>
+  <text x="40" y="62" font-size="12" fill="#64748B">knowledge-intake ｜ 上路＝导入行级守门，中路＝人审 + AI 辅助，下路＝两段式落盘（预检 → 应用 → 可回滚）</text>
+
+  <!-- 导入段 -->
+  <rect x="40" y="88" width="1120" height="128" rx="12" fill="#EFF6FF" stroke="#1677FF" stroke-width="1.8"/>
+  <text x="64" y="114" font-size="13" font-weight="700" fill="#1E40AF">导入（POST /import，multipart）—— 错误行不进候选层，随响应报告</text>
+  <rect x="64" y="128" width="240" height="72" rx="8" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="184" y="150" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">解析三工作表</text>
+  <text x="184" y="167" text-anchor="middle" font-size="9.5" fill="#64748B">1-业务功能分类 · 2-意图清单</text>
+  <text x="184" y="183" text-anchor="middle" font-size="9.5" fill="#64748B">3-说法库 ｜ 缺表缺列直接 400</text>
+  <line x1="304" y1="164" x2="340" y2="164" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="344" y="128" width="240" height="72" rx="8" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="464" y="150" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">行级校验（collectRowErrors）</text>
+  <text x="464" y="167" text-anchor="middle" font-size="9.5" fill="#64748B">路径先父后子 · 名称=末段</text>
+  <text x="464" y="183" text-anchor="middle" font-size="9.5" fill="#64748B">枚举严格 · 描述≥10字 · 查重</text>
+  <line x1="584" y1="164" x2="620" y2="164" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="624" y="128" width="250" height="72" rx="8" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="749" y="150" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">候选批次（ki-*）</text>
+  <text x="749" y="167" text-anchor="middle" font-size="9.5" fill="#64748B">functions / intents / utterances</text>
+  <text x="749" y="183" text-anchor="middle" font-size="9.5" fill="#64748B">status: pending ｜ 不直接进图</text>
+  <line x1="874" y1="164" x2="910" y2="164" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrRed)"/>
+  <rect x="914" y="128" width="222" height="72" rx="8" fill="#FEF2F2" stroke="#FCA5A5"/>
+  <text x="1025" y="150" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7F1D1D">rejected 明细随响应返回</text>
+  <text x="1025" y="167" text-anchor="middle" font-size="9.5" fill="#B91C1C">哪行哪个字段错、缺什么</text>
+  <text x="1025" y="183" text-anchor="middle" font-size="9.5" fill="#B91C1C">全空批 → 400 NOTHING_VALID</text>
+
+  <!-- 评审段 -->
+  <rect x="40" y="240" width="1120" height="150" rx="12" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.8"/>
+  <text x="64" y="266" font-size="13" font-weight="700" fill="#4C1D95">评审与辅助 —— AI 出建议，人拍板（LLM 挂了流水线照转）</text>
+  <rect x="64" y="282" width="250" height="72" rx="8" fill="#FFFFFF" stroke="#DDD6FE"/>
+  <text x="189" y="304" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">人工评审（/review）</text>
+  <text x="189" y="321" text-anchor="middle" font-size="9.5" fill="#64748B">approve / reject / reset</text>
+  <text x="189" y="337" text-anchor="middle" font-size="9.5" fill="#64748B">按 rowId 批量 · 留审核人/意见</text>
+  <line x1="314" y1="318" x2="350" y2="318" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="354" y="282" width="250" height="72" rx="8" fill="#FFFFFF" stroke="#DDD6FE"/>
+  <text x="479" y="304" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">AI 骨架辅助（/skeleton-assist）</text>
+  <text x="479" y="321" text-anchor="middle" font-size="9.5" fill="#64748B">映射建议 · 四标准打分</text>
+  <text x="479" y="337" text-anchor="middle" font-size="9.5" fill="#64748B">词群 / 负例 / 描述唯一 / 一致性</text>
+  <line x1="604" y1="318" x2="640" y2="318" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="644" y="282" width="250" height="72" rx="8" fill="#FFFFFF" stroke="#DDD6FE"/>
+  <text x="769" y="304" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">AI 扩问补全（/expand-utterances）</text>
+  <text x="769" y="321" text-anchor="middle" font-size="9.5" fill="#64748B">缺的别名/负例/描述</text>
+  <text x="769" y="337" text-anchor="middle" font-size="9.5" fill="#64748B">产出 revision 建议稿，采纳由人</text>
+  <line x1="894" y1="318" x2="930" y2="318" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <rect x="934" y="282" width="202" height="72" rx="8" fill="#EDE9FE" stroke="#A78BFA"/>
+  <text x="1035" y="304" text-anchor="middle" font-size="11.5" font-weight="700" fill="#4C1D95">approved 行</text>
+  <text x="1035" y="321" text-anchor="middle" font-size="9.5" fill="#5B21B6">进入预检资格</text>
+  <text x="1035" y="337" text-anchor="middle" font-size="9.5" fill="#5B21B6">未评审行不参与合入</text>
+  <text x="64" y="378" font-size="10.5" fill="#64748B">mock 约定：未就绪的上游引用填 mock:* —— 预检/应用给警告不阻断（MOCK_FULFILLMENT_REFERENCE），质量审计列出全部 mock，发布前必须替换</text>
+
+  <!-- 两段式落盘段 -->
+  <rect x="40" y="414" width="1120" height="300" rx="12" fill="#F0FDF4" stroke="#16A34A" stroke-width="2"/>
+  <text x="64" y="440" font-size="13" font-weight="700" fill="#166534">两段式落盘 —— 先看结果再落地，落盘后可精确反悔</text>
+
+  <!-- preview-apply -->
+  <rect x="64" y="456" width="250" height="110" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+  <text x="189" y="478" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">preview-apply（预检）</text>
+  <text x="189" y="495" text-anchor="middle" font-size="9.5" fill="#64748B">深拷贝草稿 → 内存合入</text>
+  <text x="189" y="511" text-anchor="middle" font-size="9.5" fill="#64748B">跑真实 validateGraph</text>
+  <text x="189" y="527" text-anchor="middle" font-size="9.5" fill="#64748B">不落盘 · 无副作用</text>
+  <text x="189" y="550" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">返回 stats + 逐条错误</text>
+
+  <!-- 分支 -->
+  <line x1="314" y1="490" x2="366" y2="452" stroke="#16A34A" stroke-width="2" marker-end="url(#arrGreen)"/>
+  <text x="340" y="458" text-anchor="middle" font-size="10" font-weight="700" fill="#16A34A">valid:true</text>
+  <line x1="314" y1="522" x2="366" y2="560" stroke="#DC2626" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arrRed)"/>
+  <text x="340" y="556" text-anchor="middle" font-size="10" font-weight="700" fill="#DC2626">valid:false</text>
+
+  <!-- apply -->
+  <rect x="370" y="420" width="250" height="106" rx="8" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.8"/>
+  <text x="495" y="442" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">apply（应用）</text>
+  <text x="495" y="459" text-anchor="middle" font-size="9.5" fill="#64748B">先快照当前草稿</text>
+  <text x="495" y="475" text-anchor="middle" font-size="9.5" fill="#64748B">合入 → 再校验 → 失败恢复快照</text>
+  <text x="495" y="491" text-anchor="middle" font-size="9.5" fill="#64748B">成功 → 落盘 drafts/org-graph-draft.json</text>
+  <text x="495" y="512" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">rollbackable: true</text>
+
+  <!-- invalid -->
+  <rect x="370" y="544" width="250" height="86" rx="8" fill="#FEF2F2" stroke="#FCA5A5"/>
+  <text x="495" y="566" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7F1D1D">阻断（服务端强制）</text>
+  <text x="495" y="583" text-anchor="middle" font-size="9.5" fill="#B91C1C">错误明细：哪个节点、违了哪条模板规则</text>
+  <text x="495" y="599" text-anchor="middle" font-size="9.5" fill="#B91C1C">改 Excel / 调整评审 → 重新预检</text>
+  <text x="495" y="617" text-anchor="middle" font-size="9.5" font-weight="700" fill="#B91C1C">合法之前不会落盘</text>
+
+  <!-- rollback & publish -->
+  <rect x="660" y="420" width="240" height="106" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+  <text x="780" y="442" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">rollback（回滚）</text>
+  <text x="780" y="459" text-anchor="middle" font-size="9.5" fill="#64748B">从快照恢复语义状态</text>
+  <text x="780" y="475" text-anchor="middle" font-size="9.5" fill="#64748B">capabilities 引用按当前图修正</text>
+  <text x="780" y="496" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">实测 358→354 / 849 边精确还原</text>
+  <line x1="620" y1="473" x2="656" y2="473" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="920" y="420" width="216" height="106" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+  <text x="1028" y="442" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">publish（发布）</text>
+  <text x="1028" y="459" text-anchor="middle" font-size="9.5" fill="#64748B">校验通过 → org-graph-v{N+1}</text>
+  <text x="1028" y="475" text-anchor="middle" font-size="9.5" fill="#64748B">REQUIRE_PUBLISH_APPROVAL=true</text>
+  <text x="1028" y="491" text-anchor="middle" font-size="9.5" fill="#64748B">时改为进审批队列</text>
+  <text x="1028" y="512" text-anchor="middle" font-size="9.5" font-weight="700" fill="#166534">版本链只读可追溯</text>
+  <line x1="900" y1="473" x2="916" y2="473" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- 状态示意 -->
+  <rect x="660" y="556" width="476" height="74" rx="8" fill="#F0FDF4" stroke="#86EFAC"/>
+  <text x="898" y="580" text-anchor="middle" font-size="11" font-weight="700" fill="#166534">交付前完整跑通的真实数据</text>
+  <text x="898" y="599" text-anchor="middle" font-size="9.5" fill="#15803D">合法 Excel 导入 → 4 行 approve → preview valid:true → apply 354→358 节点</text>
+  <text x="898" y="616" text-anchor="middle" font-size="9.5" fill="#15803D">离线复验 0 错误 → rollback 精确恢复 354 节点 / 849 边</text>
+
+  <!-- 底部横条 -->
+  <rect x="64" y="650" width="1072" height="44" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+  <text x="88" y="668" font-size="10.5" font-weight="700" fill="#334155">合入语义：聚合意图按名称复用 · utterance 经草稿合并 · mock 引用带警告入图</text>
+  <text x="88" y="685" font-size="10" fill="#64748B">特殊约束：knowledge-intake.js 含 NUL(\x00) rowId 分隔符（防碰撞，刻意设计）—— 禁止用文本工具重写该文件，grep 需 -a</text>
+</svg>

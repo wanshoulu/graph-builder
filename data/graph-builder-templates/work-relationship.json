@@ -1,0 +1,28 @@
+{
+  "template_id": "work-relationship",
+  "template_version": "1.0.0",
+  "name": "工作关系图",
+  "description": "描述人员、组织、团队、角色、项目与主题之间的工作关系。",
+  "origin": "builtin",
+  "parent_template_id": null,
+  "node_types": [
+    { "type": "PERSON", "label": "人员", "style": { "color": "#2563eb", "shape": "rect" }, "fields": [{ "key": "name", "label": "姓名", "type": "string", "required": true, "default": "" }] },
+    { "type": "ORGANIZATION", "label": "组织", "style": { "color": "#7c3aed", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] },
+    { "type": "TEAM", "label": "团队", "style": { "color": "#16a34a", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] },
+    { "type": "ROLE", "label": "角色", "style": { "color": "#ea580c", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] },
+    { "type": "PROJECT", "label": "项目", "style": { "color": "#0891b2", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] },
+    { "type": "TOPIC", "label": "主题", "style": { "color": "#be123c", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] }
+  ],
+  "edge_types": [
+    { "type": "MEMBER_OF", "label": "属于", "source_types": ["PERSON"], "target_types": ["TEAM", "ORGANIZATION"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "HOLDS_ROLE", "label": "担任", "source_types": ["PERSON"], "target_types": ["ROLE"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "REPORTS_TO", "label": "汇报给", "source_types": ["PERSON"], "target_types": ["PERSON"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "PARTICIPATES_IN", "label": "参与", "source_types": ["PERSON", "TEAM"], "target_types": ["PROJECT"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "RESPONSIBLE_FOR", "label": "负责", "source_types": ["PERSON", "TEAM"], "target_types": ["PROJECT", "TOPIC"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "KNOWS_ABOUT", "label": "了解", "source_types": ["PERSON"], "target_types": ["TOPIC"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "COLLABORATED_WITH", "label": "协作", "source_types": ["PERSON", "TEAM"], "target_types": ["PERSON", "TEAM"], "style": { "color": "#64748b" }, "fields": [] }
+  ],
+  "starter_graph": { "nodes": [{ "id": "person:wang", "type": "PERSON", "properties": { "name": "王小明" } }, { "id": "team:product", "type": "TEAM", "properties": { "name": "产品团队" } }, { "id": "project:harbor", "type": "PROJECT", "properties": { "name": "知识港" } }], "edges": [{ "id": "edge:member", "type": "MEMBER_OF", "source": "person:wang", "target": "team:product", "properties": {} }, { "id": "edge:participates", "type": "PARTICIPATES_IN", "source": "person:wang", "target": "project:harbor", "properties": {} }] },
+  "validation_rules": { "unique_node_ids": true, "unique_edge_ids": true, "no_orphan_edges": true, "allow_self_loop": false },
+  "metadata": { "created_at": "2026-08-21T00:00:00.000Z", "updated_at": "2026-08-21T00:00:00.000Z" }
+}

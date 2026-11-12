@@ -1,0 +1,5 @@
+{
+  "node_embeddings": [],
+  "scene_embeddings": [],
+  "source": "graph-builder 内置空缓存（评测页的向量能力需自行生成 embeddings）"
+}

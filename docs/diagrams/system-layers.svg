@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1677FF"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="700" fill="#FFFFFF"/>
+  <text x="40" y="40" font-size="19" font-weight="700" fill="#0F172A">系统架构 · 一个进程、四层结构、一个数据目录</text>
+  <text x="40" y="62" font-size="12" fill="#64748B">graph-builder ｜ routes 只做 HTTP 适配，领域逻辑全部在 tools 层（零路由依赖，node --test 直测）</text>
+
+  <!-- 接入层 -->
+  <rect x="40" y="88" width="1120" height="92" rx="12" fill="#F8FAFC" stroke="#64748B" stroke-width="1.8"/>
+  <text x="64" y="114" font-size="13" font-weight="700" fill="#334155">接入 · server.js</text>
+  <text x="64" y="132" font-size="10" fill="#64748B">req.url → req.pathname 预解析（与原宿主单体契约一致，路由可零改动嵌回）· 前缀分发 · /healthz · docs 静态（防路径穿越）</text>
+  <rect x="700" y="98" width="200" height="34" rx="7" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="800" y="120" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">/api/knowledge-intake/*</text>
+  <rect x="920" y="98" width="216" height="34" rx="7" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text x="1028" y="120" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">/api/org-graph/*</text>
+  <line x1="696" y1="115" x2="700" y2="115" stroke="#475569" stroke-width="1.5"/>
+  <line x1="900" y1="115" x2="920" y2="115" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="64" y="164" font-size="10" fill="#94A3B8">前端（OntoMind SPA，独立仓库 Knowledge_builder）经 nginx 把 /ontomind/wiki/api/ 反代到本服务 /api/ —— 本仓库不承载前端</text>
+
+  <!-- 路由层 -->
+  <rect x="40" y="200" width="1120" height="100" rx="12" fill="#EFF6FF" stroke="#1677FF" stroke-width="1.8"/>
+  <text x="64" y="226" font-size="13" font-weight="700" fill="#1E40AF">HTTP 适配层 · routes/（各自检查前缀并自证归属，统一 {success, data} 响应壳）</text>
+  <rect x="64" y="240" width="530" height="46" rx="8" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="329" y="260" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">knowledge-intake.js（约 3800 行）</text>
+  <text x="329" y="277" text-anchor="middle" font-size="9.5" fill="#64748B">导入 · 评审 · AI辅助 · 预检 · 应用 · 回滚 ｜ 含 NUL rowId 分隔符（勿文本重写）</text>
+  <rect x="614" y="240" width="522" height="46" rx="8" fill="#FFFFFF" stroke="#BFDBFE"/>
+  <text x="875" y="260" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">org-graph.js（约 2400 行）</text>
+  <text x="875" y="277" text-anchor="middle" font-size="9.5" fill="#64748B">模板 · 草稿/版本 · 文档抽取 · 双向转换 · 审计 · 试算 · 发布</text>
+
+  <!-- 服务+工具层 -->
+  <rect x="40" y="320" width="1120" height="210" rx="12" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.8"/>
+  <text x="64" y="346" font-size="13" font-weight="700" fill="#4C1D95">领域逻辑层 · services/ + tools/（分层纪律：routes → services → tools → data，禁止反向依赖）</text>
+  <rect x="64" y="360" width="340" height="60" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.6"/>
+  <text x="234" y="382" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">★ 校验器（核心）</text>
+  <text x="234" y="399" text-anchor="middle" font-size="9.5" fill="#64748B">x6-graph-template-validator · template-driven 工厂 · v4 适配</text>
+  <text x="234" y="414" text-anchor="middle" font-size="9.5" fill="#64748B">三段管线：骨架 → 字段 → 条件必填</text>
+  <rect x="424" y="360" width="340" height="60" rx="8" fill="#FFFFFF" stroke="#DDD6FE"/>
+  <text x="594" y="382" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">抽取与转换</text>
+  <text x="594" y="399" text-anchor="middle" font-size="9.5" fill="#64748B">graph-extractor（分块 LLM 抽取）· intake-graph-bridge</text>
+  <text x="594" y="414" text-anchor="middle" font-size="9.5" fill="#64748B">Excel↔图谱双向 · tabular 直转 · v2.1 导入</text>
+  <rect x="784" y="360" width="352" height="60" rx="8" fill="#FFFFFF" stroke="#DDD6FE"/>
+  <text x="960" y="382" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">质量与试算</text>
+  <text x="960" y="399" text-anchor="middle" font-size="9.5" fill="#64748B">graph-audit · graph-quality-tools（规则+LLM 双通道）</text>
+  <text x="960" y="414" text-anchor="middle" font-size="9.5" fill="#64748B">intent-draft-trial（向量+词法试算）· eval-dataset</text>
+  <rect x="64" y="436" width="530" height="66" rx="8" fill="#FFFFFF" stroke="#DDD6FE"/>
+  <text x="329" y="458" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">模型接入 · llm-client.js</text>
+  <text x="329" y="475" text-anchor="middle" font-size="9.5" fill="#64748B">deepseek → qwen 回退 · 密钥仅环境变量（config/api-keys.js 零密钥）</text>
+  <text x="329" y="491" text-anchor="middle" font-size="9.5" fill="#64748B">未配 Key：AI 端点报 MISSING_KEY，离线链路（评审/校验/合入/回滚）照常</text>
+  <rect x="614" y="436" width="522" height="66" rx="8" fill="#FFFFFF" stroke="#DDD6FE"/>
+  <text x="875" y="458" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">图谱域模型与数据工具</text>
+  <text x="875" y="475" text-anchor="middle" font-size="9.5" fill="#64748B">org-graph-model · org-graph-signals · knowledge-builder-data-import</text>
+  <text x="875" y="491" text-anchor="middle" font-size="9.5" fill="#64748B">customer-ecosystem-seed · graph-importers(v2.1) · schedule-agent（试算 mock）</text>
+
+  <!-- 数据层 -->
+  <rect x="40" y="550" width="1120" height="120" rx="12" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.8"/>
+  <text x="64" y="576" font-size="13" font-weight="700" fill="#166534">数据层 · data/（文件即契约：无数据库、无迁移、Git 友好、拷走即备份）</text>
+  <rect x="64" y="590" width="300" height="62" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+  <text x="214" y="612" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">graph-builder-templates/（13 张）</text>
+  <text x="214" y="629" text-anchor="middle" font-size="9.5" fill="#64748B">模板三合一：schema + 条件规则 + 种子图</text>
+  <text x="214" y="644" text-anchor="middle" font-size="9.5" fill="#64748B">intent-graph.json 含 355 节点种子 · 入库</text>
+  <rect x="384" y="590" width="340" height="62" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+  <text x="554" y="612" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">graphs/org/（图谱资产）</text>
+  <text x="554" y="629" text-anchor="middle" font-size="9.5" fill="#64748B">drafts/ 工作草稿 + org-graph-v{N}.json 版本链</text>
+  <text x="554" y="644" text-anchor="middle" font-size="9.5" fill="#64748B">manifest activeVersion 指针 · 种子入库，新版本运行期生成</text>
+  <rect x="744" y="590" width="200" height="62" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+  <text x="844" y="612" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">knowledge-intake/（批次）</text>
+  <text x="844" y="629" text-anchor="middle" font-size="9.5" fill="#64748B">ki-* 候选批次</text>
+  <text x="844" y="644" text-anchor="middle" font-size="9.5" fill="#64748B">运行期生成 · gitignore</text>
+  <rect x="964" y="590" width="172" height="62" rx="8" fill="#FFFFFF" stroke="#BBF7D0"/>
+  <text x="1050" y="612" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E293B">graph-assets-registry</text>
+  <text x="1050" y="629" text-anchor="middle" font-size="9.5" fill="#64748B">资产 ↔ 模板 ↔ 校验器</text>
+  <text x="1050" y="644" text-anchor="middle" font-size="9.5" fill="#64748B">绑定注册表 · 入库</text>
+
+  <!-- 层间箭头 -->
+  <line x1="600" y1="180" x2="600" y2="196" stroke="#1677FF" stroke-width="2" marker-end="url(#arrBlue)"/>
+  <line x1="600" y1="300" x2="600" y2="316" stroke="#1677FF" stroke-width="2" marker-end="url(#arrBlue)"/>
+  <line x1="600" y1="530" x2="600" y2="546" stroke="#1677FF" stroke-width="2" marker-end="url(#arrBlue)"/>
+  <text x="622" y="545" font-size="10" fill="#64748B">读写 JSON（模板只读 · 草稿/版本经既定写入路径）</text>
+</svg>

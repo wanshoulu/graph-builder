@@ -1,0 +1,13 @@
+{
+  "template_id": "blank-property-graph",
+  "template_version": "1.0.0",
+  "name": "空白属性图",
+  "description": "从一个通用实体和关联关系开始构建属性图。",
+  "origin": "builtin",
+  "parent_template_id": null,
+  "node_types": [{ "type": "ENTITY", "label": "实体", "style": { "color": "#2563eb", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] }],
+  "edge_types": [{ "type": "RELATED_TO", "label": "关联", "source_types": ["ENTITY"], "target_types": ["ENTITY"], "style": { "color": "#64748b" }, "fields": [] }],
+  "starter_graph": { "nodes": [], "edges": [] },
+  "validation_rules": { "unique_node_ids": true, "unique_edge_ids": true, "no_orphan_edges": true, "allow_self_loop": false },
+  "metadata": { "created_at": "2026-08-21T00:00:00.000Z", "updated_at": "2026-08-21T00:00:00.000Z" }
+}

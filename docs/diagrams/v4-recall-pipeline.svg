@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="560" fill="#FFFFFF"/>
+  <text x="40" y="38" font-size="19" font-weight="700" fill="#0F172A">识别主逻辑 · 两通道召回 + 裁判模型裁决</text>
+  <text x="40" y="60" font-size="12" fill="#64748B">权威通道 60~110(图谱扩召封顶80) ＞ advisory通道 96~108(阈值0.55)；两通道互补不串行；裁判只在候选内选，图谱外的意图永远选不出来</text>
+
+  <!-- 用户输入 -->
+  <rect x="40" y="150" width="200" height="90" rx="10" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.4"/>
+  <text x="140" y="178" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">用户输入</text>
+  <text x="140" y="202" text-anchor="middle" font-size="10.5" font-style="italic" fill="#475569">「卡里还有多少钱」</text>
+  <text x="140" y="224" text-anchor="middle" font-size="10" fill="#64748B">会话上下文 + 页面上下文</text>
+
+  <!-- 两通道扇出 -->
+  <line x1="240" y1="180" x2="300" y2="130" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="240" y1="210" x2="300" y2="240" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- 权威通道 -->
+  <rect x="304" y="70" width="280" height="160" rx="12" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="444" y="96" text-anchor="middle" font-size="12.5" font-weight="700" fill="#312E81">权威通道 · 词法召回 + 图谱扩召</text>
+  <text x="444" y="118" text-anchor="middle" font-size="9.5" fill="#475569">词法：alias_exact 110 · alias_contains 75 · 词组 100 · 单词 90</text>
+  <text x="444" y="134" text-anchor="middle" font-size="9.5" fill="#475569">page_menu +35 · page_tab +12 · 60分以下丢弃</text>
+  <text x="444" y="154" text-anchor="middle" font-size="9.5" fill="#B91C1C">负例命中 −160（最强纠错）</text>
+  <line x1="320" y1="164" x2="568" y2="164" stroke="#C7D2FE" stroke-width="1"/>
+  <text x="444" y="182" text-anchor="middle" font-size="9.5" fill="#312E81">图谱扩召：int(种子分 × 边权重)</text>
+  <text x="444" y="198" text-anchor="middle" font-size="9" fill="#475569">offers 0.65 · 同业务对象 0.60 · 同能力 0.55</text>
+  <text x="444" y="214" text-anchor="middle" font-size="9" fill="#475569">每种子≤2 · 全图≤4 · 封顶80</text>
+
+  <!-- advisory通道 -->
+  <rect x="304" y="240" width="280" height="90" rx="12" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.6"/>
+  <text x="444" y="266" text-anchor="middle" font-size="12.5" font-weight="700" fill="#134E4A">advisory通道 · 语义召回</text>
+  <text x="444" y="288" text-anchor="middle" font-size="9.5" fill="#475569">描述+别名预向量化 · 余弦相似度 ≥ 0.55</text>
+  <text x="444" y="304" text-anchor="middle" font-size="9.5" fill="#475569">排名赋分：108 / 104 / 100 / 96（最多4个）</text>
+  <text x="444" y="318" text-anchor="middle" font-size="9" fill="#B91C1C">仅当词法最高分 < 100 时才触发</text>
+
+  <!-- 汇入合并 -->
+  <path d="M584,130 H640 V195" fill="none" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <path d="M584,285 H640 V195" fill="none" stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arrs)"/>
+
+  <!-- 权威捷径 -->
+  <rect x="304" y="350" width="280" height="56" rx="10" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.4"/>
+  <text x="444" y="372" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9A3412">权威捷径（跳过裁判 / 跳过语义）</text>
+  <text x="444" y="390" text-anchor="middle" font-size="9.5" fill="#9A3412">最高分≥180 或 top1-top2≥100 → 直接锁定</text>
+  <text x="444" y="402" text-anchor="middle" font-size="9.5" fill="#9A3412">词法最高分≥100 → 跳过语义召回</text>
+
+  <!-- 合并 -->
+  <rect x="644" y="155" width="180" height="80" rx="12" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+  <text x="734" y="184" text-anchor="middle" font-size="12.5" font-weight="700" fill="#4C1D95">候选合并去重</text>
+  <text x="734" y="206" text-anchor="middle" font-size="10" fill="#64748B">各通道带分 · 按分排序</text>
+  <text x="734" y="224" text-anchor="middle" font-size="10" fill="#64748B">最多12(8词法+4语义)，通常3~8</text>
+  <line x1="824" y1="195" x2="876" y2="195" stroke="#475569" stroke-width="1.8" marker-end="url(#arr)"/>
+  <text x="850" y="186" text-anchor="middle" font-size="9.5" fill="#64748B">候选</text>
+
+  <!-- 裁判 -->
+  <rect x="880" y="140" width="290" height="110" rx="12" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+  <text x="1025" y="168" text-anchor="middle" font-size="13" font-weight="700" fill="#4C1D95">裁判模型（LLM）</text>
+  <text x="1025" y="192" text-anchor="middle" font-size="10.5" fill="#4C1D95">只在候选集内选择 + 消歧</text>
+  <text x="1025" y="212" text-anchor="middle" font-size="10.5" fill="#4C1D95">判别材料来自图谱：负例/混淆对/消歧提示</text>
+  <text x="1025" y="234" text-anchor="middle" font-size="10.8" font-weight="700" fill="#B91C1C">不能引入图谱里没有的意图（防幻觉）</text>
+  <path d="M1025,250 V290" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arr)"/>
+
+  <!-- 输出 -->
+  <rect x="880" y="294" width="290" height="62" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="1.8"/>
+  <text x="1025" y="318" text-anchor="middle" font-size="12" font-weight="700" fill="#065F46">唯一意图 + 置信度 + 证据</text>
+  <text x="1025" y="340" text-anchor="middle" font-size="10" fill="#047857">→ 槽位追问 / 执行 / 答 FAQ（按 delivery 八态）</text>
+
+  <!-- 分数梯度 -->
+  <rect x="40" y="420" width="330" height="120" rx="12" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.4"/>
+  <text x="205" y="442" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">分数梯度（刻意压制）</text>
+  <text x="120" y="464" text-anchor="end" font-size="9.5" fill="#475569">别名精确</text>
+  <rect x="128" y="455" width="160" height="10" rx="2" fill="#4F46E5"/>
+  <text x="294" y="464" font-size="9.5" fill="#475569">110</text>
+  <text x="120" y="482" text-anchor="end" font-size="9.5" fill="#0D9488">语义 top1</text>
+  <rect x="128" y="473" width="157" height="10" rx="2" fill="#0D9488"/>
+  <text x="291" y="482" font-size="9.5" fill="#475569">108</text>
+  <text x="120" y="500" text-anchor="end" font-size="9.5" fill="#475569">图谱扩召</text>
+  <rect x="128" y="491" width="116" height="10" rx="2" fill="#94A3B8"/>
+  <text x="250" y="500" font-size="9.5" fill="#475569">80</text>
+  <text x="120" y="518" text-anchor="end" font-size="9.5" fill="#B91C1C">负例命中</text>
+  <rect x="128" y="509" width="58" height="10" rx="2" fill="#DC2626"/>
+  <text x="192" y="518" font-size="9.5" fill="#B91C1C">−160</text>
+
+  <!-- 为什么两通道 -->
+  <rect x="390" y="420" width="770" height="120" rx="12" fill="#FFFBEB" stroke="#D97706" stroke-width="1.4"/>
+  <text x="410" y="442" font-size="12" font-weight="700" fill="#92400E">为什么这么设计</text>
+  <text x="410" y="464" font-size="10" fill="#78350F">· 两通道不串行：词法管不住换说法，语义分不清近似业务，合并后覆盖最全</text>
+  <text x="410" y="484" font-size="10" fill="#78350F">· 图谱扩召是词法通道的延伸（int(种子分×边权重)），不是独立通道——扩召分永远低于种子分</text>
+  <text x="410" y="504" font-size="10" fill="#78350F">· 裁判只在候选内选：大模型不直接从全库猜（会幻觉）；prompt 由图谱数据自动拼装</text>
+  <text x="410" y="524" font-size="10" fill="#78350F">· 权威捷径：高分直接锁定，低分才进裁判——每次识别可归因，改一条别名立刻见效</text>
+
+  <text x="40" y="550" font-size="11" fill="#64748B">实线＝权威通道　　虚线＝advisory通道　　紫区＝裁决与输出　　黄区＝设计依据</text>
+</svg>

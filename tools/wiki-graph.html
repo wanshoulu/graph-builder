@@ -1,0 +1,807 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>知识图谱 | graph-builder</title>
+<!-- vis-network 9.x 由 JS 注入样式，无独立 CSS；库文件本地化，无外网依赖 -->
+<script src="vendor/vis-network.min.js"></script>
+<style>
+:root{--bg:#0d1117;--panel:#11161d;--line:#21262d;--text:#e6edf3;--muted:#9da7b3;--blue:#58a6ff;--green:#3fb950;--amber:#d29922;--red:#f85149}
+body{margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:Microsoft YaHei,Arial,sans-serif}
+#app{display:flex;width:100vw;height:100vh}
+#main{position:relative;flex:1;min-width:0;background:var(--bg)}
+#mynetwork{width:100%;height:100%;background:var(--bg);border-right:1px solid #30363d;overflow:auto}
+#side{width:420px;background:var(--panel);border-left:1px solid #30363d;display:flex;flex-direction:column;overflow:hidden}
+#sideHeader{padding:14px 16px;border-bottom:1px solid #30363d;font-weight:700;font-size:15px;background:var(--panel);color:var(--text);flex-shrink:0;display:flex;align-items:center;gap:8px}
+#sideBody{overflow:auto;flex:1;padding:12px}
+#topbar{position:absolute;top:12px;left:12px;z-index:20;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;max-width:calc(100% - 280px)}
+.panel{background:rgba(13,17,23,0.94);border:1px solid #30363d;border-radius:8px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.35)}
+#stats{min-width:280px}
+#stats .title{font-weight:700;margin-bottom:6px}
+#stats .line{margin:3px 0;font-size:13px;color:#d0d7de}
+#stats .mini{font-size:12px;color:var(--muted)}
+#controls{display:flex;flex-direction:column;gap:6px;min-width:200px}
+#controls label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--text)}
+#controls input[type=range]{width:100px}
+#searchWrap{position:absolute;top:12px;right:12px;z-index:20;display:flex;gap:8px}
+#search{background:var(--panel);border:1px solid #30363d;color:var(--text);padding:9px 12px;border-radius:8px;width:240px}
+.toolbtn{background:var(--panel);border:1px solid #30363d;color:var(--text);border-radius:8px;padding:9px 12px;cursor:pointer;font-size:13px;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.toolbtn:hover{border-color:var(--blue)}
+#loadingBar{position:absolute;inset:0;z-index:18;background:rgba(13,17,23,.78);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;transition:opacity .35s;pointer-events:none}
+#loadingBar.hidden{opacity:0;visibility:hidden}
+.progress-wrap{width:min(420px,42vw);height:8px;border-radius:999px;background:var(--line);border:1px solid #30363d;overflow:hidden}
+#bar{height:100%;width:0;background:var(--blue);transition:width .12s}
+#ptext{font-size:12px;color:#c9d1d9}
+
+/* Node detail */
+.node-title{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text)}
+.node-type{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;margin-bottom:10px}
+.node-type.技术细节{background:#1a1d2e;color:var(--blue)}
+.node-type.具体算法{background:#1a2e1d;color:var(--green)}
+.node-type.基础理论{background:#2e1a1a;color:var(--amber)}
+.node-type.应用场景{background:#1e1a2e;color:#a371f7}
+.node-section{margin-top:12px}
+.node-section h4{font-size:12px;font-weight:700;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.3px}
+.node-def{font-size:13px;line-height:1.7;color:#c9d1d9}
+.concept-tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#1a1d2e;border:1px solid #30363d;margin:2px 4px 2px 0;font-size:11px;color:var(--blue)}
+.kp-item{font-size:12px;line-height:1.6;color:#c9d1d9;padding:3px 0;padding-left:12px;border-left:2px solid #30363d;margin:4px 0}
+.formula-block{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;margin:6px 0}
+.formula-block .f-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+.formula-block .f-latex{font-size:13px;color:var(--blue);padding:4px 0}
+.formula-block .f-expl{font-size:11px;color:var(--muted)}
+.problem-block{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;margin:6px 0}
+.problem-block .p-q{font-size:13px;font-weight:600;margin-bottom:4px}
+.problem-block .p-a{font-size:12px;color:#c9d1d9;line-height:1.5}
+.question-block{font-size:12px;color:#c9d1d9;padding:6px 0;border-bottom:1px solid var(--line)}
+.question-block .q-q{font-weight:600;margin-bottom:2px}
+.question-block .q-a{color:var(--green)}
+
+.empty-detail{color:var(--muted);text-align:center;padding:30px;font-size:13px}
+.empty-detail .icon{font-size:40px;display:block;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="main">
+    <div id="topbar">
+      <div id="stats" class="panel"><div class="title" id="graphTitle">知识图谱</div><div class="line" id="statsLine"></div><div class="mini" id="statsMini"></div></div>
+      <div id="controls" class="panel">
+        <label><input type="checkbox" id="showLabels" checked> 显示标签</label>
+        <label><input type="checkbox" id="physicsToggle" checked> 物理引擎</label>
+        <label><input type="checkbox" id="hideOrphans"> 隐藏孤立节点</label>
+        <label>最大深度 <input type="range" id="depthSlider" min="1" max="10" value="10" oninput="document.getElementById('depthVal').textContent=this.value;applyDepthFilter(parseInt(this.value))"> <span id="depthVal">10</span></label>
+        <label style="font-size:11px;color:var(--muted)">按层级着色：<select id="colorMode" style="background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:4px;padding:2px 6px;font-size:11px;margin-left:4px">
+          <option value="level">层级</option>
+          <option value="type">节点类型</option>
+        </select></label>
+        <label style="font-size:11px;color:var(--muted)">布局模式：<select id="layoutMode" style="background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:4px;padding:2px 6px;font-size:11px;margin-left:4px">
+          <option value="force">力导向</option>
+          <option value="treeUD">组织树·上下</option>
+          <option value="treeLR">组织树·左右</option>
+          <option value="radial">径向</option>
+          <option value="columns">类型分栏</option>
+        </select></label>
+        <label style="font-size:11px;color:var(--muted)">双击节点折叠/展开子树 · <a href="javascript:void(0)" id="expandAll" style="color:var(--blue)">全部展开</a></label>
+      </div>
+    </div>
+    <div id="searchWrap">
+      <a href="index.html" class="toolbtn">← 返回门户</a>
+      <input id="search" placeholder="搜索节点..." oninput="onSearch(this.value)"/>
+      <button id="fitBtn" class="toolbtn" onclick="network && network.fit()">适配</button>
+    </div>
+    <div id="mynetwork"></div>
+    <div id="loadingBar"><div class="progress-wrap"><div id="bar"></div></div><div id="ptext">加载图谱数据...</div></div>
+  </div>
+  <div id="side">
+    <div id="sideHeader">📋 <span id="sideTitle">节点详情</span></div>
+    <div id="sideBody"><div class="empty-detail"><span class="icon">🔍</span>点击节点查看详细信息</div></div>
+  </div>
+</div>
+<script>
+'use strict';
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+var network = null;
+var nodeMap = {};
+var graphData = null;
+var currentColorMode = 'level';
+/** 图谱资产模式（?asset=）：双击节点 postMessage 给嵌入方（由嵌入页面跳编辑画布定位该节点） */
+var ASSET_MODE = false;
+var ASSET_ID = '';
+
+var LEVEL_COLORS = ['#58a6ff','#3fb950','#d29922','#f85149','#a371f7','#79c0ff','#56d364','#e3b341','#ff7b72','#d2a8ff','#7ee787','#f0883e','#db6d28','#768390'];
+var TYPE_COLORS = { '基础理论':'#d29922','技术细节':'#58a6ff','具体算法':'#3fb950','应用场景':'#a371f7','人物':'#f85149','概念':'#79c0ff' };
+var TYPE_LABELS = {};
+
+// ── 图谱资产桥接（?asset=xxx&version=active版本|draft）：直接复用本工具渲染 org-graph 资产 ──
+function fetchJson(url){ return fetch(url).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); }
+
+function loadOrgGraphAsset(assetId, version){
+  var tUrl = '/api/org-graph/template?asset=' + encodeURIComponent(assetId);
+  var gUrl = '/api/org-graph/load?asset=' + encodeURIComponent(assetId) + (version ? '&version=' + encodeURIComponent(version) : '');
+  return Promise.all([fetchJson(tUrl), fetchJson(gUrl)]).then(function(rs){
+    var template = rs[0].data || rs[0];
+    var doc = rs[1].data || rs[1];
+
+    // 模板配色/中文标签注入（缺省色板兜底），保证所有图谱在此工具下风格统一
+    var palette = ['#58a6ff','#3fb950','#d29922','#f85149','#a371f7','#79c0ff','#56d364','#e3b341','#ff7b72','#d2a8ff','#7ee787','#f0883e','#db6d28','#39c5cf'];
+    TYPE_LABELS = {};
+    var fieldLabels = {};
+    (template.node_types || []).forEach(function(t, i){
+      TYPE_LABELS[t.type] = t.label || t.type;
+      TYPE_COLORS[t.type] = (t.style && t.style.color) || palette[i % palette.length];
+      var m = {};
+      (t.fields || []).forEach(function(f){ m[f.key] = f.label || f.key; });
+      fieldLabels[t.type] = m;
+    });
+    var edgeLabels = {};
+    (template.edge_types || []).forEach(function(t){ edgeLabels[t.type] = t.label || t.type; });
+
+    // 度统计 → 大小/层级/孤立标记
+    var deg = {}, outD = {}, inD = {};
+    (doc.nodes || []).forEach(function(n){ deg[n.id] = 0; outD[n.id] = 0; inD[n.id] = 0; });
+    (doc.edges || []).forEach(function(e){
+      if (deg[e.source] !== undefined) { deg[e.source]++; outD[e.source]++; }
+      if (deg[e.target] !== undefined) { deg[e.target]++; inD[e.target]++; }
+    });
+
+    var nodes = (doc.nodes || []).map(function(n){
+      var props = n.properties || {};
+      var kps = [];
+      Object.keys(props).forEach(function(k){
+        var v = props[k];
+        if (v === null || v === undefined || v === '') return;
+        var lbl = (fieldLabels[n.type] && fieldLabels[n.type][k]) || k;
+        kps.push(lbl + '：' + v);
+      });
+      var d = deg[n.id] || 0;
+      return {
+        id: n.id,
+        title: props.name || props.title || n.id,
+        type: n.type || 'NODE',
+        typeLabel: TYPE_LABELS[n.type] || n.type || '节点',
+        level: d >= 6 ? 1 : (d >= 3 ? 2 : 3),
+        keyPoints: kps,
+        inDegree: inD[n.id] || 0,
+        outDegree: outD[n.id] || 0,
+        orphan: d === 0
+      };
+    });
+
+    var edges = (doc.edges || []).map(function(e){
+      return { source: e.source, target: e.target, type: e.type || 'REL', typeLabel: edgeLabels[e.type] || e.type || '关联' };
+    });
+
+    // 模板布局配置（与旧编辑画布同源）：树骨架边（含父端方向）/ 默认布局 / 初始折叠深度 / 默认隐藏边类型
+    var layout = template.layout || {};
+    var treeEdgeDecls = (layout.tree_edges || []).map(function(d){
+      return typeof d === 'string' ? { type: d, parent: layout.tree_parent || 'source' } : { type: d.type, parent: d.parent || layout.tree_parent || 'source' };
+    });
+    var layoutMap = { force: 'force', tree: 'treeUD', dagre: 'treeLR', 'dagre-tb': 'treeUD', radial: 'radial', columns: 'columns' };
+    return {
+      title: (template.name || assetId) + (version ? ' · ' + version : ''),
+      nodes: nodes,
+      edges: edges,
+      treeEdgeParent: treeEdgeDecls.reduce(function(m, d){ m[d.type] = d.parent; return m; }, {}),
+      hasTreeEdges: treeEdgeDecls.length > 0,
+      initialCollapseDepth: layout.initial_collapse_depth,
+      defaultLayout: layoutMap[layout.default_layout] || 'force',
+      hiddenEdgeTypes: layout.default_hidden_edges || []
+    };
+  });
+}
+
+function setLoading(v, text, pct){
+  var lb = document.getElementById('loadingBar');
+  if (v) { lb.classList.remove('hidden'); if (text) document.getElementById('ptext').textContent = text; if (pct!==undefined) document.getElementById('bar').style.width = pct+'%'; }
+  else lb.classList.add('hidden');
+}
+
+function getNodeColor(node){
+  if (currentColorMode === 'type') return TYPE_COLORS[node.type] || '#768390';
+  var lvl = node.level || 0;
+  return LEVEL_COLORS[lvl % LEVEL_COLORS.length];
+}
+
+// ── 展示模式与折叠（资产/通用）：布局 5 种 + 双击折叠子树（⊕N 徽标） ──
+var layoutMode = 'force';
+var collapsedSet = new Set();
+var childrenMap = {};
+var parentMap = {};
+var depthMap = {};
+/** 图层组（意图图谱等支撑节点）：默认隐藏，工具栏可开关 —— 与旧编辑画布一致 */
+var LAYER_GROUPS = [
+  { key: 'objects', label: '对象', types: ['BUSINESS_OBJECT'] },
+  { key: 'constraints', label: '约束·答案', types: ['SLOT', 'STATE', 'RISK', 'ACTION', 'KNOWLEDGE_ANSWER', 'RUNTIME_BOUNDARY'] },
+];
+var hiddenLayers = new Set();
+
+function rebuildHierarchy(){
+  childrenMap = {}; parentMap = {};
+  if (!graphData) return;
+  var treeParent = graphData.treeEdgeParent || {};
+  var useTree = graphData.hasTreeEdges;
+  graphData.edges.forEach(function(e){
+    var parentEnd = useTree ? treeParent[e.type] : 'source';
+    if (useTree && !parentEnd) return; // 非树骨架边不进层级
+    var parent = parentEnd === 'target' ? e.target : e.source;
+    var child = parentEnd === 'target' ? e.source : e.target;
+    (childrenMap[parent] = childrenMap[parent] || []).push(child);
+    if (!parentMap[child]) parentMap[child] = parent;
+  });
+  // 树深度（仅树骨架资产）：根 0，供节点尺寸分层（根大叶小）
+  depthMap = {};
+  if (graphData.hasTreeEdges) {
+    var hasParent2 = new Set();
+    Object.keys(childrenMap).forEach(function(p){ childrenMap[p].forEach(function(k){ hasParent2.add(k); }); });
+    var q = graphData.nodes.filter(function(n){ return !hasParent2.has(n.id); }).map(function(n){ return [n.id, 0]; });
+    while (q.length) {
+      var it = q.shift();
+      if (depthMap[it[0]] !== undefined) continue;
+      depthMap[it[0]] = it[1];
+      (childrenMap[it[0]] || []).forEach(function(k){ q.push([k, it[1] + 1]); });
+    }
+  }
+}
+
+/** 树节点集合（有子树或挂在树上）——支撑节点连通传播的边界 */
+function treeNodeIdSet(){
+  var s = new Set();
+  Object.keys(childrenMap).forEach(function(p){ s.add(p); childrenMap[p].forEach(function(k){ s.add(k); }); });
+  return s;
+}
+
+function descendantsOf(id){
+  var out = [], seen = new Set([id]), queue = (childrenMap[id] || []).slice();
+  while (queue.length) {
+    var cur = queue.shift();
+    if (seen.has(cur)) continue;
+    seen.add(cur); out.push(cur);
+    (childrenMap[cur] || []).forEach(function(k){ if (!seen.has(k)) queue.push(k); });
+  }
+  return out;
+}
+
+function subtreeSize(id){ return descendantsOf(id).length; }
+
+/** 节点类型 → 图层组（无分组返回 null） */
+function layerGroupOf(type){
+  for (var i = 0; i < LAYER_GROUPS.length; i++) {
+    if (LAYER_GROUPS[i].types.indexOf(type) >= 0) return LAYER_GROUPS[i].key;
+  }
+  return null;
+}
+
+/** 初始折叠集合（旧画布同款语义）：有子树且深度 >= 阈值的节点折叠（根深度 0） */
+function computeInitialCollapsed(maxDepth){
+  var hasParent = new Set();
+  Object.keys(childrenMap).forEach(function(p){ childrenMap[p].forEach(function(k){ hasParent.add(k); }); });
+  var depth = {};
+  var queue = graphData.nodes.filter(function(n){ return !hasParent.has(n.id); }).map(function(n){ return [n.id, 0]; });
+  while (queue.length) {
+    var it = queue.shift();
+    if (depth[it[0]] !== undefined) continue;
+    depth[it[0]] = it[1];
+    (childrenMap[it[0]] || []).forEach(function(k){ queue.push([k, it[1] + 1]); });
+  }
+  var out = new Set();
+  Object.keys(childrenMap).forEach(function(p){
+    if ((depth[p] || 0) >= maxDepth) out.add(p);
+  });
+  return out;
+}
+
+/** BFS 深度（自最高度数根）→ 径向布局半径 */
+function radialPositions(ids){
+  var deg = {};
+  ids.forEach(function(id){ deg[id] = 0; });
+  graphData.edges.forEach(function(e){ if (deg[e.source] !== undefined) deg[e.source]++; if (deg[e.target] !== undefined) deg[e.target]++; });
+  var root = ids[0];
+  ids.forEach(function(id){ if (deg[id] > (deg[root] || 0)) root = id; });
+  var depth = {}; depth[root] = 0;
+  var queue = [root];
+  while (queue.length) {
+    var cur = queue.shift();
+    (childrenMap[cur] || []).forEach(function(k){ if (ids.indexOf(k) >= 0 && depth[k] === undefined) { depth[k] = depth[cur] + 1; queue.push(k); } });
+  }
+  // 同深均分圆环；未达节点（环/断链）摆最外圈
+  var byDepth = {};
+  ids.forEach(function(id){
+    var d = depth[id] === undefined ? 99 : depth[id];
+    (byDepth[d] = byDepth[d] || []).push(id);
+  });
+  var pos = {};
+  Object.keys(byDepth).sort(function(a, b){ return a - b; }).forEach(function(d){
+    var list = byDepth[d], r = (d === 99 ? 4 : Number(d)) * 170 + 80;
+    list.forEach(function(id, i){
+      var a = (2 * Math.PI * i) / list.length - Math.PI / 2;
+      pos[id] = { x: Math.cos(a) * r, y: Math.sin(a) * r };
+    });
+  });
+  return pos;
+}
+
+/** 类型分栏：每类一列，列内按度数排序纵向排 */
+function columnPositions(ids){
+  var typeOf = {};
+  (graphData.nodes || []).forEach(function(n){ typeOf[n.id] = n.type || 'OTHER'; });
+  var typeOrder = [];
+  var byType = {};
+  ids.forEach(function(id){
+    var t = typeOf[id] || 'OTHER';
+    if (!byType[t]) { byType[t] = []; typeOrder.push(t); }
+    byType[t].push(id);
+  });
+  var deg = {};
+  graphData.edges.forEach(function(e){ deg[e.source] = (deg[e.source] || 0) + 1; deg[e.target] = (deg[e.target] || 0) + 1; });
+  var pos = {};
+  typeOrder.forEach(function(t, col){
+    byType[t].sort(function(a, b){ return (deg[b] || 0) - (deg[a] || 0); });
+    byType[t].forEach(function(id, i){ pos[id] = { x: col * 420, y: i * 100 }; });
+  });
+  return pos;
+}
+
+/** 自定义树形布局（预计算坐标，替代 vis-network hierarchical 的超宽问题）
+ *  叶子计数算法：DFS 后序遍历，叶子节点按序分配 x，内部节点取子节点 x 均值
+ *  @param {string[]} ids 可见节点 id 列表
+ *  @param {'treeUD'|'treeLR'} mode 上下或左右
+ */
+function treePositions(ids, mode){
+  var idSet = new Set(ids);
+  var isLR = mode === 'treeLR';
+  var nodeGap = 36;     // 同层节点水平间距
+  var levelGap = 120;   // 层间距
+
+  // 分层（用 depthMap，树外节点放最底层）
+  var byLevel = {};
+  var maxLevel = 0;
+  ids.forEach(function(id){
+    var d = depthMap[id];
+    if (d === undefined) d = 99;
+    (byLevel[d] = byLevel[d] || []).push(id);
+    if (d !== 99 && d > maxLevel) maxLevel = d;
+  });
+
+  // 收集树内可见子节点
+  function visChildren(id){
+    return (childrenMap[id] || []).filter(function(k){ return idSet.has(k); });
+  }
+
+  // DFS 后序叶子计数
+  var pos = {};
+  var leafX = 0;
+  var assigned = new Set();
+  var stack = [];
+
+  // 找可见根节点
+  var roots = (byLevel[0] || []).slice();
+  // 非树节点（depth=99）单独处理
+  var nonTree = byLevel[99] || [];
+
+  function dfs(id){
+    if (assigned.has(id)) return;
+    assigned.add(id);
+    var kids = visChildren(id);
+    if (!kids.length) {
+      // 叶子
+      pos[id] = { x: leafX * nodeGap, depth: depthMap[id] || 0 };
+      leafX++;
+    } else {
+      kids.forEach(dfs);
+      // 内部节点：取子节点 x 均值
+      var xs = kids.map(function(k){ return pos[k] ? pos[k].x : 0; }).filter(function(x){ return x !== undefined; });
+      if (xs.length) {
+        pos[id] = { x: xs.reduce(function(a,b){ return a+b; }, 0) / xs.length, depth: depthMap[id] || 0 };
+      } else {
+        pos[id] = { x: leafX * nodeGap, depth: depthMap[id] || 0 };
+        leafX++;
+      }
+    }
+  }
+
+  // 按度数排序根节点（子节点多的居中）
+  roots.sort(function(a,b){ return (visChildren(b).length) - (visChildren(a).length); });
+  roots.forEach(dfs);
+
+  // 非树节点放最外层，按 x 排序
+  if (nonTree.length) {
+    nonTree.sort(function(a,b){
+      var da = deg(a), db = deg(b);
+      return db - da;
+    });
+    var nonStart = leafX * nodeGap + nodeGap * 2;
+    nonTree.forEach(function(id, i){
+      pos[id] = { x: nonStart + i * nodeGap, depth: 99 };
+    });
+  }
+
+  function deg(id){
+    var c = 0;
+    (graphData.edges || []).forEach(function(e){ if (e.source === id || e.target === id) c++; });
+    return c;
+  }
+
+  // 计算居中偏移
+  var allX = Object.keys(pos).map(function(k){ return pos[k].x; });
+  var cx = allX.length ? (Math.min.apply(null, allX) + Math.max.apply(null, allX)) / 2 : 0;
+  var cy = maxLevel * levelGap / 2;
+
+  var out = {};
+  Object.keys(pos).forEach(function(k){
+    var p = pos[k];
+    var x = p.x - cx;
+    var y = p.depth === 99 ? (maxLevel + 1) * levelGap - cy : p.depth * levelGap - cy;
+    out[k] = isLR ? { x: y, y: x } : { x: x, y: y };
+  });
+  return out;
+}
+
+function buildNetwork(){
+  if (!graphData) return;
+  rebuildHierarchy();
+  var hideOrphans = document.getElementById('hideOrphans').checked;
+  var maxDepth = parseInt(document.getElementById('depthSlider').value);
+
+  // 可见性（与旧编辑画布同款语义）：
+  //   1) 折叠子树隐藏；2) 图层开关（对象/约束·答案默认隐藏）；3) 树外支撑节点只在连到可见节点时出现（连通传播）；
+  //   4) 模板 default_hidden_edges 噪声边直接滤掉
+  var hiddenTypes = new Set(graphData.hiddenEdgeTypes || []);
+  var activeEdges = graphData.edges.filter(function(e){ return !hiddenTypes.has(e.type); });
+  var treeIds = treeNodeIdSet();
+  // 图层开关（动态读 checkbox：checked=显示该层；无 checkbox 视为全显示）
+  var hiddenLayersNow = new Set();
+  LAYER_GROUPS.forEach(function(g){
+    var cb = document.getElementById('layer_' + g.key);
+    if (cb && !cb.checked) hiddenLayersNow.add(g.key);
+  });
+  var visible = new Set(graphData.nodes.map(function(n){ return n.id; }));
+  collapsedSet.forEach(function(c){ descendantsOf(c).forEach(function(d){ visible.delete(d); }); });
+  var typeOf = {};
+  graphData.nodes.forEach(function(n){ typeOf[n.id] = n.type; });
+  graphData.nodes.forEach(function(n){
+    if (treeIds.has(n.id)) return;
+    var g = layerGroupOf(n.type);
+    if (g && hiddenLayersNow.has(g)) visible.delete(n.id);
+  });
+  var changed = true;
+  while (changed) {
+    changed = false;
+    activeEdges.forEach(function(e){
+      // 图层隐藏的支撑节点不许被连通传播拉回（与旧画布「先传播后裁图层」等效）
+      if (visible.has(e.source) && !visible.has(e.target) && !treeIds.has(e.target)) {
+        var gt = layerGroupOf(typeOf[e.target]);
+        if (!(gt && hiddenLayersNow.has(gt))) { visible.add(e.target); changed = true; }
+      } else if (visible.has(e.target) && !visible.has(e.source) && !treeIds.has(e.source)) {
+        var gs = layerGroupOf(typeOf[e.source]);
+        if (!(gs && hiddenLayersNow.has(gs))) { visible.add(e.source); changed = true; }
+      }
+    });
+  }
+  var hasAnyEdge = new Set();
+  activeEdges.forEach(function(e){ hasAnyEdge.add(e.source); hasAnyEdge.add(e.target); });
+
+  var filteredNodes = graphData.nodes.filter(function(n){
+    if (hideOrphans && n.orphan) return false;
+    if (n.level > maxDepth) return false;
+    if (!visible.has(n.id)) return false;
+    if (!treeIds.has(n.id) && !hasAnyEdge.has(n.id) && hiddenLayersNow.size && layerGroupOf(n.type)) return false; // 图层隐藏的孤立支撑节点
+    return true;
+  });
+  var visibleIds = new Set(filteredNodes.map(function(n){ return n.id; }));
+  var filteredEdges = activeEdges.filter(function(e){
+    return visibleIds.has(e.source) && visibleIds.has(e.target);
+  });
+
+  // 非力导向布局：先算坐标（径向/分栏/树形都用预置坐标关物理）
+  var presetPos = null;
+  if (layoutMode === 'radial') presetPos = radialPositions(Array.from(visibleIds));
+  if (layoutMode === 'columns') presetPos = columnPositions(Array.from(visibleIds));
+  if (layoutMode === 'treeUD' || layoutMode === 'treeLR') presetPos = treePositions(Array.from(visibleIds), layoutMode);
+
+  nodeMap = {};
+  var visNodes = filteredNodes.map(function(n){
+    var color = getNodeColor(n);
+    // 树骨架资产按树深度分层（根大叶小），其余按度数层级
+    var lvl = (graphData.hasTreeEdges && depthMap[n.id] !== undefined) ? Math.min(depthMap[n.id] + 1, 3) : n.level;
+    var isTop = lvl <= 1;
+    // 折叠徽标：⊕N（隐藏的后代数）
+    var label = n.title;
+    if (collapsedSet.has(n.id) && (childrenMap[n.id] || []).length) label = n.title + ' ⊕' + subtreeSize(n.id);
+    nodeMap[n.id] = { label: n.title, _raw: n };
+    var v = {
+      id: n.id, label: label,
+      size: isTop ? 14 : (lvl <= 2 ? 9 : 5),
+      shape: isTop ? 'box' : 'dot',
+      color: { background: color, border: isTop ? '#fff' : color },
+      font: { size: document.getElementById('showLabels').checked ? (isTop ? 13 : 9) : 0, color: '#f0f6fc', face: 'Microsoft YaHei' },
+      borderWidth: isTop ? 2 : 1
+    };
+    if (presetPos && presetPos[n.id]) { v.x = presetPos[n.id].x; v.y = presetPos[n.id].y; }
+    return v;
+  });
+
+  var visEdges = [];
+  var edgeSet = new Set();
+  filteredEdges.forEach(function(e){
+    var src = e.source;
+    var tgt = e.target;
+    var key = src + '|||' + tgt;
+    if (!edgeSet.has(key)) { edgeSet.add(key); var ev = { from: src, to: tgt, color: { color: e.type === 'parent' ? '#5a6a80' : '#3a6090', highlight: '#58a6ff' } }; if (e.typeLabel) ev.title = e.typeLabel; visEdges.push(ev); }
+  });
+
+  var container = document.getElementById('mynetwork');
+  var data = { nodes: new vis.DataSet(visNodes), edges: new vis.DataSet(visEdges) };
+  var options = {
+    physics: { enabled: true, solver: 'barnesHut', barnesHut: { gravitationalConstant: -3000, centralGravity: 0.2, springLength: 120, springConstant: 0.02, damping: 0.05 }, stabilization: { enabled: false } },
+    interaction: { hover: true, tooltipDelay: 150, zoomView: true, dragView: true },
+    nodes: { shape: 'dot', size: 8, font: { size: 11, color: '#c9d1d9', face: 'Microsoft YaHei' }, color: { background: '#58a6ff', border: '#30363d', highlight: { border: '#fff', background: '#58a6ff' } } },
+    edges: { color: { color: '#5a6a80', highlight: '#58a6ff' }, width: 1.2, smooth: { type: 'continuous' } }
+  };
+  // 预置坐标布局（树形/径向/分栏）：关物理引擎，节点坐标由 presetPos 指定
+  if (presetPos) {
+    options.physics.enabled = false;
+    if (layoutMode === 'treeUD' || layoutMode === 'treeLR') {
+      options.edges.smooth = { enabled: true, type: 'cubicBezier', roundness: 0.5 };
+    }
+  }
+
+  if (network) network.destroy();
+  network = new vis.Network(container, data, options);
+
+  // 统计栏追加当前显示量（折叠/图层过滤后）
+  var mini = document.getElementById('statsMini');
+  if (filteredNodes.length !== graphData.nodes.length) {
+    mini.textContent = mini.textContent.replace(/ · 显示 \d+\/\d+/, '') + ' · 显示 ' + filteredNodes.length + '/' + graphData.nodes.length;
+  } else {
+    mini.textContent = mini.textContent.replace(/ · 显示 \d+\/\d+/, '');
+  }
+
+  network.once('afterDrawing', function(){ setTimeout(function(){ setLoading(false); network.fit(); }, 400); });
+  var _deselTimer = null;
+  network.on('selectNode', function(p){
+    if (_deselTimer) { clearTimeout(_deselTimer); _deselTimer = null; }
+    if (p.nodes.length === 1) {
+      showNodeDetail(p.nodes[0]);
+      // 嵌入模式：单击节点上报嵌入方（由嵌入页面的属性面板就地编辑）
+      if (embedMode && ASSET_MODE) window.parent.postMessage({ type: 'wikiGraphSelectNode', asset: ASSET_ID, nodeId: p.nodes[0] }, '*');
+    }
+  });
+  network.on('deselectNode', function(){
+    _deselTimer = setTimeout(function(){
+      _deselTimer = null;
+      document.getElementById('sideTitle').textContent = '节点详情';
+      document.getElementById('sideBody').innerHTML = '<div class="empty-detail"><span class="icon">🔍</span>点击节点查看详细信息</div>';
+      if (embedMode && ASSET_MODE) window.parent.postMessage({ type: 'wikiGraphSelectNode', asset: ASSET_ID, nodeId: '' }, '*');
+    }, 60);
+  });
+  // 双击节点 → 折叠/展开其子树（⊕N 徽标提示隐藏规模）
+  network.on('doubleClick', function(p){
+    if (p.nodes.length !== 1) return;
+    var id = p.nodes[0];
+    if (!(childrenMap[id] || []).length) return; // 叶子无可折叠
+    if (collapsedSet.has(id)) collapsedSet.delete(id); else collapsedSet.add(id);
+    buildNetwork();
+  });
+}
+
+function showNodeDetail(nodeId){
+  var n = nodeMap[nodeId];
+  if (!n || !n._raw) {
+    document.getElementById('sideTitle').textContent = '节点未找到';
+    document.getElementById('sideBody').innerHTML = '<div class="empty-detail"><span class="icon">⚠</span>节点数据未加载 (id: ' + esc(nodeId || '') + ')</div>';
+    return;
+  }
+  var r = n._raw;
+  document.getElementById('sideTitle').textContent = r.title || r.id;
+
+  var html = '<div class="node-title">' + esc(r.title || r.id) + '</div>';
+  var tc = TYPE_COLORS[r.type];
+  html += '<span class="node-type ' + esc(r.type || '') + '"' + (tc ? ' style="background:' + tc + '26;color:' + tc + ';border:1px solid ' + tc + '55"' : '') + '>' + esc(r.typeLabel || r.type || '节点') + '</span>';
+  if (r.topic) html += ' <span class="concept-tag">' + esc(r.topic) + '</span>';
+
+  if (r.definition) {
+    html += '<div class="node-section"><h4>定义</h4><div class="node-def">' + esc(r.definition) + '</div></div>';
+  }
+
+  if (r.concepts && r.concepts.length) {
+    html += '<div class="node-section"><h4>核心概念</h4>';
+    r.concepts.forEach(function(c){ html += '<span class="concept-tag">' + esc(c) + '</span>'; });
+    html += '</div>';
+  }
+
+  if (r.keyPoints && r.keyPoints.length) {
+    html += '<div class="node-section"><h4>关键要点</h4>';
+    r.keyPoints.forEach(function(k){ html += '<div class="kp-item">' + esc(k) + '</div>'; });
+    html += '</div>';
+  }
+
+  if (r.formulas && r.formulas.length) {
+    html += '<div class="node-section"><h4>公式</h4>';
+    r.formulas.forEach(function(f){
+      html += '<div class="formula-block"><div class="f-title">' + esc(f.title || '') + '</div><div class="f-latex">' + esc(f.latex || '') + '</div><div class="f-expl">' + esc(f.explanation || '') + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  if (r.problems && r.problems.length) {
+    html += '<div class="node-section"><h4>习题</h4>';
+    r.problems.forEach(function(p){
+      html += '<div class="problem-block"><div class="p-q">' + esc(p.q || '') + '</div><div class="p-a">' + esc(p.a || '') + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  if (r.questions && r.questions.length) {
+    html += '<div class="node-section"><h4>常见问题</h4>';
+    r.questions.forEach(function(q){
+      html += '<div class="question-block"><div class="q-q">Q: ' + esc(q.q || '') + '</div><div class="q-a">A: ' + esc(q.a || '') + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="node-section" style="font-size:11px;color:var(--muted)">层级: ' + (r.level||0) + ' · 出入度: ' + (r.inDegree||0) + '/' + (r.outDegree||0) + (r.orphan ? ' · 孤立节点' : '') + '</div>';
+
+  document.getElementById('sideBody').innerHTML = html;
+}
+
+function renderStats(){
+  if (!graphData) return;
+  var nodes = graphData.nodes;
+  var edges = graphData.edges;
+  var types = {};
+  nodes.forEach(function(n){ var t = n.typeLabel || n.type || '未分类'; types[t] = (types[t] || 0) + 1; });
+  var typeStr = Object.keys(types).map(function(t){ return t + ' ' + types[t]; }).join(' · ');
+  document.getElementById('statsLine').innerHTML = '<b>' + nodes.length + '</b> 节点 · <b>' + edges.length + '</b> 关系';
+  document.getElementById('statsMini').textContent = '类型分布: ' + typeStr;
+}
+
+function onSearch(q){
+  if (!network || !graphData) return;
+  if (!q.trim()) { network.unselectAll(); return; }
+  var lower = q.toLowerCase();
+  var matches = [];
+  graphData.nodes.forEach(function(n){
+    if ((n.title||'').toLowerCase().indexOf(lower) >= 0 || (n.definition||'').toLowerCase().indexOf(lower) >= 0) matches.push(n.id);
+  });
+  if (matches.length) { network.selectNodes(matches.slice(0, 50)); if (matches.length === 1) network.focus(matches[0], { scale: 1.5, animation: true }); }
+}
+
+function applyDepthFilter(maxDepth){
+  if (!graphData || !network) return;
+  var visibleIds = new Set(graphData.nodes.filter(function(n){ return n.level <= maxDepth; }).map(function(n){ return n.id; }));
+  graphData.nodes.forEach(function(n){
+    if (nodeMap[n.id]) network.body.data.nodes.update({ id: n.id, hidden: !visibleIds.has(n.id) });
+  });
+}
+
+function rebuildWithColors(){
+  if (!graphData || !network) return;
+  var hideOrphans = document.getElementById('hideOrphans').checked;
+  var batch = [];
+  graphData.nodes.forEach(function(n){
+    if (hideOrphans && n.orphan) return;
+    var color = getNodeColor(n);
+    batch.push({ id: n.id, color: { background: color, border: n.level <= 1 ? '#fff' : color } });
+  });
+  network.body.data.nodes.update(batch);
+}
+
+document.getElementById('physicsToggle').addEventListener('change', function(){ if (network) network.setOptions({ physics: { enabled: this.checked } }); });
+document.getElementById('showLabels').addEventListener('change', function(){
+  if (!network || !graphData) return;
+  var checked = this.checked;
+  var batch = [];
+  graphData.nodes.forEach(function(n){
+    batch.push({ id: n.id, font: { size: checked ? (n.level <= 1 ? 13 : 9) : 0 } });
+  });
+  network.body.data.nodes.update(batch);
+});
+document.getElementById('hideOrphans').addEventListener('change', function(){ buildNetwork(); });
+document.getElementById('colorMode').addEventListener('change', function(){
+  currentColorMode = this.value;
+  rebuildWithColors();
+});
+document.getElementById('depthSlider').addEventListener('input', function(){
+  applyDepthFilter(parseInt(this.value));
+});
+document.getElementById('fitBtn').addEventListener('click', function(){ if (network) network.fit(); });
+
+// 布局模式切换 / 全部展开
+document.getElementById('layoutMode').addEventListener('change', function(){
+  layoutMode = this.value;
+  collapsedSet = new Set(); // 换布局重置折叠状态
+  buildNetwork();
+});
+document.getElementById('expandAll').addEventListener('click', function(){
+  collapsedSet = new Set();
+  buildNetwork();
+});
+
+// 嵌入方定位节点（AI 质检等）：展开祖先链 → 选中 + 聚焦 + 回报选中
+window.addEventListener('message', function(ev){
+  var d = ev.data;
+  if (!d || d.type !== 'wikiGraphFocusNode' || !d.nodeId || !network) return;
+  if (!nodeMap[d.nodeId]) return;
+  var changed = false;
+  var cur = parentMap[d.nodeId];
+  while (cur) { if (collapsedSet.delete(cur)) changed = true; cur = parentMap[cur]; }
+  if (collapsedSet.delete(d.nodeId)) changed = true;
+  if (changed) buildNetwork();
+  setTimeout(function(){
+    if (!network || !nodeMap[d.nodeId]) return;
+    network.selectNodes([d.nodeId]);
+    network.focus(d.nodeId, { scale: 1.2, animation: true });
+    showNodeDetail(d.nodeId);
+    if (embedMode && ASSET_MODE) window.parent.postMessage({ type: 'wikiGraphSelectNode', asset: ASSET_ID, nodeId: d.nodeId }, '*');
+  }, changed ? 200 : 0);
+});
+
+// Init：?asset=xxx 走图谱资产桥接；?id=xxx 保持 wiki 图谱原逻辑；?embed=1 嵌入模式（隐藏自带详情栏，单击节点上报给嵌入方编辑）
+var params = new URLSearchParams(window.location.search);
+var assetId = params.get('asset');
+var versionParam = params.get('version') || '';
+var graphId = params.get('id') || 'demo';
+var embedMode = params.get('embed') === '1' && window.parent && window.parent !== window;
+
+if (assetId) {
+  // 图谱资产模式：按节点类型着色、默认显示标签
+  ASSET_MODE = true;
+  ASSET_ID = assetId;
+  if (embedMode) document.getElementById('side').style.display = 'none'; // 嵌入模式：自带详情栏交给嵌入方的属性编辑面板
+  document.getElementById('colorMode').value = 'type';
+  currentColorMode = 'type';
+  document.getElementById('showLabels').checked = true;
+  document.querySelector('#searchWrap .toolbtn').setAttribute('href', 'javascript:history.back()');
+  setLoading(true, '加载图谱资产（' + assetId + '）...', 15);
+  loadOrgGraphAsset(assetId, versionParam).then(function(data){
+    graphData = data;
+    document.getElementById('graphTitle').textContent = data.title;
+    renderStats();
+    // 模板布局配置生效：默认布局 + 初始折叠（树骨架，深度≥阈值的子树折叠） + 图层开关（对象/约束·答案默认隐藏）
+    layoutMode = data.defaultLayout || 'force';
+    document.getElementById('layoutMode').value = layoutMode;
+    if (data.hasTreeEdges && data.initialCollapseDepth) {
+      rebuildHierarchy();
+      collapsedSet = computeInitialCollapsed(data.initialCollapseDepth);
+    }
+    var presentTypes = new Set(data.nodes.map(function(n){ return n.type; }));
+    var controls = document.getElementById('controls');
+    LAYER_GROUPS.forEach(function(g){
+      if (!g.types.some(function(t){ return presentTypes.has(t); })) return;
+      var label = document.createElement('label');
+      label.style.fontSize = '11px';
+      label.style.color = 'var(--muted)';
+      label.innerHTML = '<input type="checkbox" id="layer_' + g.key + '"> 显示' + g.label + '层';
+      controls.appendChild(label);
+      document.getElementById('layer_' + g.key).addEventListener('change', function(){ buildNetwork(); });
+    });
+    if (window.parent && window.parent !== window) {
+      document.getElementById('statsMini').textContent += ' · 💡 单击=编辑属性 · 双击=折叠子树';
+    }
+    setLoading(true, '构建可视化...', 40);
+    setTimeout(function(){ buildNetwork(); setLoading(true, '稳定布局...', 70); }, 100);
+  }).catch(function(e){
+    setLoading(true, '加载失败: ' + e.message, 0);
+    document.getElementById('ptext').textContent = '图谱资产加载失败（' + assetId + '），请检查资产是否已发布或存在草稿';
+  });
+} else {
+  setLoading(true, '加载图谱数据...', 10);
+  fetch('/api/graph/data?id=' + encodeURIComponent(graphId)).then(function(resp){
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return resp.json();
+  }).then(function(data){
+    graphData = data;
+    document.getElementById('graphTitle').textContent = data.title || '知识图谱';
+    renderStats();
+    setLoading(true, '构建可视化...', 40);
+    setTimeout(function(){ buildNetwork(); setLoading(true, '稳定布局...', 70); }, 100);
+  }).catch(function(e){
+    setLoading(true, '加载失败: ' + e.message, 0);
+    document.getElementById('ptext').textContent = '图谱数据加载失败，请检查该图谱是否存在';
+  });
+}
+</script>
+</body>
+</html>

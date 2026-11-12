@@ -1,0 +1,23 @@
+{
+  "name": "graph-builder",
+  "version": "1.0.0",
+  "private": false,
+  "description": "图谱知识构建工具链（独立部署版）：模板驱动校验 + Excel 知识摄入 + 图谱资产管理 + 单文件前端工作台，零数据库、零 CDN",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js",
+    "test:contract": "node --test tests/knowledge-intake-contract.test.js tests/intent-graph-template.test.js tests/x6-graph-template-validator.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "formidable": "^3.5.4",
+    "jsonwebtoken": "^9.0.3",
+    "mammoth": "^1.12.0",
+    "pdf-parse": "^2.4.5",
+    "xlsx": "^0.18.5"
+  }
+}

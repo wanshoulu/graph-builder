@@ -1,0 +1,873 @@
+{
+  "template_id": "personal-credit-risk",
+  "template_version": "2.0.0",
+  "name": "个贷风控人员图谱",
+  "description": "个人贷款风控综合建模知识图谱：借款人为中心，覆盖身份画像/家族亲属/企业任职持股/资产负债/逾期行为/担保网络/团伙关联（共用联系方式设备）/夫妻共债/风险标签。数据均为虚构脱敏。",
+  "origin": "builtin",
+  "parent_template_id": null,
+  "node_types": [
+    {
+      "type": "BORROWER",
+      "label": "借款人",
+      "style": {
+        "color": "#2563eb",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "姓名",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "customerCode",
+          "label": "客户编号",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "ageRange",
+          "label": "年龄段",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "occupation",
+          "label": "职业",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "incomeRange",
+          "label": "年收入区间(万元)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "creditQueryCount",
+          "label": "近6月征信查询次数",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "overdueCount12m",
+          "label": "近12月逾期次数",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "activeLoanOrgs",
+          "label": "在贷机构数",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "province",
+          "label": "所在城市",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "tags",
+          "label": "标签",
+          "type": "tags",
+          "required": false,
+          "default": []
+        }
+      ]
+    },
+    {
+      "type": "RELATED_PERSON",
+      "label": "关联人",
+      "style": {
+        "color": "#0891b2",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "姓名",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "relation",
+          "label": "与借款人关系",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "phoneMasked",
+          "label": "联系方式(打码)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "GUARANTOR",
+      "label": "担保人",
+      "style": {
+        "color": "#7c3aed",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "姓名",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "guarantorType",
+          "label": "担保人类型",
+          "type": "string",
+          "required": false,
+          "default": "自然人"
+        },
+        {
+          "key": "customerCode",
+          "label": "客户编号",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "EMPLOYER",
+      "label": "任职单位",
+      "style": {
+        "color": "#64748b",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "单位名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "industry",
+          "label": "行业",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "employeeScale",
+          "label": "规模",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "isShellRisk",
+          "label": "疑似空壳",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "key": "province",
+          "label": "所在城市",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "COMPANY",
+      "label": "关联企业",
+      "style": {
+        "color": "#0f766e",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "企业名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "uscc",
+          "label": "统一社会信用代码(打码)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "industry",
+          "label": "行业",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "registeredCapitalWan",
+          "label": "注册资本(万元)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "foundedYear",
+          "label": "成立年份",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "employeeScale",
+          "label": "规模",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "operatingStatus",
+          "label": "经营状态",
+          "type": "string",
+          "required": false,
+          "default": "正常"
+        },
+        {
+          "key": "isFamilyBusiness",
+          "label": "家族企业",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "key": "province",
+          "label": "所在城市",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "ASSET",
+      "label": "资产",
+      "style": {
+        "color": "#ca8a04",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "资产名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "assetType",
+          "label": "资产类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "valueWan",
+          "label": "估值(万元)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "mortgageStatus",
+          "label": "抵押状态",
+          "type": "string",
+          "required": false,
+          "default": "无"
+        },
+        {
+          "key": "location",
+          "label": "坐落/登记地",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "LOAN",
+      "label": "贷款/负债",
+      "style": {
+        "color": "#d97706",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "贷款名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "loanType",
+          "label": "贷款类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "lender",
+          "label": "贷款机构",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "amountWan",
+          "label": "发放金额(万元)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "balanceWan",
+          "label": "剩余本金(万元)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "startDate",
+          "label": "发放日期",
+          "type": "date",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "termMonths",
+          "label": "期限(月)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "ratePercent",
+          "label": "年利率(%)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "status",
+          "label": "状态",
+          "type": "string",
+          "required": false,
+          "default": "正常"
+        }
+      ]
+    },
+    {
+      "type": "OVERDUE_EVENT",
+      "label": "逾期事件",
+      "style": {
+        "color": "#dc2626",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "事件名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "level",
+          "label": "逾期等级",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "occurredAt",
+          "label": "发生月份",
+          "type": "date",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "amountWan",
+          "label": "逾期金额(万元)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "cured",
+          "label": "是否已结清",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "RISK_TAG",
+      "label": "风险标签",
+      "style": {
+        "color": "#be123c",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "标签名",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "category",
+          "label": "类别",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "severity",
+          "label": "严重度",
+          "type": "string",
+          "required": false,
+          "default": "中"
+        },
+        {
+          "key": "evidence",
+          "label": "判定依据",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "discoveredAt",
+          "label": "发现日期",
+          "type": "date",
+          "required": false,
+          "default": ""
+        }
+      ]
+    }
+  ],
+  "edge_types": [
+    {
+      "type": "HAS_LOAN",
+      "label": "负债",
+      "source_types": [
+        "BORROWER"
+      ],
+      "target_types": [
+        "LOAN"
+      ],
+      "style": {
+        "color": "#d97706"
+      },
+      "fields": [
+        {
+          "key": "role",
+          "label": "角色",
+          "type": "string",
+          "required": false,
+          "default": "主借"
+        },
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 5
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "IS_RELATIVE_OF",
+      "label": "亲属",
+      "source_types": [
+        "BORROWER",
+        "RELATED_PERSON"
+      ],
+      "target_types": [
+        "BORROWER",
+        "RELATED_PERSON"
+      ],
+      "style": {
+        "color": "#0891b2"
+      },
+      "fields": [
+        {
+          "key": "relationDetail",
+          "label": "具体关系",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 5
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "WORKS_AT",
+      "label": "任职于",
+      "source_types": [
+        "BORROWER"
+      ],
+      "target_types": [
+        "EMPLOYER",
+        "COMPANY"
+      ],
+      "style": {
+        "color": "#64748b"
+      },
+      "fields": [
+        {
+          "key": "title",
+          "label": "职务",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "monthlySalaryWan",
+          "label": "月薪(万元)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "IS_LEGAL_REP_OF",
+      "label": "法定代表人",
+      "source_types": [
+        "BORROWER",
+        "RELATED_PERSON"
+      ],
+      "target_types": [
+        "COMPANY"
+      ],
+      "style": {
+        "color": "#0f766e"
+      },
+      "fields": [
+        {
+          "key": "since",
+          "label": "任职起始年",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "SHAREHOLDER_OF",
+      "label": "持股",
+      "source_types": [
+        "BORROWER",
+        "RELATED_PERSON"
+      ],
+      "target_types": [
+        "COMPANY"
+      ],
+      "style": {
+        "color": "#0f766e"
+      },
+      "fields": [
+        {
+          "key": "sharePercent",
+          "label": "持股比例(%)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "since",
+          "label": "入股起始年",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "GUARANTEES",
+      "label": "担保",
+      "source_types": [
+        "BORROWER",
+        "RELATED_PERSON",
+        "GUARANTOR"
+      ],
+      "target_types": [
+        "BORROWER"
+      ],
+      "style": {
+        "color": "#7c3aed"
+      },
+      "fields": [
+        {
+          "key": "amountWan",
+          "label": "担保金额(万元)",
+          "type": "number",
+          "required": false,
+          "default": 0
+        },
+        {
+          "key": "startDate",
+          "label": "担保日期",
+          "type": "date",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "OWNS_ASSET",
+      "label": "拥有资产",
+      "source_types": [
+        "BORROWER",
+        "RELATED_PERSON"
+      ],
+      "target_types": [
+        "ASSET"
+      ],
+      "style": {
+        "color": "#ca8a04"
+      },
+      "fields": [
+        {
+          "key": "ownershipShare",
+          "label": "份额(%)",
+          "type": "number",
+          "required": false,
+          "default": 100
+        },
+        {
+          "key": "isCommonProperty",
+          "label": "夫妻共有",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "SECURED_BY",
+      "label": "抵押物",
+      "source_types": [
+        "LOAN"
+      ],
+      "target_types": [
+        "ASSET"
+      ],
+      "style": {
+        "color": "#ca8a04"
+      },
+      "fields": [
+        {
+          "key": "lienRank",
+          "label": "抵押顺位",
+          "type": "number",
+          "required": false,
+          "default": 1
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "HAS_OVERDUE",
+      "label": "发生逾期",
+      "source_types": [
+        "LOAN"
+      ],
+      "target_types": [
+        "OVERDUE_EVENT"
+      ],
+      "style": {
+        "color": "#dc2626"
+      },
+      "fields": [
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "SHARED_CONTACT",
+      "label": "共用联系方式/设备",
+      "source_types": [
+        "BORROWER"
+      ],
+      "target_types": [
+        "BORROWER"
+      ],
+      "style": {
+        "color": "#be123c"
+      },
+      "fields": [
+        {
+          "key": "sharedType",
+          "label": "共用类型",
+          "type": "string",
+          "required": false,
+          "default": "手机号"
+        },
+        {
+          "key": "sharedValue",
+          "label": "共用值(打码)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 5
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    },
+    {
+      "type": "LABELED",
+      "label": "风险标记",
+      "source_types": [
+        "BORROWER"
+      ],
+      "target_types": [
+        "RISK_TAG"
+      ],
+      "style": {
+        "color": "#be123c"
+      },
+      "fields": [
+        {
+          "key": "confidence",
+          "label": "置信度",
+          "type": "number",
+          "required": false,
+          "default": 0.8
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "mock"
+        }
+      ]
+    }
+  ],
+  "validation_rules": {
+    "unique_node_ids": true,
+    "unique_edge_ids": true,
+    "no_orphan_edges": true,
+    "allow_self_loop": false
+  },
+  "starter_graph": {
+    "nodes": [],
+    "edges": []
+  },
+  "metadata": {
+    "created_at": "2026-09-03T00:00:00.000Z",
+    "updated_at": "2026-09-03T14:37:37.605Z"
+  },
+  "layout": {
+    "default_layout": "force"
+  }
+}

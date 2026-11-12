@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="810" viewBox="0 0 1100 810" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arrL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/>
+    </marker>
+    <marker id="arrS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="810" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="40" y="32" font-size="18" font-weight="700" fill="#0F172A">一次对话的生命周期 · 五步流程</text>
+  <text x="40" y="52" font-size="11" fill="#64748B">输入护栏 → 双智能体 → 能力回环 → 台账对账 → 安全投影与记忆候选</text>
+
+  <!-- ── Step 1: 输入护栏 ── -->
+  <rect x="40" y="66" width="1020" height="112" rx="12" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+  <circle cx="72" cy="90" r="16" fill="#DC2626"/>
+  <text x="72" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">1</text>
+  <text x="100" y="95" font-size="13" font-weight="700" fill="#7F1D1D">输入护栏</text>
+  <text x="100" y="118" font-size="10" fill="#991B1B">用户消息 → bank-web → guardrail 输入侧（LangGraph 双向安全检测）→ 四态裁决：</text>
+  <!-- four state badges -->
+  <rect x="100" y="128" width="84" height="24" rx="4" fill="#DCFCE7" stroke="#16A34A" stroke-width="1"/>
+  <text x="142" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#15803D">allow ✓</text>
+  <rect x="196" y="128" width="100" height="24" rx="4" fill="#FEF3C7" stroke="#D97706" stroke-width="1"/>
+  <text x="246" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#92400E">review ⚠</text>
+  <rect x="308" y="128" width="80" height="24" rx="4" fill="#FEE2E2" stroke="#DC2626" stroke-width="1"/>
+  <text x="348" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#991B1B">block ✕</text>
+  <rect x="400" y="128" width="130" height="24" rx="4" fill="#F1F5F9" stroke="#64748B" stroke-width="1"/>
+  <text x="465" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#475569">unavailable ✕</text>
+  <text x="550" y="144" font-size="9.5" fill="#B91C1C">review → 转用户智能体受限续跑，向本人发起用途澄清</text>
+  <text x="100" y="168" font-size="9.5" fill="#B91C1C">block / unavailable 即终止，绝不静默放行 · 每次裁决产出可解释 trace 事件</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="550" y1="178" x2="550" y2="198" stroke="#475569" stroke-width="2.2" marker-end="url(#arrL)"/>
+
+  <!-- ── Step 2: 双智能体 ── -->
+  <rect x="40" y="200" width="1020" height="130" rx="12" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5"/>
+  <circle cx="72" cy="224" r="16" fill="#4F46E5"/>
+  <text x="72" y="229" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">2</text>
+  <text x="100" y="229" font-size="13" font-weight="700" fill="#312E81">双智能体：意图理解与执行分权</text>
+
+  <!-- Left: recall + contract -->
+  <rect x="60" y="246" width="450" height="74" rx="8" fill="#FFF" stroke="#C7D2FE"/>
+  <text x="75" y="264" font-size="10" font-weight="600" fill="#312E81">意图图谱双通道召回 + 槽位契约评估</text>
+  <text x="75" y="280" font-size="9" fill="#475569">词法图谱召回（别名 / 词组 / 菜单 / 负例加权）</text>
+  <text x="75" y="294" font-size="9" fill="#475569">语义向量召回（embedding 余弦相似，失败静默降级）</text>
+  <text x="75" y="308" font-size="9" fill="#475569">槽位契约判定澄清顺序 + 执行绑定（不是 if-else）</text>
+
+  <!-- Middle: user agent → envelope -->
+  <rect x="530" y="246" width="230" height="74" rx="8" fill="#FFF" stroke="#A78BFA"/>
+  <text x="545" y="264" font-size="10" font-weight="600" fill="#5B21B6">用户智能体裁决</text>
+  <text x="545" y="280" font-size="9" fill="#475569">只做意图理解，不执行交易</text>
+  <text x="545" y="294" font-size="9" fill="#475569">→ 生成 IntentTaskEnvelope（任务信封）</text>
+  <text x="545" y="308" font-size="9" fill="#475569">工具：submit_intent_task / submit_safety_clarification</text>
+
+  <!-- Right: business agent -->
+  <rect x="780" y="246" width="260" height="74" rx="8" fill="#FFF" stroke="#A78BFA"/>
+  <text x="795" y="264" font-size="10" font-weight="600" fill="#5B21B6">业务智能体接收信封</text>
+  <text x="795" y="280" font-size="9" fill="#475569">不重新猜意图 → 动态展开 GuidedTodo 计划</text>
+  <text x="795" y="294" font-size="9" fill="#475569">台账约束：幻觉步骤被拒</text>
+  <text x="795" y="308" font-size="9" fill="#475569">最小授权装载技能与能力工具（惰性创建）</text>
+
+  <!-- Arrow: recall→user agent -->
+  <line x1="510" y1="283" x2="528" y2="283" stroke="#7C3AED" stroke-width="1.5" marker-end="url(#arrP)"/>
+  <!-- Arrow: user agent→business agent -->
+  <line x1="760" y1="283" x2="778" y2="283" stroke="#7C3AED" stroke-width="1.5" marker-end="url(#arrP)"/>
+
+  <!-- Arrow 2→3 -->
+  <line x1="550" y1="330" x2="550" y2="350" stroke="#475569" stroke-width="2.2" marker-end="url(#arrL)"/>
+
+  <!-- ── Step 3: 能力调用回环 ── -->
+  <rect x="40" y="352" width="1020" height="120" rx="12" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+  <circle cx="72" cy="376" r="16" fill="#7C3AED"/>
+  <text x="72" y="381" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">3</text>
+  <text x="100" y="381" font-size="13" font-weight="700" fill="#4C1D95">能力调用回环</text>
+
+  <!-- Read capability -->
+  <rect x="60" y="396" width="470" height="66" rx="8" fill="#FFF" stroke="#C4B5FD"/>
+  <text x="75" y="414" font-size="10" font-weight="600" fill="#5B21B6">读能力（余额查询、流水查询等）</text>
+  <text x="75" y="430" font-size="9" fill="#475569">runtime → 内部网关 internal/agent-capability-invocations</text>
+  <text x="75" y="445" font-size="9" fill="#475569">→ 回环 bank-web 执行 → 返回结果（内部令牌互信）</text>
+
+  <!-- Write capability -->
+  <rect x="550" y="396" width="490" height="66" rx="8" fill="#FEF2F2" stroke="#F87171"/>
+  <text x="565" y="414" font-size="10" font-weight="600" fill="#991B1B">写能力（转账、缴费等）— 必须双重凭证</text>
+  <text x="565" y="430" font-size="9" fill="#475569">① 确认令牌（用户确认 · BANK_CONFIRMATION_SECRET 签名）</text>
+  <text x="565" y="445" font-size="9" fill="#475569">② 内部执行令牌 → 受控执行引擎落地 · 风险分级 L1 / L2</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="550" y1="472" x2="550" y2="492" stroke="#475569" stroke-width="2.2" marker-end="url(#arrL)"/>
+
+  <!-- ── Step 4: 台账对账 ── -->
+  <rect x="40" y="494" width="1020" height="88" rx="12" fill="#FFFBEB" stroke="#D97706" stroke-width="1.5"/>
+  <circle cx="72" cy="518" r="16" fill="#D97706"/>
+  <text x="72" y="523" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">4</text>
+  <text x="100" y="523" font-size="13" font-weight="700" fill="#92400E">台账对账</text>
+  <text x="100" y="546" font-size="10.5" fill="#78350F">业务台账（workflow 记录）= 唯一权威投影</text>
+  <text x="100" y="566" font-size="9.5" fill="#92400E">已交付目标翻平 · 活动指针前移 · 已确认信息多轮之间永不丢失</text>
+  <text x="500" y="566" font-size="9.5" fill="#92400E">· BusinessLoopCoordinator 最多 4 次迭代</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="550" y1="582" x2="550" y2="602" stroke="#475569" stroke-width="2.2" marker-end="url(#arrL)"/>
+
+  <!-- ── Step 5: 安全投影与记忆候选 ── -->
+  <rect x="40" y="604" width="1020" height="140" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+  <circle cx="72" cy="628" r="16" fill="#059669"/>
+  <text x="72" y="633" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">5</text>
+  <text x="100" y="633" font-size="13" font-weight="700" fill="#065F46">安全投影与记忆候选</text>
+
+  <!-- Output guardrail + projection -->
+  <rect x="60" y="648" width="470" height="82" rx="8" fill="#FFF" stroke="#A7F3D0"/>
+  <text x="75" y="666" font-size="10" font-weight="600" fill="#065F46">输出护栏 → 安全投影</text>
+  <text x="75" y="682" font-size="9" fill="#475569">runtime → guardrail 输出 / 动作侧裁决（四态）</text>
+  <text x="75" y="697" font-size="9" fill="#475569">→ 安全投影生成卡片 / 表单 / 回执</text>
+  <text x="75" y="712" font-size="9" fill="#475569">→ bank-web → 前端（Agent 执行链实时可见）</text>
+  <text x="75" y="726" font-size="9" fill="#475569">· 无容器降级：runtime 不可达 → mock 回复，页面全可用</text>
+
+  <!-- Memory candidate -->
+  <rect x="550" y="648" width="490" height="82" rx="8" fill="#F0FDF4" stroke="#86EFAC"/>
+  <text x="565" y="666" font-size="10" font-weight="600" fill="#065F46">记忆候选 → 治理控制面</text>
+  <text x="565" y="682" font-size="9" fill="#475569">run 成功后生成情节记忆 + 用户偏好候选（不直写）</text>
+  <text x="565" y="697" font-size="9" fill="#475569">→ governed_write（默认受控写入）</text>
+  <text x="565" y="712" font-size="9" fill="#475569">→ 独立记忆控制面按谓词策略裁决</text>
+  <text x="565" y="726" font-size="9" fill="#475569">· 全程可审计：pending / contested / revoked</text>
+
+  <!-- Multi-turn feedback arrow (right side) -->
+  <path d="M1060,674 H1086 V120 H1062" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#arrS)"/>
+  <text x="1095" y="400" font-size="8.5" fill="#64748B" transform="rotate(-90 1095 400)">下一轮（上下文不丢）</text>
+
+  <!-- Bottom note -->
+  <rect x="40" y="760" width="1020" height="36" rx="6" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <text x="55" y="782" font-size="9.5" fill="#475569">全程产生 agent-trace（护栏裁决 · 意图召回 · 记忆召回），前端右侧执行链实时可见　·　中途任何一步被打断，上下文不丢</text>
+</svg>

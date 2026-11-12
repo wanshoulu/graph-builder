@@ -1,0 +1,140 @@
+{
+  "meta": {
+    "version": "demo",
+    "graph_version_id": "demo",
+    "generated_at": "2026-11-12T06:01:25.332174+00:00",
+    "schema_profile": "graph-builder demo"
+  },
+  "summary": {
+    "total_nodes": 9,
+    "total_edges": 8,
+    "domain_distribution": {
+      "账户管理": 4,
+      "转账汇款": 2,
+      "信用卡": 2
+    },
+    "action_distribution": {
+      "balance_get": 1
+    }
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "root",
+        "label": "银行业务",
+        "fullLabel": "银行业务",
+        "nodeType": "super_root",
+        "depth": 0,
+        "domain": "银行业务"
+      },
+      {
+        "id": "d1",
+        "label": "账户管理",
+        "fullLabel": "账户管理",
+        "nodeType": "domain",
+        "depth": 1,
+        "domain": "账户管理"
+      },
+      {
+        "id": "d2",
+        "label": "转账汇款",
+        "fullLabel": "转账汇款",
+        "nodeType": "domain",
+        "depth": 1,
+        "domain": "转账汇款"
+      },
+      {
+        "id": "d3",
+        "label": "信用卡",
+        "fullLabel": "信用卡",
+        "nodeType": "domain",
+        "depth": 1,
+        "domain": "信用卡"
+      },
+      {
+        "id": "n1",
+        "label": "余额查询",
+        "fullLabel": "账户管理 / 余额查询",
+        "nodeType": "intent",
+        "depth": 2,
+        "domain": "账户管理"
+      },
+      {
+        "id": "n2",
+        "label": "明细查询",
+        "fullLabel": "账户管理 / 明细查询",
+        "nodeType": "intent",
+        "depth": 2,
+        "domain": "账户管理"
+      },
+      {
+        "id": "n3",
+        "label": "行内转账",
+        "fullLabel": "转账汇款 / 行内转账",
+        "nodeType": "intent",
+        "depth": 2,
+        "domain": "转账汇款"
+      },
+      {
+        "id": "n4",
+        "label": "账单查询",
+        "fullLabel": "信用卡 / 账单查询",
+        "nodeType": "intent",
+        "depth": 2,
+        "domain": "信用卡"
+      },
+      {
+        "id": "a1",
+        "label": "查询动作",
+        "fullLabel": "balance_get",
+        "nodeType": "action",
+        "depth": 3,
+        "domain": "账户管理",
+        "actionCode": "balance_get"
+      }
+    ],
+    "edges": [
+      {
+        "from": "root",
+        "to": "d1",
+        "edgeType": "parent"
+      },
+      {
+        "from": "root",
+        "to": "d2",
+        "edgeType": "parent"
+      },
+      {
+        "from": "root",
+        "to": "d3",
+        "edgeType": "parent"
+      },
+      {
+        "from": "d1",
+        "to": "n1",
+        "edgeType": "parent"
+      },
+      {
+        "from": "d1",
+        "to": "n2",
+        "edgeType": "parent"
+      },
+      {
+        "from": "d2",
+        "to": "n3",
+        "edgeType": "parent"
+      },
+      {
+        "from": "d3",
+        "to": "n4",
+        "edgeType": "parent"
+      },
+      {
+        "from": "n1",
+        "to": "a1",
+        "edgeType": "binds"
+      }
+    ]
+  },
+  "source": "graph-builder 内置演示数据（替换为真实 intent-graph-graph.json 即可展示线上图谱）"
+}

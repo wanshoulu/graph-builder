@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#B91C1C"/>
+    </marker>
+    <marker id="arrp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="480" fill="#FFFFFF"/>
+  <text x="40" y="38" font-size="19" font-weight="700" fill="#0F172A">领域详细架构 · 财富管理领域展开 + 有场景的节点内部结构 + 资源引用</text>
+  <text x="40" y="60" font-size="12" fill="#64748B">分类节点只负责分组导航（scope + 导航词）；有场景的节点按八块组织；资源在注册表被 bindings 引用，本身不在树上</text>
+
+  <!-- 领域树 -->
+  <rect x="40" y="90" width="440" height="360" rx="14" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="6 3"/>
+  <text x="60" y="114" font-size="12" font-weight="700" fill="#334155">财富管理领域（xx.investment）</text>
+  <rect x="80" y="128" width="120" height="44" rx="8" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.8"/>
+  <text x="140" y="147" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134E4A">理财</text>
+  <text x="140" y="164" text-anchor="middle" font-size="8.5" fill="#0F766E">分类节点</text>
+  <rect x="220" y="128" width="120" height="44" rx="8" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.8"/>
+  <text x="280" y="147" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134E4A">存款</text>
+  <text x="280" y="164" text-anchor="middle" font-size="8.5" fill="#0F766E">分类节点</text>
+  <line x1="140" y1="172" x2="150" y2="192" stroke="#475569" stroke-width="1.4" marker-end="url(#arrp)"/>
+  <rect x="90" y="196" width="120" height="44" rx="8" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.8"/>
+  <text x="150" y="215" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134E4A">基金</text>
+  <text x="150" y="232" text-anchor="middle" font-size="8.5" fill="#0F766E">二级分类</text>
+  <rect x="60" y="290" width="140" height="46" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.6"/>
+  <text x="130" y="310" text-anchor="middle" font-size="10" font-weight="700" fill="#78350F">基金购买</text>
+  <text x="130" y="327" text-anchor="middle" font-size="8.5" fill="#92400E">leaf</text>
+  <rect x="210" y="290" width="140" height="46" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  <text x="280" y="310" text-anchor="middle" font-size="10" font-weight="700" fill="#78350F">开通基金定投</text>
+  <text x="280" y="327" text-anchor="middle" font-size="8.5" fill="#92400E">leaf ★本例</text>
+  <rect x="360" y="290" width="110" height="46" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.6"/>
+  <text x="415" y="310" text-anchor="middle" font-size="10" font-weight="700" fill="#78350F">查定投记录</text>
+  <text x="415" y="327" text-anchor="middle" font-size="8.5" fill="#92400E">leaf</text>
+  <line x1="150" y1="240" x2="130" y2="286" stroke="#475569" stroke-width="1.3" marker-end="url(#arrp)"/>
+  <line x1="150" y1="240" x2="270" y2="286" stroke="#475569" stroke-width="1.3" marker-end="url(#arrp)"/>
+  <line x1="150" y1="240" x2="410" y2="286" stroke="#475569" stroke-width="1.3" marker-end="url(#arrp)"/>
+  <text x="60" y="392" font-size="9.5" fill="#64748B">分类节点内部只有：scope_in / scope_out / 导航词</text>
+  <text x="60" y="410" font-size="9.5" fill="#64748B">不放别名、槽位、执行配置（都是有场景的节点的事）</text>
+  <text x="60" y="428" font-size="9.5" fill="#64748B">层级跟随 App 菜单：菜单有几层建几层</text>
+
+  <!-- 节点内部 -->
+  <rect x="520" y="90" width="360" height="360" rx="14" fill="#FEFDF8" stroke="#F59E0B" stroke-width="1.6"/>
+  <text x="540" y="114" font-size="12" font-weight="700" fill="#78350F">功能节点『开通基金定投』内部（八块）</text>
+  <rect x="540" y="126" width="320" height="36" rx="6" fill="#FFFFFF" stroke="#FCD34D"/>
+  <text x="700" y="149" text-anchor="middle" font-size="9.5" fill="#78350F">语义块：DO 类 / 描述(全图唯一) / 渠道</text>
+  <rect x="540" y="168" width="320" height="36" rx="6" fill="#FFFFFF" stroke="#FCD34D"/>
+  <text x="700" y="191" text-anchor="middle" font-size="9.5" fill="#78350F">召回块：别名16条 / 负例3条 / 混淆对 / 消歧提示</text>
+  <rect x="540" y="210" width="320" height="36" rx="6" fill="#FFFFFF" stroke="#FCD34D"/>
+  <text x="700" y="233" text-anchor="middle" font-size="9.5" fill="#78350F">任务块：槽位(基金/金额/扣款日) + 追问顺序</text>
+  <rect x="540" y="252" width="320" height="36" rx="6" fill="#FFFFFF" stroke="#FCD34D"/>
+  <text x="700" y="275" text-anchor="middle" font-size="9.5" fill="#78350F">策略块：路由与上下文（追问期间意图不丢）</text>
+  <rect x="540" y="294" width="320" height="36" rx="6" fill="#FFFFFF" stroke="#FCD34D"/>
+  <text x="700" y="317" text-anchor="middle" font-size="9.5" fill="#78350F">执行块：confirm-required（写操作须确认）</text>
+  <rect x="540" y="336" width="320" height="30" rx="6" fill="#FFFFFF" stroke="#FCD34D"/>
+  <text x="700" y="356" text-anchor="middle" font-size="9.5" fill="#78350F">知识块：answerRefs → FAQ（咨询类场景替代任务块）</text>
+  <rect x="540" y="370" width="320" height="30" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.4"/>
+  <text x="700" y="390" text-anchor="middle" font-size="9.5" font-weight="700" fill="#7F1D1D">绑定块 bindings：菜单 + 能力 + 策略</text>
+  <rect x="540" y="404" width="320" height="24" rx="6" fill="#F0F9FF" stroke="#7DD3FC"/>
+  <text x="700" y="420" text-anchor="middle" font-size="9" fill="#0C4A6E">可观测块：sourceRecords · lastReviewedAt · lastReviewedBy</text>
+  <text x="540" y="442" font-size="9.5" fill="#92400E">办理与咨询互斥：由 executionMode 决定</text>
+
+  <!-- 注册表 -->
+  <rect x="920" y="90" width="240" height="360" rx="14" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.6"/>
+  <text x="940" y="114" font-size="12" font-weight="700" fill="#0C4A6E">资源注册表</text>
+  <rect x="940" y="126" width="200" height="66" rx="8" fill="#FFFFFF" stroke="#7DD3FC" stroke-width="1.5"/>
+  <text x="1040" y="150" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0C4A6E">能力 kind=mcp-tool</text>
+  <text x="1040" y="168" text-anchor="middle" font-size="8.5" fill="#0369A1">fund_subscription_create</text>
+  <text x="1040" y="183" text-anchor="middle" font-size="8.5" fill="#0369A1">riskLevel=L2 · 写操作</text>
+  <rect x="940" y="200" width="200" height="50" rx="8" fill="#FFFFFF" stroke="#7DD3FC"/>
+  <text x="1040" y="221" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0C4A6E">FAQ：定投扣款规则</text>
+  <text x="1040" y="239" text-anchor="middle" font-size="8.5" fill="#0369A1">faq.fund.subscription.rule</text>
+  <rect x="940" y="258" width="200" height="50" rx="8" fill="#FFFFFF" stroke="#7DD3FC"/>
+  <text x="1040" y="279" text-anchor="middle" font-size="9.5" font-weight="700" fill="#0C4A6E">策略：首次购买须风险测评</text>
+  <text x="1040" y="297" text-anchor="middle" font-size="8.5" fill="#0369A1">policy.investment.risk</text>
+  <text x="940" y="340" font-size="9.5" fill="#0369A1">资源定义一次，多处引用</text>
+  <text x="940" y="358" font-size="9.5" fill="#0369A1">改 FAQ 只动字典，不动树</text>
+  <text x="940" y="376" font-size="9.5" fill="#0369A1">悬空引用 = 审计 error</text>
+
+  <!-- 引用箭头 -->
+  <path d="M860,385 H916" fill="none" stroke="#B91C1C" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="888" y="375" text-anchor="middle" font-size="8.5" fill="#B91C1C">引用</text>
+  <path d="M280,336 V378 H516" fill="none" stroke="#94A3B8" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#arrp)"/>
+</svg>

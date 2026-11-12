@@ -1,0 +1,135 @@
+{
+  "nodes": [
+    {
+      "node_identity": {
+        "node_id": "N-001",
+        "node_name": "账户查询",
+        "business_category_path": "银行业务/账户管理/账户查询",
+        "domain": "账户管理",
+        "modeling_role": "intent_candidate",
+        "aliases": [
+          "查余额",
+          "查一下余额"
+        ]
+      },
+      "navigation": {
+        "standard_navigation_path": "首页 > 账户管理 > 账户查询"
+      },
+      "actions": [
+        {
+          "action_code": "ACT-N-001",
+          "action_name": "账户查询",
+          "action_aliases": [
+            "查余额",
+            "查一下余额"
+          ],
+          "scenes": [
+            {
+              "scene_id": "SC-N-001",
+              "scene_name": "查询场景",
+              "intent_type": "QUERY",
+              "trigger_keywords": [
+                "查余额",
+                "查一下余额"
+              ],
+              "similar_questions": [
+                "帮我账户查询"
+              ],
+              "required_slots": [
+                "账户"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_identity": {
+        "node_id": "N-002",
+        "node_name": "行内转账",
+        "business_category_path": "银行业务/转账汇款/行内转账",
+        "domain": "转账汇款",
+        "modeling_role": "intent_candidate",
+        "aliases": [
+          "转账",
+          "转一笔"
+        ]
+      },
+      "navigation": {
+        "standard_navigation_path": "首页 > 转账汇款 > 行内转账"
+      },
+      "actions": [
+        {
+          "action_code": "ACT-N-002",
+          "action_name": "行内转账",
+          "action_aliases": [
+            "转账",
+            "转一笔"
+          ],
+          "scenes": [
+            {
+              "scene_id": "SC-N-002",
+              "scene_name": "查询场景",
+              "intent_type": "QUERY",
+              "trigger_keywords": [
+                "转账",
+                "转一笔"
+              ],
+              "similar_questions": [
+                "帮我行内转账"
+              ],
+              "required_slots": [
+                "账户"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "node_identity": {
+        "node_id": "N-003",
+        "node_name": "账单查询",
+        "business_category_path": "银行业务/信用卡/账单查询",
+        "domain": "信用卡",
+        "modeling_role": "intent_candidate",
+        "aliases": [
+          "查账单",
+          "本期账单"
+        ]
+      },
+      "navigation": {
+        "standard_navigation_path": "首页 > 信用卡 > 账单查询"
+      },
+      "actions": [
+        {
+          "action_code": "ACT-N-003",
+          "action_name": "账单查询",
+          "action_aliases": [
+            "查账单",
+            "本期账单"
+          ],
+          "scenes": [
+            {
+              "scene_id": "SC-N-003",
+              "scene_name": "查询场景",
+              "intent_type": "QUERY",
+              "trigger_keywords": [
+                "查账单",
+                "本期账单"
+              ],
+              "similar_questions": [
+                "帮我账单查询"
+              ],
+              "required_slots": [
+                "账户"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "source": "graph-builder 内置演示数据（3 个意图节点，非线上评测集）",
+  "generated_at": "2026-11-12T06:01:25.332174+00:00"
+}

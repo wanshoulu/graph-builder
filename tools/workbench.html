@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>图谱构建工作台 | graph-builder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='4' cy='4' r='2.4' fill='%2358a6ff'/%3E%3Ccircle cx='12' cy='6' r='2.4' fill='%233fb950'/%3E%3Ccircle cx='7' cy='12' r='2.4' fill='%23d29922'/%3E%3Cpath d='M4 4L12 6L7 12L4 4' stroke='%2330363d' fill='none'/%3E%3C/svg%3E"/>
+<style>
+:root{--bg:#0d1117;--panel:#11161d;--card:#161b22;--line:#30363d;--text:#e6edf3;--muted:#9da7b3;--blue:#58a6ff;--green:#3fb950;--amber:#d29922;--red:#f85149}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Microsoft YaHei",-apple-system,Segoe UI,Arial,sans-serif;font-size:14px;line-height:1.6}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.top{border-bottom:1px solid var(--line);padding:12px 24px;display:flex;align-items:center;gap:16px;background:#121a26;flex-wrap:wrap}
+.top .b{font-weight:700;font-size:15px}.top .m{color:var(--muted);font-size:12.5px}.top .sp{flex:1}
+.pill{font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:16px;color:var(--muted)}
+.wrap{max-width:1240px;margin:0 auto;padding:22px 24px 60px}
+.cols{display:grid;grid-template-columns:380px 1fr;gap:18px}@media(max-width:900px){.cols{grid-template-columns:1fr}}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+.box h2{font-size:14px;margin:0 0 12px;color:var(--text);display:flex;align-items:center;gap:8px}
+.box h2 .n{color:var(--blue);font-variant-numeric:tabular-nums}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 5px}
+select,input,textarea{width:100%;background:#0d1117;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 10px;font-family:inherit;font-size:13px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:#4a83c4}
+textarea{font-family:Consolas,Menlo,monospace;font-size:12px;min-height:88px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button{background:#21262d;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:8px 13px;font-size:13px;cursor:pointer;font-family:inherit}
+button:hover:not(:disabled){border-color:#4a83c4;background:#26303c}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:#173a63;border-color:#2d5a8a;color:#c9e3ff}
+button.warn{border-color:#6d5a2d;color:#e3c67c}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.stat{background:#0d1117;border:1px solid var(--line);border-radius:8px;padding:10px}
+.stat .k{font-size:11px;color:var(--muted)}.stat .v{font-size:19px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums}
+pre{background:#0a0e14;border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;max-height:330px;font-size:12px;line-height:1.55;color:#c9d1d9;margin:10px 0 0;white-space:pre-wrap;word-break:break-word}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left}th{background:#11161d;color:var(--muted)}td{color:#c6d0da}
+code{font-family:Consolas,Menlo,monospace;font-size:12px;background:#0d1117;border:1px solid var(--line);padding:1px 5px;border-radius:4px;color:#a5d6ff}
+.msg{font-size:12.5px;padding:8px 11px;border-radius:6px;margin:10px 0 0;border-left:3px solid var(--blue);background:#111d2c;color:#bcd8f5}
+.msg.ok{border-color:var(--green);background:#12291e;color:#9be0b5}
+.msg.err{border-color:var(--red);background:#2a1414;color:#ffb0b0}
+.log{max-height:210px;overflow:auto;background:#0a0e14;border:1px solid var(--line);border-radius:8px;padding:10px;font-family:Consolas,Menlo,monospace;font-size:11.5px}
+.log div{padding:2px 0;border-bottom:1px solid #1b222b;color:#9da7b3}
+.log .s2{color:#7ee2a3}.log .s4{color:#ffb070}.log .s5{color:#ff9b9b}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+details{margin-top:10px}summary{cursor:pointer;font-size:13px;color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="top">
+  <a href="index.html">← 门户</a>
+  <span class="b">graph-builder</span><span class="m">图谱构建工作台</span>
+  <span class="sp"></span>
+  <span class="pill" id="health">自检中…</span>
+  <span class="pill">HOST 127.0.0.1 · SKIP_AUTH=true</span>
+</div>
+
+<div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="box">
+        <h2><span class="n">01</span>选择图谱资产</h2>
+        <label>asset（由 data/graph-assets-registry.json + 内置模板共同提供）</label>
+        <select id="assetSel"><option value="">加载中…</option></select>
+        <div class="row">
+          <button class="primary" id="btnLoad">载入草稿</button>
+          <button id="btnTemplate">查看模板</button>
+          <button id="btnStatus">服务状态</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">节点</div><div class="v" id="nNodes">—</div></div>
+          <div class="stat"><div class="k">边</div><div class="v" id="nEdges">—</div></div>
+          <div class="stat"><div class="k">模板</div><div class="v" id="nTypes" style="font-size:13px">—</div></div>
+        </div>
+        <div class="hint">「载入草稿」读取 <code>GET /api/org-graph/load?asset=…</code>，结果成为后续所有写操作的 <code>document</code>。</div>
+        <details><summary>节点预览（最多 12 条）</summary><div id="nodesPreview"></div></details>
+      </div>
+
+      <div class="box">
+        <h2><span class="n">02</span>摄入批次</h2>
+        <div class="hint">Excel 摄入审核流的批次列表，接口 <code>GET /api/knowledge-intake/batches</code>。</div>
+        <div class="row"><button id="btnBatches">刷新批次</button><a href="/api/knowledge-intake/template" style="font-size:12.5px;align-self:center">下载填报 Excel 模板 ↓</a></div>
+        <div id="batchesOut"></div>
+      </div>
+
+      <div class="box">
+        <h2><span class="n">03</span>请求日志</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="box">
+        <h2><span class="n">04</span>草稿流水线：校验 → 质检 → 保存 → 发布</h2>
+        <div class="row">
+          <button class="primary" id="btnValidate">① 三段校验</button>
+          <button id="btnQuality">② 质量报告</button>
+          <button id="btnSave">③ 保存草稿</button>
+          <button class="warn" id="btnPublish">④ 发布版本</button>
+        </div>
+        <div class="hint">服务端的 <code>valid:false</code> 会强制阻断 apply；「发布版本」会写版本链，请确认后再点。</div>
+        <div class="row">
+          <button id="btnHistory">草稿历史</button>
+          <select id="historySel" style="max-width:330px"><option value="">（先查历史）</option></select>
+          <button id="btnRestore">回滚到选中草稿</button>
+        </div>
+        <div id="opMsg"></div>
+        <pre id="result">尚未执行操作。先「载入草稿」，再按 ①→④ 顺序走一遍。</pre>
+      </div>
+
+      <div class="box">
+        <h2><span class="n">05</span>表格确定性建图（零 LLM）</h2>
+        <div class="hint">CSV 行按 <code>nodeMappings</code> 映射到模板节点类型，返回 document + stats + 双关校验结果。可把结果「采纳为当前草稿」再走上面的流水线。</div>
+        <label>CSV 内容（表头必填）</label>
+        <textarea id="csvText">id,name,category
+p1,示例产品A,现金管理类
+p2,示例产品B,固定收益类
+p3,示例产品C,权益类</textarea>
+        <div class="row" style="align-items:flex-end">
+          <div style="flex:1"><label>目标节点类型（模板声明）</label><select id="nodeTypeSel"><option value="">先载入模板</option></select></div>
+          <div style="flex:1"><label>名称列 / ID 列</label><input id="mapCols" value="name | id"></div>
+        </div>
+        <div class="row"><button id="btnTabular">执行确定性映射</button><button id="btnAdopt" disabled>采纳为当前草稿</button></div>
+        <div id="tabularMsg"></div>
+        <pre id="tabularOut" style="max-height:220px">—</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var S={assets:[],asset:'',doc:null,template:null,tabularDoc:null};
+  var $=function(id){return document.getElementById(id)};
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var fmt=function(o){return JSON.stringify(o,null,2)};
+
+  function log(method,path,status,ms){
+    var d=document.createElement('div');
+    d.className=status>=500?'s5':status>=400?'s4':'s2';
+    d.textContent='['+new Date().toLocaleTimeString()+'] '+method+' '+path+' → '+status+' ('+ms+'ms)';
+    $('log').insertBefore(d,$('log').firstChild);
+  }
+  async function api(method,path,body){
+    var t=Date.now(), opt={method:method,headers:{}};
+    if(body!==undefined){opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(body)}
+    var status=0, text='';
+    try{
+      var r=await fetch(path,opt); status=r.status; text=await r.text();
+      var data; try{data=JSON.parse(text)}catch(e){data={raw:text.slice(0,400),contentType:r.headers.get('content-type')}}
+      log(method,path,status,Date.now()-t);
+      return {ok:r.ok,status:status,data:data};
+    }catch(e){
+      log(method,path,'ERR',Date.now()-t);
+      return {ok:false,status:0,data:{error:e.message}};
+    }
+  }
+  function msg(id,text,kind){ $(id).innerHTML='<div class="msg '+(kind||'')+'">'+esc(text)+'</div>' }
+  function show(id,obj){ $(id).textContent=typeof obj==='string'?obj:fmt(obj) }
+  function needDoc(){
+    if(S.doc) return true;
+    msg('opMsg','请先点「载入草稿」拿到 document。','err'); return false;
+  }
+  function unwrap(r){
+    return r.data && r.data.data!==undefined && r.data.success!==undefined ? r.data.data : r.data;
+  }
+
+  async function loadAssets(){
+    var r=await api('GET','/api/org-graph/assets');
+    if(!r.ok){msg('opMsg','资产列表加载失败：'+fmt(r.data),'err');return}
+    var list=unwrap(r)||[];
+    S.assets=Array.isArray(list)?list:[];
+    $('assetSel').innerHTML=S.assets.map(function(a){
+      return '<option value="'+esc(a.assetId||a.id||'')+'">'+esc(a.assetId||a.id||'?')+' — '+esc(a.name||'')+'</option>';
+    }).join('')||'<option value="">（无资产）</option>';
+    S.asset=$('assetSel').value;
+    msg('opMsg','已加载 '+S.assets.length+' 个图谱资产。','ok');
+  }
+  function stat(doc){
+    $('nNodes').textContent=doc&&Array.isArray(doc.nodes)?doc.nodes.length:'—';
+    $('nEdges').textContent=doc&&Array.isArray(doc.edges)?doc.edges.length:'—';
+    var rows=(doc&&Array.isArray(doc.nodes)?doc.nodes:[]).slice(0,12).map(function(n){
+      return '<tr><td>'+esc(n.id)+'</td><td>'+esc(n.type)+'</td><td>'+esc((n.properties&&(n.properties.name||n.properties.label))||n.label||'')+'</td></tr>';
+    }).join('');
+    $('nodesPreview').innerHTML=rows?'<table><tr><th>id</th><th>type</th><th>name</th></tr>'+rows+'</table>':'<div class="hint">无节点</div>';
+  }
+  async function loadDraft(){
+    S.asset=$('assetSel').value; if(!S.asset){msg('opMsg','请先选资产','err');return}
+    var r=await api('GET','/api/org-graph/load?asset='+encodeURIComponent(S.asset));
+    if(!r.ok){msg('opMsg','载入失败：'+fmt(r.data),'err');show('result',r.data);return}
+    S.doc=unwrap(r); stat(S.doc);
+    msg('opMsg','草稿已载入：'+(S.doc.nodes||[]).length+' 节点 / '+(S.doc.edges||[]).length+' 边。','ok');
+    show('result',{asset:S.asset,keys:Object.keys(S.doc||{}),nodes:(S.doc.nodes||[]).length,edges:(S.doc.edges||[]).length});
+  }
+  function nodeTypes(t){
+    var nt=t&&(t.node_types||t.nodeTypes)||[];
+    if(!Array.isArray(nt)) nt=Object.keys(nt);
+    return nt.map(function(x){return typeof x==='string'?x:(x.type||x.name||x.node_type||x.id||'')}).filter(Boolean);
+  }
+  async function loadTemplate(){
+    S.asset=$('assetSel').value;
+    var r=await api('GET','/api/org-graph/template?asset='+encodeURIComponent(S.asset||'bank-semantic-graph'));
+    if(!r.ok){msg('opMsg','模板读取失败：'+fmt(r.data),'err');return}
+    S.template=unwrap(r);
+    var types=nodeTypes(S.template);
+    $('nodeTypeSel').innerHTML=types.map(function(t){return '<option value="'+esc(t)+'">'+esc(t)+'</option>'}).join('')||'<option value="">（模板未声明节点类型）</option>';
+    $('nTypes').textContent=S.template.template_id||'—';
+    msg('opMsg','模板 '+S.template.template_id+'：'+types.length+' 个节点类型 / '+((S.template.edge_types||[]).length)+' 个边类型。','ok');
+    show('result',{template_id:S.template.template_id,template_version:S.template.template_version,node_types:types,edge_types:(S.template.edge_types||[]).slice(0,10),validation_rules:(S.template.validation_rules||[]).length});
+  }
+  async function op(name,path,body,okText){
+    if(!needDoc())return;
+    var r=await api('POST',path,Object.assign({asset:S.asset,document:S.doc},body||{}));
+    show('result',r.data);
+    msg('opMsg',name+'：'+(r.ok?'成功':'HTTP '+r.status)+' — '+(okText||''),r.ok?'ok':'err');
+    return r;
+  }
+  async function history(){
+    S.asset=$('assetSel').value;
+    var r=await api('GET','/api/org-graph/draft-history?asset='+encodeURIComponent(S.asset));
+    var items=(unwrap(r)||{}).items||[];
+    $('historySel').innerHTML=items.length?items.map(function(i){
+      var f=i.file||i.name||''; return '<option value="'+esc(f)+'">'+esc(f)+'</option>';
+    }).join(''):'<option value="">（暂无历史草稿）</option>';
+    show('result',r.data);
+    msg('opMsg','草稿历史 '+items.length+' 条。',r.ok?'ok':'err');
+  }
+  async function batches(){
+    var r=await api('GET','/api/knowledge-intake/batches');
+    var list=(unwrap(r)||{}).batches||[];
+    $('batchesOut').innerHTML=list.length?'<table><tr><th>批次 ID</th><th>文件</th><th>导入时间</th></tr>'+list.slice(0,12).map(function(b){
+      return '<tr><td>'+esc(b.batchId)+'</td><td>'+esc(b.fileName||'')+'</td><td>'+esc(b.importedAt||'')+'</td></tr>';
+    }).join('')+'</table>':'<div class="hint">暂无批次</div>';
+    msg('opMsg','摄入批次 '+list.length+' 条。',r.ok?'ok':'err');
+  }
+  async function tabular(){
+    if(!S.template) await loadTemplate();
+    var nt=$('nodeTypeSel').value;
+    if(!nt){msg('tabularMsg','模板未声明节点类型，无法映射。','err');return}
+    var cols=$('mapCols').value.split('|').map(function(s){return s.trim()});
+    var r=await api('POST','/api/org-graph/from-tabular',{
+      asset:S.asset,
+      content:$('csvText').value,
+      format:'csv',
+      nodeMappings:[{nodeType:nt,nameColumn:cols[0]||'name',idColumn:cols[1]||'',fieldMap:{}}],
+      edgeMappings:[]
+    });
+    show('tabularOut',r.data);
+    if(r.ok&&r.data&&r.data.document){S.tabularDoc=r.data.document;$('btnAdopt').disabled=false;msg('tabularMsg','映射完成，可「采纳为当前草稿」后继续校验/发布。','ok')}
+    else msg('tabularMsg','映射失败：HTTP '+r.status,'err');
+  }
+
+  $('assetSel').addEventListener('change',function(){S.asset=this.value});
+  $('btnLoad').onclick=loadDraft;
+  $('btnTemplate').onclick=loadTemplate;
+  $('btnStatus').onclick=async function(){var r=await api('GET','/api/org-graph/status');show('result',r.data);msg('opMsg','服务状态已刷新。',r.ok?'ok':'err')};
+  $('btnValidate').onclick=function(){return op('三段校验','/api/org-graph/validate',null,'结果见下方 valid / asset / template')};
+  $('btnQuality').onclick=function(){return op('质量报告','/api/org-graph/quality-report',null,'三维评分与发现清单')};
+  $('btnSave').onclick=function(){return op('保存草稿','/api/org-graph/save',{force:true},'草稿已落盘并归档历史')};
+  $('btnPublish').onclick=function(){
+    if(!needDoc())return;
+    if(!window.confirm('确认发布当前草稿为新的只读版本？此操作会写入版本链。'))return;
+    return op('发布版本','/api/org-graph/publish',{note:'from graph-builder workbench'},'版本链已追加');
+  };
+  $('btnHistory').onclick=history;
+  $('btnRestore').onclick=async function(){
+    var f=$('historySel').value; if(!f){msg('opMsg','没有可回滚的历史草稿。','err');return}
+    var r=await api('POST','/api/org-graph/draft-restore',{asset:S.asset,file:f});
+    show('result',r.data); msg('opMsg','回滚：'+(r.ok?'成功':'HTTP '+r.status),r.ok?'ok':'err');
+    if(r.ok) await loadDraft();
+  };
+  $('btnBatches').onclick=batches;
+  $('btnTabular').onclick=tabular;
+  $('btnAdopt').onclick=function(){
+    if(!S.tabularDoc)return;
+    S.doc=S.tabularDoc; stat(S.doc);
+    msg('opMsg','已把映射结果采纳为当前草稿，可继续 ①→④ 流水线。','ok');
+    show('result',{adopted:true,nodes:S.doc.nodes.length,edges:S.doc.edges.length});
+  };
+
+  fetch('/api/health').then(function(r){return r.json()}).then(function(d){
+    $('health').textContent='● 服务在线 · :'+(d.port||'')+' · '+(d.routes||[]).length+' 组 API';
+  }).catch(function(){$('health').textContent='✕ /api/health 不可用'});
+  loadAssets().then(function(){ return loadTemplate(); }).then(function(){
+    // 深链：?autoload=1 打开即载入草稿，便于分享/截图/回归验证
+    if (new URLSearchParams(location.search).get('autoload') === '1') return loadDraft();
+  });
+})();
+</script>
+</body>
+</html>

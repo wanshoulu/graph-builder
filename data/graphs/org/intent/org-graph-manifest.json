@@ -1,0 +1,71 @@
+{
+  "asset_id": "intent-graph",
+  "active_version": "org-graph-v5",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "intent-graph-seed",
+      "document_version": "1.0.0",
+      "template_id": "intent-graph",
+      "published_at": "2026-09-01T17:17:41.181Z",
+      "note": "初始版本：转账服务+财富管理真实子图（intent-graph-v2.1-p1-batch10）",
+      "stats": {
+        "nodes": 723,
+        "edges": 1542
+      }
+    },
+    {
+      "version": "org-graph-v2",
+      "file": "org-graph-v2.json",
+      "document_id": "intent-graph-seed",
+      "document_version": "1.0.0",
+      "template_id": "intent-graph",
+      "published_at": "2026-09-01T17:23:05.482Z",
+      "note": "v2 领域聚焦：转账汇款（17 聚合）+ 金融理财（58 聚合，剔除代发工资/外汇/保险等非理财内容）",
+      "stats": {
+        "nodes": 498,
+        "edges": 1104
+      }
+    },
+    {
+      "version": "org-graph-v3",
+      "file": "org-graph-v3.json",
+      "document_id": "intent-graph-seed",
+      "document_version": "1.0.0",
+      "template_id": "intent-graph",
+      "published_at": "2026-09-01T17:26:30.218Z",
+      "note": "v3 领域收敛：转账汇款（17 聚合）+ 理财（35 聚合，纯理财产品线）",
+      "stats": {
+        "nodes": 354,
+        "edges": 799
+      }
+    },
+    {
+      "version": "org-graph-v4",
+      "file": "org-graph-v4.json",
+      "document_id": "intent-graph-seed",
+      "document_version": "1.0.0",
+      "template_id": "intent-graph",
+      "published_at": "2026-09-01T17:37:03.927Z",
+      "note": "v4 层级组织：领域根（转账汇款/理财）→ 聚合意图 → 叶子意图 → 槽位/约束",
+      "stats": {
+        "nodes": 354,
+        "edges": 849
+      }
+    },
+    {
+      "version": "org-graph-v5",
+      "file": "org-graph-v5.json",
+      "document_id": "draft",
+      "document_version": "1.0.0",
+      "template_id": "intent-graph",
+      "published_at": "2026-09-01T23:30:16.048Z",
+      "note": "总根节点+完整层级+AntV 配色重建",
+      "stats": {
+        "nodes": 355,
+        "edges": 851
+      }
+    }
+  ]
+}

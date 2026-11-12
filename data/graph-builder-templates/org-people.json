@@ -1,0 +1,381 @@
+{
+  "template_id": "org-people",
+  "template_version": "1.0.0",
+  "name": "组织人员图谱",
+  "description": "企业组织结构图谱：员工、部门、项目与汇报/所属/参与/协作关系，支撑日程管理 Agent 的找人、图谱推理与排期。",
+  "origin": "builtin",
+  "parent_template_id": null,
+  "node_types": [
+    {
+      "type": "EMPLOYEE",
+      "label": "员工",
+      "style": {
+        "color": "#2563eb",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "姓名",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "empNo",
+          "label": "工号",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "pinyin",
+          "label": "拼音",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "aliases",
+          "label": "习惯叫法",
+          "type": "tags",
+          "required": false,
+          "default": []
+        },
+        {
+          "key": "department",
+          "label": "部门编码",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "deptName",
+          "label": "部门名称",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "team",
+          "label": "团队",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "rank",
+          "label": "职级",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "title",
+          "label": "职位",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "skills",
+          "label": "技能",
+          "type": "tags",
+          "required": false,
+          "default": []
+        },
+        {
+          "key": "location",
+          "label": "办公地点",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "email",
+          "label": "邮箱",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "phone",
+          "label": "电话",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "managerId",
+          "label": "直属上级",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "status",
+          "label": "在职状态",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "onboardDate",
+          "label": "入职日期",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "DEPARTMENT",
+      "label": "部门",
+      "style": {
+        "color": "#7c3aed",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "部门名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "parent",
+          "label": "上级部门",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "PROJECT",
+      "label": "项目",
+      "style": {
+        "color": "#0891b2",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "项目名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        }
+      ]
+    }
+  ],
+  "edge_types": [
+    {
+      "type": "REPORTS_TO",
+      "label": "汇报给",
+      "source_types": [
+        "EMPLOYEE"
+      ],
+      "target_types": [
+        "EMPLOYEE"
+      ],
+      "style": {
+        "color": "#475569"
+      },
+      "fields": []
+    },
+    {
+      "type": "MEMBER_OF",
+      "label": "属于部门",
+      "source_types": [
+        "EMPLOYEE"
+      ],
+      "target_types": [
+        "DEPARTMENT"
+      ],
+      "style": {
+        "color": "#7c3aed"
+      },
+      "fields": []
+    },
+    {
+      "type": "PARTICIPATES_IN",
+      "label": "参与项目",
+      "source_types": [
+        "EMPLOYEE"
+      ],
+      "target_types": [
+        "PROJECT"
+      ],
+      "style": {
+        "color": "#0891b2"
+      },
+      "fields": []
+    },
+    {
+      "type": "COLLABORATES",
+      "label": "协作关系",
+      "source_types": [
+        "EMPLOYEE"
+      ],
+      "target_types": [
+        "EMPLOYEE"
+      ],
+      "style": {
+        "color": "#f59e0b"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "协作权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "signals",
+          "label": "建边信号",
+          "type": "tags",
+          "required": false,
+          "default": []
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    }
+  ],
+  "starter_graph": {
+    "nodes": [
+      {
+        "id": "emp:A1001",
+        "type": "EMPLOYEE",
+        "properties": {
+          "name": "王伟",
+          "empNo": "A1001",
+          "deptName": "金融科技部",
+          "team": "平台研发团队",
+          "title": "高级工程师",
+          "skills": [
+            "NLP"
+          ]
+        }
+      },
+      {
+        "id": "emp:A0002",
+        "type": "EMPLOYEE",
+        "properties": {
+          "name": "李强",
+          "empNo": "A0002",
+          "deptName": "金融科技部",
+          "team": "平台研发团队",
+          "title": "团队负责人"
+        }
+      },
+      {
+        "id": "emp:B2001",
+        "type": "EMPLOYEE",
+        "properties": {
+          "name": "张敏",
+          "empNo": "B2001",
+          "deptName": "个人金融业务部",
+          "title": "产品经理"
+        }
+      },
+      {
+        "id": "dept:tech",
+        "type": "DEPARTMENT",
+        "properties": {
+          "name": "金融科技部"
+        }
+      },
+      {
+        "id": "dept:personal",
+        "type": "DEPARTMENT",
+        "properties": {
+          "name": "个人金融业务部"
+        }
+      },
+      {
+        "id": "prj:smartadvisor",
+        "type": "PROJECT",
+        "properties": {
+          "name": "智能投顾"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge:rep-1",
+        "type": "REPORTS_TO",
+        "source": "emp:A1001",
+        "target": "emp:A0002",
+        "properties": {}
+      },
+      {
+        "id": "edge:dep-1",
+        "type": "MEMBER_OF",
+        "source": "emp:A1001",
+        "target": "dept:tech",
+        "properties": {}
+      },
+      {
+        "id": "edge:dep-2",
+        "type": "MEMBER_OF",
+        "source": "emp:B2001",
+        "target": "dept:personal",
+        "properties": {}
+      },
+      {
+        "id": "edge:prj-1",
+        "type": "PARTICIPATES_IN",
+        "source": "emp:A1001",
+        "target": "prj:smartadvisor",
+        "properties": {}
+      },
+      {
+        "id": "edge:col-1",
+        "type": "COLLABORATES",
+        "source": "emp:A1001",
+        "target": "emp:B2001",
+        "properties": {
+          "weight": 7.5,
+          "signals": [
+            "member_overlap",
+            "skill_affinity"
+          ],
+          "origin": "auto"
+        }
+      }
+    ]
+  },
+  "validation_rules": {
+    "unique_node_ids": true,
+    "unique_edge_ids": true,
+    "no_orphan_edges": true,
+    "allow_self_loop": false
+  },
+  "layout": {
+    "tree_edges": [
+      "REPORTS_TO"
+    ],
+    "tree_parent": "target",
+    "default_hidden_edges": [
+      "COLLABORATES"
+    ],
+    "default_layout": "force"
+  },
+  "metadata": {
+    "created_at": "2026-08-24T00:00:00.000Z",
+    "updated_at": "2026-08-24T00:00:00.000Z"
+  }
+}

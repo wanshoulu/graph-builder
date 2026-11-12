@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="440" fill="#FFFFFF"/>
+  <text x="40" y="40" font-size="19" font-weight="700" fill="#0F172A">无 scenes 节点的结构 · 两种形态（能不能执行由声明决定，与层级无关）</text>
+  <text x="40" y="62" font-size="12" fill="#64748B">聚合业务节点复用功能节点的八块结构（见 8.3 结构图）；纯分类节点结构如下——简单但完整</text>
+
+  <!-- 纯分类节点结构 -->
+  <rect x="40" y="96" width="640" height="230" rx="14" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.8"/>
+  <text x="60" y="122" font-size="13" font-weight="700" fill="#134E4A">纯分类节点（大多数 domain / category）</text>
+
+  <rect x="60" y="138" width="290" height="76" rx="8" fill="#FFFFFF" stroke="#5EEAD4" stroke-width="1.4"/>
+  <text x="205" y="160" text-anchor="middle" font-size="11" font-weight="700" fill="#134E4A">身份字段</text>
+  <text x="205" y="180" text-anchor="middle" font-size="9" fill="#0F766E">id / title / node_role</text>
+  <text x="205" y="196" text-anchor="middle" font-size="9" fill="#0F766E">parent_intent_id / path</text>
+
+  <rect x="370" y="138" width="290" height="76" rx="8" fill="#FFFFFF" stroke="#5EEAD4" stroke-width="1.4"/>
+  <text x="515" y="160" text-anchor="middle" font-size="11" font-weight="700" fill="#134E4A">边界声明块</text>
+  <text x="515" y="180" text-anchor="middle" font-size="9" fill="#0F766E">scope_in（必填，≥1 条）</text>
+  <text x="515" y="196" text-anchor="middle" font-size="9" fill="#0F766E">scope_out（可选）——审计新意图该挂哪</text>
+
+  <rect x="60" y="226" width="290" height="76" rx="8" fill="#FFFFFF" stroke="#5EEAD4" stroke-width="1.4"/>
+  <text x="205" y="248" text-anchor="middle" font-size="11" font-weight="700" fill="#134E4A">导航词块</text>
+  <text x="205" y="268" text-anchor="middle" font-size="9" fill="#0F766E">navigationTerms：如"基金"</text>
+  <text x="205" y="284" text-anchor="middle" font-size="9" fill="#0F766E">命中只给本子树加分，不出终判</text>
+
+  <rect x="370" y="226" width="290" height="76" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.2"/>
+  <text x="515" y="248" text-anchor="middle" font-size="11" font-weight="700" fill="#7F1D1D">导航绑定块（可选）</text>
+  <text x="515" y="268" text-anchor="middle" font-size="9" fill="#7F1D1D">bindings.menu + kind=menu-nav 能力</text>
+  <text x="515" y="284" text-anchor="middle" font-size="9" fill="#7F1D1D">子树无强命中时兜底出频道直达</text>
+
+  <text x="60" y="316" font-size="9.5" fill="#0F766E">软约束：不配别名/召回词——配了就实质变成聚合节点，须补全槽位与执行配置并过全部校验</text>
+
+  <!-- 聚合业务节点 -->
+  <rect x="720" y="96" width="440" height="230" rx="14" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.8"/>
+  <text x="740" y="122" font-size="13" font-weight="700" fill="#78350F">聚合业务节点（如"转账服务"统一入口）</text>
+  <text x="740" y="148" font-size="10.5" fill="#92400E">= 身份字段 + 边界声明 + 导航词</text>
+  <text x="740" y="168" font-size="10.5" fill="#92400E">+ <tspan font-weight="700">功能节点的全部八个块</tspan>（复用 8.3 结构图）：</text>
+  <text x="740" y="192" font-size="9.5" fill="#92400E">语义块（intentType/描述）　召回块（别名/负例，全权参与打分）</text>
+  <text x="740" y="212" font-size="9.5" fill="#92400E">任务块（槽位：转给谁/转多少）　策略块　执行块（confirm-required）</text>
+  <text x="740" y="232" font-size="9.5" fill="#92400E">绑定块（skill/workflow 统一流程能力）</text>
+  <rect x="740" y="246" width="400" height="56" rx="8" fill="#FFFFFF" stroke="#FCD34D"/>
+  <text x="940" y="268" text-anchor="middle" font-size="10" font-weight="700" fill="#78350F">同时有子节点（子型功能节点）</text>
+  <text x="940" y="288" text-anchor="middle" font-size="9" fill="#92400E">用户明确说"跨行转账"直接落功能节点，跳过统一流程</text>
+
+  <!-- root -->
+  <rect x="720" y="346" width="440" height="60" rx="10" fill="#F1F5F9" stroke="#64748B" stroke-width="1.4"/>
+  <text x="940" y="370" text-anchor="middle" font-size="11" font-weight="700" fill="#0F172A">root 根节点</text>
+  <text x="940" y="390" text-anchor="middle" font-size="9.5" fill="#64748B">只有身份字段——不参与识别、不承载任何业务配置</text>
+
+  <text x="40" y="376" font-size="10.5" fill="#475569">建法速记：期望直接进流程 → 聚合节点+子型功能节点 ｜ 必须先明确子型 → 只建功能节点 ｜ 只是频道入口 → 纯分类+menu-nav</text>
+  <text x="40" y="398" font-size="10.5" fill="#475569">识别是三层协作：聚合入口（全权打分）· 功能节点细粒度 · 分类兜底（导航）</text>
+</svg>

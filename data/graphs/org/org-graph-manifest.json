@@ -1,0 +1,62 @@
+{
+  "asset_id": "org-graph",
+  "active_version": "org-graph-v4",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "org-graph-doc",
+      "document_version": "1.0.0",
+      "published_at": "2026-08-24T06:51:19.419Z",
+      "note": "mock 种子图谱（157 人银行总行，seed=42）",
+      "stats": {
+        "nodes": 173,
+        "edges": 843
+      }
+    },
+    {
+      "version": "org-graph-v2",
+      "file": "org-graph-v2.json",
+      "document_id": "org-graph-doc",
+      "document_version": "1.0.0",
+      "published_at": "2026-08-24T07:22:26.907Z",
+      "note": "E2E 测试：专家改边权重",
+      "stats": {
+        "nodes": 173,
+        "edges": 843
+      }
+    },
+    {
+      "version": "org-graph-v3",
+      "file": "org-graph-v3.json",
+      "document_id": "org-graph-doc",
+      "document_version": "1.0.0",
+      "published_at": "2026-08-24T14:22:24.863Z",
+      "note": "E2E 测试：专家改边权重",
+      "stats": {
+        "nodes": 173,
+        "edges": 843
+      }
+    },
+    {
+      "version": "org-graph-v4",
+      "file": "org-graph-v4.json",
+      "document_id": "org-graph-doc",
+      "document_version": "1.0.0",
+      "template_id": "org-people",
+      "published_at": "2026-08-24T16:32:24.575Z",
+      "note": "E2E 测试：专家改边权重",
+      "stats": {
+        "nodes": 173,
+        "edges": 843
+      }
+    }
+  ],
+  "rollbacks": [
+    {
+      "from": "org-graph-v6",
+      "to": "org-graph-v4",
+      "at": "2026-09-02T06:57:23.357Z"
+    }
+  ]
+}

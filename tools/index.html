@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>graph-builder | 图谱知识构建工作台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='4' cy='4' r='2.4' fill='%2358a6ff'/%3E%3Ccircle cx='12' cy='6' r='2.4' fill='%233fb950'/%3E%3Ccircle cx='7' cy='12' r='2.4' fill='%23d29922'/%3E%3Cpath d='M4 4L12 6L7 12L4 4' stroke='%2330363d' fill='none'/%3E%3C/svg%3E"/>
+<style>
+:root{--bg:#0d1117;--panel:#11161d;--card:#161b22;--line:#30363d;--text:#e6edf3;--muted:#9da7b3;--blue:#58a6ff;--green:#3fb950;--amber:#d29922;--purple:#bc8cff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Microsoft YaHei",-apple-system,Segoe UI,Arial,sans-serif;line-height:1.7}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 72px}
+header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#121a26,#0d1117)}
+.hd{max-width:1120px;margin:0 auto;padding:28px 24px 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:38px;height:38px;border:1px solid #2d5a8a;border-radius:9px;background:#13233a;display:grid;place-items:center;font-size:20px;color:var(--blue)}
+h1{font-size:22px;margin:0;letter-spacing:.3px}.sub{font-size:13px;color:var(--muted);margin-top:2px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.badge{font-size:12px;padding:5px 10px;border:1px solid var(--line);border-radius:20px;background:#131a24;color:var(--muted)}
+.badge.ok{border-color:#2d6d4a;background:#12291e;color:#7ee2a3}.badge.err{border-color:#6d2d2d;background:#2a1414;color:#ff9b9b}
+.tagline{font-size:17px;color:var(--text);margin:34px 0 10px;font-weight:600}
+.lede{color:var(--muted);font-size:14px;margin:0 0 28px;max-width:900px}
+h2{font-size:17px;margin:38px 0 14px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+h2 .num{color:var(--blue);margin-right:8px;font-variant-numeric:tabular-nums}
+p{font-size:14px;color:#cdd6e0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;transition:border-color .15s,transform .15s}
+.card:hover{border-color:#4a83c4;transform:translateY(-2px)}
+.card .ico{font-size:20px}.card h3{font-size:15px;margin:8px 0 6px}.card p{font-size:13px;color:var(--muted);margin:0 0 12px}
+.card .go{font-size:13px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 18px}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}th{background:#161b22;color:var(--text);font-weight:600}td{color:#c6d0da}
+code,.mono{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:12.5px;background:#161b22;border:1px solid var(--line);padding:2px 6px;border-radius:4px;color:#a5d6ff}
+pre{background:#0a0e14;border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow:auto;font-size:13px;color:#c9d1d9;line-height:1.6}
+pre code{background:none;border:0;padding:0;color:inherit}
+.fig{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:14px 0}
+.fig img{width:100%;height:auto;display:block;background:#fff;border-radius:6px}
+.fig figcaption{font-size:12.5px;color:var(--muted);margin-top:10px}
+.note{border-left:3px solid var(--amber);background:#1c1710;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#d8c9a8;margin:14px 0}
+.lim{border-left:3px solid #6d4a2d;background:#1a1512;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#cbb9a5}
+.lim ul{margin:6px 0 0;padding-left:20px}.lim li{margin:4px 0}
+footer{border-top:1px solid var(--line);margin-top:44px;padding-top:18px;font-size:12.5px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:760px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <div class="brand">
+      <div class="logo">◈</div>
+      <div><h1>graph-builder</h1><div class="sub">模板驱动 · 写入即校验的知识图谱构建工具链 · 独立部署版</div></div>
+    </div>
+    <div class="badges">
+      <span class="badge" id="healthBadge">服务自检中…</span>
+      <span class="badge" id="portBadge">PORT</span>
+      <span class="badge">MIT</span>
+      <span class="badge">无数据库 · 文件即契约</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tagline">把 Excel、文档、表格、自然语言和存量图谱，加工成结构合法、可审计、可回滚的知识图谱。</div>
+  <p class="lede">本页是独立部署入口。所有工具页面均为仓库内的单文件应用，静态资源与图表库全部本地化，不依赖 AI Harbor、OntoMind 前端或任何外部 CDN。</p>
+
+  <h2><span class="num">01</span>这是什么</h2>
+  <p><strong>graph-builder</strong> 是一套 Node.js 原生 http 服务 + 单文件前端页面组成的图谱构建工具链。它解决的是知识图谱「建库」环节：把业务人员填报的 Excel、docx/pdf 文档、CSV/JSON 表格、Agent 对话描述、内置种子数据、v2.1 存量图谱这六类原料，统一加工成一张属性图，并在每次写入时强制校验。</p>
+  <table>
+    <tr><th style="width:130px">名词</th><th>含义</th></tr>
+    <tr><td>知识图谱</td><td>由节点（实体/概念/功能）与边（关系）构成的有向属性图，用来把业务知识预定义成结构化数据。</td></tr>
+    <tr><td>模板</td><td>一份 JSON，同时声明节点/边类型、字段契约、枚举、条件必填规则和种子图。校验规则写在模板里，不写死在代码中。</td></tr>
+    <tr><td>草稿</td><td>当前正在编辑的图谱文档，保存在 <code>data/graphs/org/&lt;asset&gt;/drafts/</code>。任何写入都先落到草稿。</td></tr>
+    <tr><td>资产（asset）</td><td>一张具名图谱，由 <code>data/graph-assets-registry.json</code> 注册，绑定一张模板。</td></tr>
+    <tr><td>摄入批次</td><td>一次 Excel 导入产生的候选行集合，经逐行评审、预检、应用后才合入草稿。</td></tr>
+    <tr><td>发布版本</td><td>草稿通过校验后生成的只读版本，形成 v1→v2→… 版本链，可回滚。</td></tr>
+  </table>
+
+  <h2><span class="num">02</span>六条建图入口，一道校验门</h2>
+  <table>
+    <tr><th style="width:170px">原料形态</th><th style="width:250px">机制</th><th>入口</th></tr>
+    <tr><td>Excel 填报</td><td>摄入审核流（人在环上）</td><td><code>POST /api/knowledge-intake/import</code></td></tr>
+    <tr><td>docx / pdf / txt / md</td><td>文档抽取 + 块级进度 + 断点续跑</td><td><code>/api/org-graph/parse-document</code> → <code>extract</code></td></tr>
+    <tr><td>CSV / JSON 表格</td><td>表头确定性映射（零 LLM、可复现）</td><td><code>POST /api/org-graph/from-tabular</code></td></tr>
+    <tr><td>自然语言</td><td>Agent 对话建图</td><td><code>/api/org-graph/builder-agent/*</code></td></tr>
+    <tr><td>内置种子数据</td><td>一键起步</td><td><code>POST /api/org-graph/seed</code></td></tr>
+    <tr><td>v2.1 存量图谱</td><td>importer 注册表双通道迁移</td><td><code>POST /api/org-graph/import</code></td></tr>
+  </table>
+  <p>六条路径共用同一个<strong>三段校验管线</strong>：骨架（ID 唯一 / 类型白名单 / 无孤儿边 / 无自环）→ 字段（必填 / 类型 / 枚举 / 禁止模板外字段）→ 条件必填（跨字段约束由模板声明）。服务端在 apply 时强制阻断 <code>valid:false</code>，不信任前端。</p>
+
+  <figure class="fig">
+    <img src="/docs/diagrams/toolchain-overview.svg" alt="工具链总体定位图">
+    <figcaption>图 1　总体定位：左为六条建图入口，中为模板校验门，右为回滚/发布/审计。原图为仓库内 <code>docs/diagrams/toolchain-overview.svg</code>。</figcaption>
+  </figure>
+
+  <h2><span class="num">03</span>打开一个工具</h2>
+  <div class="grid">
+    <div class="card"><div class="ico">🛠</div><h3>图谱构建工作台</h3><p>选资产 → 载入草稿 → 校验 → 保存 → 质量报告 → 发布/回滚。覆盖 <code>/api/org-graph/*</code> 与 <code>/api/knowledge-intake/*</code> 主链路。</p><a class="go" href="workbench.html">打开工作台 →</a></div>
+    <div class="card"><div class="ico">✎</div><h3>意图图谱编辑器</h3><p>专家手工建模：版本列表、schema 校验、导出新批次。含组织图谱视图与 AI 辅助面板。</p><a class="go" href="intent-graph-editor.html">打开编辑器 →</a></div>
+    <div class="card"><div class="ico">◈</div><h3>图谱画布</h3><p>vis-network 交互式可视化：业务域/动作/语义枢纽分栏、搜索、物理布局、详情面板。</p><a class="go" href="graph-intent-visual.html">打开画布 →</a></div>
+    <div class="card"><div class="ico">▤</div><h3>图谱评测</h3><p>纯前端评测面板，加载评测明细、按维度统计与对比，无后端依赖。</p><a class="go" href="graph-eval.html">打开评测 →</a></div>
+    <div class="card"><div class="ico">⌘</div><h3>知识图谱展示</h3><p>按类型着色、层级深度过滤、连通传播、嵌入模式上报，读取 <code>/api/graph/data?id=demo</code>。</p><a class="go" href="wiki-graph.html">打开展示页 →</a></div>
+    <div class="card"><div class="ico">▦</div><h3>API 与架构文档</h3><p>端点清单、系统架构、设计决策记录、部署与开发测试指南。</p><a class="go" href="/docs/api.md">API 参考 →</a>　<a class="go" href="/docs/architecture.md">架构文档 →</a></div>
+  </div>
+
+  <h2><span class="num">04</span>模板生态</h2>
+  <p>仓库内置 <strong>13 张模板</strong>（<code>data/graph-builder-templates/</code>），覆盖意图图谱、组织人力、客户风控、领域知识与通用底座五类。新增一张图谱 = 一份模板 JSON + 注册表一行，校验/草稿/版本/发布/审计全部复用，零代码。</p>
+  <div class="two">
+    <figure class="fig"><img src="/docs/diagrams/template-ecosystem.svg" alt="模板生态全景图"><figcaption>图 2　13 张模板、五类图谱、一个校验引擎。</figcaption></figure>
+    <figure class="fig"><img src="/docs/diagrams/validation-pipeline.svg" alt="模板校验管线图"><figcaption>图 3　三段校验管线：骨架 → 字段 → 条件必填。</figcaption></figure>
+  </div>
+
+  <h2><span class="num">05</span>快速开始</h2>
+  <pre><code>npm install
+npm start          # 默认 http://127.0.0.1:3013 → /tools/index.html</code></pre>
+  <p>改端口：<code>PORT=4013 npm start</code>。跑测试：<code>npm test</code>（契约测试：<code>npm run test:contract</code>）。所有 AI 辅助能力在未配置模型密钥时自动降级，模板校验、草稿管理、应用/回滚等离线能力不受影响。</p>
+  <div class="note">服务默认绑定 <code>127.0.0.1</code> 且 <code>SKIP_AUTH=true</code>（免鉴权）。这是为了本机开箱即用：若需对外提供，务必设置 <code>SKIP_AUTH=false</code> + <code>JWT_SECRET</code>，并在反向代理层做认证与访问控制。</div>
+
+  <h2><span class="num">06</span>已知限制</h2>
+  <div class="lim">
+    <ul>
+      <li>本仓库只带 13 张模板、样例 CSV、一个种子草稿和一份演示图谱；AI Harbor 中 29 MB 级存量图谱与评测大文件未随仓上传，编辑器版本列表初始为空属预期。</li>
+      <li>AI 辅助（映射、抽取、扩问、节点审核、自动建图 generate）需要 <code>.env</code> 中配置 <code>DEEPSEEK_KEY</code> 等密钥；未配置时这些端点返回明确错误，离线能力照常可用。</li>
+      <li><code>/api/org-graph/builder-agent/*</code>、<code>/trial-agent/*</code> 默认指向外部 Agent 服务（<code>BUILDER_AGENT_URL</code>、<code>TRIAL_AGENT_URL</code>），独立部署时若未启动该服务，这两组端点不可用。</li>
+      <li>原单体中依赖「知识产品平台 / Knowledge Builder Runtime」的 <code>x6-graph-builder.html</code> 及 <code>/api/knowledge-builder/*</code> 未纳入本仓库——它们的后端路由依赖十余个运行时模块，剥离后会留下大量 404。</li>
+      <li>单文件 HTML 应用不提供打包、路由或权限模型；发布、回滚等写操作无二次确认以外的服务端保护，请勿在共享环境直接暴露。</li>
+    </ul>
+  </div>
+
+  <footer>graph-builder · 独立部署版 · MIT License · 详细文档见仓库 <a href="/docs/architecture.md">docs/</a> 与 README.md · 端口与存活状态由 <code>/api/health</code> 自检</footer>
+</div>
+
+<script>
+(function(){
+  var b=document.getElementById('healthBadge'), p=document.getElementById('portBadge');
+  p.textContent='PORT '+(location.port||'80');
+  fetch('/api/health').then(function(r){return r.json();}).then(function(d){
+    b.textContent='● 服务在线 · '+(d.version||'v1')+' · '+(d.routes?d.routes.length:0)+' 组 API';
+    b.className='badge ok';
+  }).catch(function(e){ b.textContent='✕ /api/health 不可用：'+e.message; b.className='badge err'; });
+})();
+</script>
+</body>
+</html>

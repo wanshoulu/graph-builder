@@ -1,0 +1,316 @@
+{
+  "title": "银行业务知识图谱（内置演示）",
+  "source": "graph-builder/data/graphs/demo.json",
+  "hasTreeEdges": true,
+  "hiddenEdgeTypes": [],
+  "nodes": [
+    {
+      "id": "root",
+      "label": "银行业务知识图谱",
+      "name": "银行业务知识图谱",
+      "type": "ROOT",
+      "level": 0,
+      "description": "示例节点：银行业务知识图谱（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "银行业务知识图谱",
+      "typeLabel": "根节点"
+    },
+    {
+      "id": "deposit",
+      "label": "存款业务",
+      "name": "存款业务",
+      "type": "DOMAIN",
+      "level": 1,
+      "description": "示例节点：存款业务（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "存款业务",
+      "typeLabel": "业务域"
+    },
+    {
+      "id": "loan",
+      "label": "贷款业务",
+      "name": "贷款业务",
+      "type": "DOMAIN",
+      "level": 1,
+      "description": "示例节点：贷款业务（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "贷款业务",
+      "typeLabel": "业务域"
+    },
+    {
+      "id": "card",
+      "label": "银行卡",
+      "name": "银行卡",
+      "type": "DOMAIN",
+      "level": 1,
+      "description": "示例节点：银行卡（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "银行卡",
+      "typeLabel": "业务域"
+    },
+    {
+      "id": "wealth",
+      "label": "理财业务",
+      "name": "理财业务",
+      "type": "DOMAIN",
+      "level": 1,
+      "description": "示例节点：理财业务（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "理财业务",
+      "typeLabel": "业务域"
+    },
+    {
+      "id": "savings",
+      "label": "活期储蓄",
+      "name": "活期储蓄",
+      "type": "PRODUCT",
+      "level": 2,
+      "description": "示例节点：活期储蓄（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "活期储蓄",
+      "typeLabel": "产品"
+    },
+    {
+      "id": "fixed",
+      "label": "定期存款",
+      "name": "定期存款",
+      "type": "PRODUCT",
+      "level": 2,
+      "description": "示例节点：定期存款（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "定期存款",
+      "typeLabel": "产品"
+    },
+    {
+      "id": "mortgage",
+      "label": "个人住房贷款",
+      "name": "个人住房贷款",
+      "type": "PRODUCT",
+      "level": 2,
+      "description": "示例节点：个人住房贷款（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "个人住房贷款",
+      "typeLabel": "产品"
+    },
+    {
+      "id": "creditloan",
+      "label": "信用贷款",
+      "name": "信用贷款",
+      "type": "PRODUCT",
+      "level": 2,
+      "description": "示例节点：信用贷款（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "信用贷款",
+      "typeLabel": "产品"
+    },
+    {
+      "id": "debit",
+      "label": "借记卡",
+      "name": "借记卡",
+      "type": "PRODUCT",
+      "level": 2,
+      "description": "示例节点：借记卡（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "借记卡",
+      "typeLabel": "产品"
+    },
+    {
+      "id": "creditcard",
+      "label": "信用卡",
+      "name": "信用卡",
+      "type": "PRODUCT",
+      "level": 2,
+      "description": "示例节点：信用卡（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "信用卡",
+      "typeLabel": "产品"
+    },
+    {
+      "id": "fund",
+      "label": "基金",
+      "name": "基金",
+      "type": "PRODUCT",
+      "level": 2,
+      "description": "示例节点：基金（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "基金",
+      "typeLabel": "产品"
+    },
+    {
+      "id": "bond",
+      "label": "债券",
+      "name": "债券",
+      "type": "PRODUCT",
+      "level": 2,
+      "description": "示例节点：债券（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "债券",
+      "typeLabel": "产品"
+    },
+    {
+      "id": "account",
+      "label": "账户",
+      "name": "账户",
+      "type": "CONCEPT",
+      "level": 2,
+      "description": "示例节点：账户（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "账户",
+      "typeLabel": "概念"
+    },
+    {
+      "id": "interest",
+      "label": "利率",
+      "name": "利率",
+      "type": "CONCEPT",
+      "level": 2,
+      "description": "示例节点：利率（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "利率",
+      "typeLabel": "概念"
+    },
+    {
+      "id": "risk",
+      "label": "风险评级",
+      "name": "风险评级",
+      "type": "CONCEPT",
+      "level": 2,
+      "description": "示例节点：风险评级（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "风险评级",
+      "typeLabel": "概念"
+    },
+    {
+      "id": "rule_aml",
+      "label": "反洗钱规则",
+      "name": "反洗钱规则",
+      "type": "RULE",
+      "level": 2,
+      "description": "示例节点：反洗钱规则（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "反洗钱规则",
+      "typeLabel": "规则"
+    },
+    {
+      "id": "rule_limit",
+      "label": "授信额度规则",
+      "name": "授信额度规则",
+      "type": "RULE",
+      "level": 2,
+      "description": "示例节点：授信额度规则（graph-builder 内置演示数据，可替换为 /api/org-graph/load?asset= 的真实资产）",
+      "title": "授信额度规则",
+      "typeLabel": "规则"
+    }
+  ],
+  "edges": [
+    {
+      "source": "root",
+      "target": "deposit",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "loan",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "card",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "root",
+      "target": "wealth",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "deposit",
+      "target": "savings",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "deposit",
+      "target": "fixed",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "loan",
+      "target": "mortgage",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "loan",
+      "target": "creditloan",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "card",
+      "target": "debit",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "card",
+      "target": "creditcard",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "wealth",
+      "target": "fund",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "wealth",
+      "target": "bond",
+      "type": "parent",
+      "label": "包含",
+      "typeLabel": "包含"
+    },
+    {
+      "source": "savings",
+      "target": "account",
+      "type": "requires",
+      "label": "依赖账户",
+      "typeLabel": "依赖账户"
+    },
+    {
+      "source": "fixed",
+      "target": "interest",
+      "type": "has_attr",
+      "label": "计息依据",
+      "typeLabel": "计息依据"
+    },
+    {
+      "source": "mortgage",
+      "target": "rule_limit",
+      "type": "constrained_by",
+      "label": "受约束",
+      "typeLabel": "受约束"
+    },
+    {
+      "source": "creditloan",
+      "target": "risk",
+      "type": "has_attr",
+      "label": "风险评级",
+      "typeLabel": "风险评级"
+    },
+    {
+      "source": "creditcard",
+      "target": "rule_aml",
+      "type": "constrained_by",
+      "label": "受约束",
+      "typeLabel": "受约束"
+    },
+    {
+      "source": "fund",
+      "target": "risk",
+      "type": "has_attr",
+      "label": "风险评级",
+      "typeLabel": "风险评级"
+    }
+  ]
+}

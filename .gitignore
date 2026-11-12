@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# env & secrets
+.env
+.env.local
+*.key
+
+# runtime data — 保留种子清单与草稿，忽略运行期生成物
+data/knowledge-intake/*
+!data/knowledge-intake/.gitkeep
+data/graphs/org/**/drafts/history/
+data/graphs/org/**/drafts/extract-cache/
+data/graphs/org/**/publish-requests/
+data/graphs/org/**/org-graph-v[0-9]*.json
+!data/graphs/org/intent/drafts/org-graph-draft.json
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# runtime artifacts of the standalone前端/自动建图（保留种子 demo.json、menu-tree.json 与 org-graph-draft.json）
+data/graphs/autobuild-jobs/
+data/graphs/org/**/publish-requests/
+data/graphs/org/**/drafts/extract-cache/

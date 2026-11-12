@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="560" viewBox="0 0 1100 560" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arrI" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#4F46E5"/>
+    </marker>
+    <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="560" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="40" y="32" font-size="18" font-weight="700" fill="#0F172A">双智能体：理解与执行分权（A2A 网关）</text>
+  <text x="40" y="52" font-size="11" fill="#64748B">用户智能体只理解不执行 · 业务智能体只执行不猜意图 · 职责互斥 · deepagent_factory.py</text>
+
+  <!-- ── Left: 用户智能体 ── -->
+  <rect x="40" y="70" width="400" height="400" rx="14" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+  <rect x="40" y="70" width="400" height="40" rx="14" fill="#4F46E5"/>
+  <rect x="40" y="96" width="400" height="14" fill="#4F46E5"/>
+  <text x="240" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">用户智能体 User DeepAgent</text>
+
+  <!-- Role description -->
+  <rect x="60" y="124" width="360" height="50" rx="8" fill="#FFF" stroke="#C7D2FE"/>
+  <text x="75" y="142" font-size="10" font-weight="600" fill="#312E81">职责：只做意图理解</text>
+  <text x="75" y="158" font-size="9" fill="#475569">不执行任何银行交易 · 不触达执行层能力</text>
+
+  <!-- Input -->
+  <rect x="60" y="184" width="360" height="66" rx="8" fill="#F8FAFC" stroke="#94A3B8"/>
+  <text x="75" y="202" font-size="10" font-weight="600" fill="#334155">输入</text>
+  <text x="75" y="218" font-size="9" fill="#475569">用户消息 + 上下文包（记忆召回结果）</text>
+  <text x="75" y="232" font-size="9" fill="#475569">意图图谱双通道召回（词法 + 语义）</text>
+  <text x="75" y="246" font-size="9" fill="#475569">槽位契约评估（澄清顺序 + 执行绑定）</text>
+
+  <!-- Processing -->
+  <rect x="60" y="260" width="360" height="56" rx="8" fill="#F5F3FF" stroke="#A78BFA"/>
+  <text x="75" y="278" font-size="10" font-weight="600" fill="#5B21B6">处理</text>
+  <text x="75" y="294" font-size="9" fill="#475569">意图裁决：多候选排序 → 消歧（图谱语义驱动）</text>
+  <text x="75" y="308" font-size="9" fill="#475569">歧义时 → 向用户发起澄清（非 if-else）</text>
+
+  <!-- Output: task envelope -->
+  <rect x="60" y="326" width="360" height="56" rx="8" fill="#FFF" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="75" y="344" font-size="10" font-weight="600" fill="#5B21B6">输出：IntentTaskEnvelope（任务信封）</text>
+  <text x="75" y="360" font-size="9" fill="#475569">已裁决意图 + 槽位填充 + 风险级 + 技能绑定</text>
+  <text x="75" y="374" font-size="9" fill="#475569">可跨域组合多任务 · 共享槽位自动传递</text>
+
+  <!-- Tools -->
+  <rect x="60" y="390" width="360" height="66" rx="8" fill="#FEF2F2" stroke="#F87171"/>
+  <text x="75" y="408" font-size="10" font-weight="600" fill="#991B1B">仅有 2 个提交工具</text>
+  <text x="75" y="424" font-size="9" fill="#475569">① submit_intent_task（提交已裁决任务）</text>
+  <text x="75" y="438" font-size="9" fill="#475569">② submit_safety_clarification（用途澄清）</text>
+  <text x="75" y="452" font-size="9" fill="#B91C1C">→ 无法触达任何银行执行能力</text>
+
+  <!-- ── Middle: A2A 网关 ── -->
+  <rect x="460" y="190" width="180" height="180" rx="14" fill="#FFFBEB" stroke="#D97706" stroke-width="2"/>
+  <text x="550" y="216" text-anchor="middle" font-size="12" font-weight="700" fill="#92400E">A2A 网关</text>
+  <text x="550" y="234" text-anchor="middle" font-size="9.5" fill="#92400E">Agent-to-Agent</text>
+
+  <!-- Shield icons -->
+  <rect x="480" y="250" width="140" height="28" rx="6" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="550" y="268" text-anchor="middle" font-size="9" font-weight="600" fill="#92400E">理解层 ✕ 无法执行</text>
+
+  <rect x="480" y="286" width="140" height="28" rx="6" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="550" y="304" text-anchor="middle" font-size="9" font-weight="600" fill="#92400E">执行层 ✕ 无法改意图</text>
+
+  <text x="550" y="326" text-anchor="middle" font-size="9" fill="#92400E">职责互斥 · 单向传递</text>
+  <text x="550" y="344" text-anchor="middle" font-size="8.5" fill="#B45309">deepagent_factory.py</text>
+  <text x="550" y="360" text-anchor="middle" font-size="8.5" fill="#B45309">工厂模式创建双智能体</text>
+
+  <!-- Arrow: left→middle -->
+  <line x1="440" y1="280" x2="458" y2="280" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrI)"/>
+  <!-- Arrow: middle→right -->
+  <line x1="640" y1="280" x2="658" y2="280" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrI)"/>
+
+  <!-- ── Right: 业务智能体 ── -->
+  <rect x="660" y="70" width="400" height="400" rx="14" fill="#F0FDF4" stroke="#059669" stroke-width="2"/>
+  <rect x="660" y="70" width="400" height="40" rx="14" fill="#059669"/>
+  <rect x="660" y="96" width="400" height="14" fill="#059669"/>
+  <text x="860" y="95" text-anchor="middle" font-size="14" font-weight="700" fill="#FFF">业务智能体 Business DeepAgent</text>
+
+  <!-- Role description -->
+  <rect x="680" y="124" width="360" height="50" rx="8" fill="#FFF" stroke="#A7F3D0"/>
+  <text x="695" y="142" font-size="10" font-weight="600" fill="#065F46">职责：只接收已裁决的任务信封</text>
+  <text x="695" y="158" font-size="9" fill="#475569">不重新猜意图 · 不越权修改意图裁决</text>
+
+  <!-- Input: task envelope -->
+  <rect x="680" y="184" width="360" height="50" rx="8" fill="#FFF" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="695" y="202" font-size="10" font-weight="600" fill="#5B21B6">输入：IntentTaskEnvelope</text>
+  <text x="695" y="218" font-size="9" fill="#475569">已裁决意图 + 槽位 + 风险级 + 技能绑定 sha256</text>
+
+  <!-- Processing: dynamic planning -->
+  <rect x="680" y="244" width="360" height="66" rx="8" fill="#F0FDF4" stroke="#86EFAC"/>
+  <text x="695" y="262" font-size="10" font-weight="600" fill="#065F46">处理：动态展开 GuidedTodo 计划</text>
+  <text x="695" y="278" font-size="9" fill="#475569">台账约束：步骤凭可信入参白名单生成</text>
+  <text x="695" y="292" font-size="9" fill="#475569">幻觉步骤过不了台账校验 → 被拒</text>
+  <text x="695" y="306" font-size="9" fill="#475569">BusinessLoopCoordinator 最多 4 次迭代</text>
+
+  <!-- Execution: capability invocation -->
+  <rect x="680" y="320" width="360" height="56" rx="8" fill="#F5F3FF" stroke="#C4B5FD"/>
+  <text x="695" y="338" font-size="10" font-weight="600" fill="#5B21B6">执行：能力回环</text>
+  <text x="695" y="354" font-size="9" fill="#475569">读能力 → 内部网关 → bank-web 直接执行</text>
+  <text x="695" y="368" font-size="9" fill="#475569">写能力 → 确认令牌 + 内部执行令牌双凭证</text>
+
+  <!-- Tools: lazy-loaded -->
+  <rect x="680" y="384" width="360" height="72" rx="8" fill="#ECFDF5" stroke="#059669"/>
+  <text x="695" y="402" font-size="10" font-weight="600" fill="#065F46">工具：按意图视图惰性创建</text>
+  <text x="695" y="418" font-size="9" fill="#475569">最小授权装载技能（SKILL.md + manifest）</text>
+  <text x="695" y="432" font-size="9" fill="#475569">能力工具按意图视图白名单物化注入</text>
+  <text x="695" y="446" font-size="9" fill="#475569">workflow-templates 只作引导模板</text>
+
+  <!-- ── Bottom: mutual exclusion summary ── -->
+  <rect x="40" y="486" width="1020" height="56" rx="10" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <text x="60" y="508" font-size="10" font-weight="600" fill="#334155">职责互斥保障</text>
+  <text x="60" y="526" font-size="9.5" fill="#475569">用户智能体（理解层）无法触达执行：仅有 2 个提交工具，无银行交易能力　·　业务智能体（执行层）无法越权改意图：只接收信封不重新裁决</text>
+  <text x="60" y="540" font-size="9" fill="#64748B">deepagent_factory.py 工厂模式创建双智能体 · A2A 网关单向传递任务信封</text>
+</svg>

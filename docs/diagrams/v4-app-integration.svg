@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="730" viewBox="0 0 1200 730" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arrb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/>
+    </marker>
+    <marker id="arrr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/>
+    </marker>
+    <marker id="arrg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#059669"/>
+    </marker>
+    <marker id="arrp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/>
+    </marker>
+    <marker id="arrs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#94A3B8"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="730" fill="#FFFFFF"/>
+
+  <!-- 标题 -->
+  <text x="40" y="38" font-size="19" font-weight="700" fill="#0F172A">应用如何使用意图图谱 · AI 原生手机银行五容器架构</text>
+  <text x="40" y="60" font-size="12" fill="#64748B">意图图谱路由 · 双智能体分权 · 动态规划编排 · 可干预安全护栏 · 记忆治理闭环</text>
+
+  <!-- 图例 -->
+  <rect x="800" y="46" width="380" height="22" rx="4" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <text x="812" y="61" font-size="9" fill="#2563EB">━ 请求</text>
+  <text x="860" y="61" font-size="9" fill="#DC2626">━ 护栏</text>
+  <text x="910" y="61" font-size="9" fill="#7C3AED">┄ 能力回环</text>
+  <text x="982" y="61" font-size="9" fill="#059669">━ 响应/记忆</text>
+  <text x="1062" y="61" font-size="9" fill="#94A3B8">┄ 令牌签发</text>
+
+  <!-- 前端 -->
+  <rect x="40" y="236" width="170" height="120" rx="12" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+  <text x="125" y="262" text-anchor="middle" font-size="12" font-weight="700" fill="#1E3A8A">前端（原生 JS）</text>
+  <text x="125" y="284" text-anchor="middle" font-size="9.5" fill="#1D4ED8">手机壳 UI / 会话流</text>
+  <text x="125" y="302" text-anchor="middle" font-size="9.5" fill="#1D4ED8">工作台 / 记忆工作台</text>
+  <text x="125" y="320" text-anchor="middle" font-size="9.5" fill="#1D4ED8">Agent 执行链实时视图</text>
+  <text x="125" y="338" text-anchor="middle" font-size="9.5" fill="#1D4ED8">（护栏/召回/记忆可见）</text>
+
+  <!-- bank-web -->
+  <rect x="260" y="90" width="380" height="470" rx="14" fill="#F8FAFC" stroke="#475569" stroke-width="2"/>
+  <text x="280" y="116" font-size="13" font-weight="700" fill="#0F172A">bank-web（Node.js :3000）</text>
+  <rect x="280" y="128" width="340" height="52" rx="8" fill="#FFFFFF" stroke="#94A3B8"/>
+  <text x="450" y="150" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">REST API / 前端页面</text>
+  <text x="450" y="168" text-anchor="middle" font-size="9" fill="#64748B">agent/sessions · workbench · next-action · memory/workbench</text>
+  <rect x="280" y="188" width="340" height="52" rx="8" fill="#FFFFFF" stroke="#7C3AED"/>
+  <text x="450" y="210" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4C1D95">模型网关（5 家模型路由）</text>
+  <text x="450" y="228" text-anchor="middle" font-size="9" fill="#4C1D95">DeepSeek/Qwen/Kimi/GLM/豆包 · 密钥只在 bank-web</text>
+  <rect x="280" y="248" width="165" height="76" rx="8" fill="#FFFFFF" stroke="#94A3B8"/>
+  <text x="362" y="272" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">银行核心（mock）</text>
+  <text x="362" y="292" text-anchor="middle" font-size="9" fill="#64748B">SQLite 业务核心</text>
+  <text x="362" y="310" text-anchor="middle" font-size="9" fill="#64748B">10 类数据资产</text>
+  <rect x="455" y="248" width="165" height="76" rx="8" fill="#FFFFFF" stroke="#059669"/>
+  <text x="537" y="272" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065F46">受控执行引擎</text>
+  <text x="537" y="292" text-anchor="middle" font-size="9" fill="#047857">确认卡→用户确认</text>
+  <text x="537" y="310" text-anchor="middle" font-size="9" fill="#047857">→内部执行令牌落地</text>
+  <rect x="280" y="332" width="340" height="60" rx="8" fill="#FFFFFF" stroke="#D97706"/>
+  <text x="450" y="354" text-anchor="middle" font-size="10.5" font-weight="700" fill="#92400E">内部回调网关 internal/*（内部令牌互信）</text>
+  <text x="450" y="374" text-anchor="middle" font-size="9" fill="#92400E">agent-capability-invocations · agent-memory-commands</text>
+  <rect x="280" y="400" width="340" height="66" rx="8" fill="#FFFFFF" stroke="#94A3B8"/>
+  <text x="450" y="424" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">NBA 推荐引擎 + 数据资产工作台</text>
+  <text x="450" y="444" text-anchor="middle" font-size="9" fill="#64748B">投影 {records,metrics}：records≤64 · fields≤12 严格边界</text>
+  <rect x="280" y="474" width="340" height="66" rx="8" fill="#FEF2F2" stroke="#DC2626"/>
+  <text x="450" y="496" text-anchor="middle" font-size="10.5" font-weight="700" fill="#7F1D1D">技能与能力注册表</text>
+  <text x="450" y="516" text-anchor="middle" font-size="9" fill="#7F1D1D">skills/*/SKILL.md+manifest+evals · 契约评测三方一致</text>
+  <text x="280" y="552" font-size="9.5" fill="#64748B">无容器降级：runtime 不可达时返回 mock 回复，页面/工作台/NBA 全可用</text>
+
+  <!-- guardrail -->
+  <rect x="700" y="90" width="200" height="150" rx="12" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.8"/>
+  <text x="800" y="116" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7F1D1D">guardrail-runtime</text>
+  <text x="800" y="136" text-anchor="middle" font-size="9.5" fill="#7F1D1D">LangGraph :8000</text>
+  <text x="800" y="158" text-anchor="middle" font-size="9" fill="#7F1D1D">输入/输出/动作 三段 Rail</text>
+  <text x="800" y="176" text-anchor="middle" font-size="9" fill="#7F1D1D">四态：allow/review/block/</text>
+  <text x="800" y="192" text-anchor="middle" font-size="9" fill="#7F1D1D">unavailable</text>
+  <text x="800" y="214" text-anchor="middle" font-size="8.5" fill="#B91C1C">review 不静默·unavailable 即终止</text>
+
+  <!-- agent-runtime -->
+  <rect x="700" y="256" width="280" height="240" rx="14" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="840" y="282" text-anchor="middle" font-size="12" font-weight="700" fill="#312E81">agent-runtime（Python :18120）</text>
+  <rect x="715" y="294" width="250" height="56" rx="8" fill="#FFFFFF" stroke="#C7D2FE"/>
+  <text x="840" y="315" text-anchor="middle" font-size="10" font-weight="700" fill="#312E81">用户智能体（只理解不执行）</text>
+  <text x="840" y="334" text-anchor="middle" font-size="8.5" fill="#475569">意图裁决 → 任务信封 · 仅 2 个提交工具</text>
+  <rect x="715" y="356" width="250" height="56" rx="8" fill="#FFFFFF" stroke="#C7D2FE"/>
+  <text x="840" y="377" text-anchor="middle" font-size="10" font-weight="700" fill="#312E81">业务智能体（只执行不猜意图）</text>
+  <text x="840" y="396" text-anchor="middle" font-size="8.5" fill="#475569">收信封→最小授权装载技能/能力工具</text>
+  <rect x="715" y="418" width="250" height="66" rx="8" fill="#F5F3FF" stroke="#7C3AED"/>
+  <text x="840" y="440" text-anchor="middle" font-size="10" font-weight="700" fill="#4C1D95">意图图谱 + 槽位契约 + 动态规划</text>
+  <text x="840" y="458" text-anchor="middle" font-size="8.5" fill="#4C1D95">双通道召回（词法图谱+语义向量）</text>
+  <text x="840" y="474" text-anchor="middle" font-size="8.5" fill="#4C1D95">GuidedTodo 台账：幻觉步骤被拒</text>
+
+  <!-- memory-control -->
+  <rect x="1020" y="90" width="140" height="150" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="1.8"/>
+  <text x="1090" y="114" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065F46">agent-memory-</text>
+  <text x="1090" y="130" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065F46">control :8080</text>
+  <text x="1090" y="152" text-anchor="middle" font-size="9" fill="#047857">记忆治理控制面</text>
+  <text x="1090" y="170" text-anchor="middle" font-size="8.5" fill="#047857">governed_write</text>
+  <text x="1090" y="188" text-anchor="middle" font-size="8.5" fill="#047857">候选不直写·按谓词</text>
+  <text x="1090" y="204" text-anchor="middle" font-size="8.5" fill="#047857">策略裁决·可审计</text>
+
+  <!-- secrets -->
+  <rect x="1020" y="256" width="140" height="60" rx="10" fill="#F8FAFC" stroke="#64748B" stroke-width="1.2"/>
+  <text x="1090" y="280" text-anchor="middle" font-size="9.5" font-weight="700" fill="#334155">secrets 初始化</text>
+  <text x="1090" y="298" text-anchor="middle" font-size="8.5" fill="#64748B">互信令牌签发（一次性）</text>
+
+  <!-- ============ 连线（按流程顺序编号） ============ -->
+
+  <!-- ① 前端→bank-web（请求，蓝色实线） -->
+  <line x1="210" y1="296" x2="256" y2="296" stroke="#2563EB" stroke-width="2" marker-end="url(#arrb)"/>
+  <text x="233" y="288" text-anchor="middle" font-size="9" font-weight="700" fill="#2563EB">① 用户消息</text>
+
+  <!-- ② bank-web→guardrail（输入护栏，红色实线） -->
+  <path d="M640,155 H696" fill="none" stroke="#DC2626" stroke-width="2" marker-end="url(#arrr)"/>
+  <text x="668" y="146" text-anchor="middle" font-size="9" font-weight="700" fill="#DC2626">② 输入护栏</text>
+
+  <!-- ③ guardrail→runtime（allow 通过，红色虚线表示条件放行） -->
+  <path d="M780,240 V254" fill="none" stroke="#DC2626" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrr)"/>
+  <text x="796" y="250" font-size="8.5" fill="#B91C1C">③ allow</text>
+
+  <!-- ④ bank-web→runtime（会话/任务下发，紫色虚线） -->
+  <path d="M640,380 H696" fill="none" stroke="#7C3AED" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#arrp)"/>
+  <text x="668" y="371" text-anchor="middle" font-size="9" fill="#7C3AED">④ 会话/任务</text>
+
+  <!-- ⑤ runtime→bank-web（能力回环，紫色虚线，反向） -->
+  <path d="M696,425 H644" fill="none" stroke="#7C3AED" stroke-width="1.6" stroke-dasharray="5 3" marker-end="url(#arrp)"/>
+  <text x="670" y="441" text-anchor="middle" font-size="9" fill="#7C3AED">⑤ 能力回环</text>
+
+  <!-- ⑥ runtime→guardrail（输出/动作护栏，红色实线） -->
+  <path d="M860,256 V242" fill="none" stroke="#DC2626" stroke-width="2" marker-end="url(#arrr)"/>
+  <text x="876" y="252" font-size="8.5" font-weight="700" fill="#DC2626">⑥ 输出护栏</text>
+
+  <!-- ⑦ guardrail→bank-web（安全投影，绿色实线） -->
+  <path d="M700,210 H644" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#arrg)"/>
+  <text x="672" y="201" text-anchor="middle" font-size="9" font-weight="700" fill="#059669">⑦ 安全投影</text>
+
+  <!-- ⑧ bank-web→前端（响应，绿色实线） -->
+  <line x1="256" y1="330" x2="210" y2="330" stroke="#059669" stroke-width="2" marker-end="url(#arrg)"/>
+  <text x="233" y="322" text-anchor="middle" font-size="9" font-weight="700" fill="#059669">⑧ 卡片/回执</text>
+
+  <!-- ⑨ runtime→memory（记忆候选，绿色实线，L型路径修复坐标） -->
+  <path d="M940,256 V224 H1016" fill="none" stroke="#059669" stroke-width="1.6" marker-end="url(#arrg)"/>
+  <text x="975" y="216" text-anchor="middle" font-size="9" fill="#059669">⑨ 记忆候选</text>
+
+  <!-- secrets→runtime（令牌签发，灰色点线） -->
+  <path d="M1020,286 H984" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="2 2" marker-end="url(#arrs)"/>
+  <text x="1002" y="278" text-anchor="middle" font-size="7.5" fill="#94A3B8">令牌</text>
+
+  <!-- secrets→memory（令牌签发，灰色点线） -->
+  <path d="M1090,256 V242" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="2 2" marker-end="url(#arrs)"/>
+
+  <!-- secrets→guardrail（令牌签发，灰色点线，L型绕行） -->
+  <path d="M1020,304 H1000 V218 H902" fill="none" stroke="#94A3B8" stroke-width="1.2" stroke-dasharray="2 2" marker-end="url(#arrs)"/>
+  <text x="950" y="212" text-anchor="middle" font-size="7.5" fill="#94A3B8">令牌</text>
+
+  <!-- ============ 生命周期五步 ============ -->
+  <rect x="40" y="586" width="1120" height="128" rx="12" fill="#FFFBEB" stroke="#D97706" stroke-width="1.4"/>
+  <text x="60" y="610" font-size="12" font-weight="700" fill="#92400E">一次对话的完整生命周期（请求 → 输入护栏 → 双智能体执行 → 能力回环 → 输出护栏 → 响应 → 记忆候选）</text>
+  <text x="60" y="634" font-size="10" fill="#78350F">① 输入护栏：用户消息 → bank-web → guardrail 输入侧四态裁决（review 转用户智能体向本人澄清用途，block/unavailable 即终止）</text>
+  <text x="60" y="654" font-size="10" fill="#78350F">② 双智能体：guardrail allow → runtime 图谱双通道召回 + 槽位契约 → 用户智能体裁决成任务信封 → 业务智能体 GuidedTodo 动态展开</text>
+  <text x="60" y="674" font-size="10" fill="#78350F">③ 能力回环：runtime → bank-web 内部网关，读能力直接执行，写能力须确认令牌 + 内部执行令牌双凭证 → 台账对账（已确认信息多轮不丢）</text>
+  <text x="60" y="694" font-size="10" fill="#78350F">④ 输出护栏 + 响应：runtime → guardrail 输出/动作侧裁决 → 安全投影生成卡片/表单/回执 → bank-web → 前端　　⑤ 记忆候选 → 治理面 governed_write</text>
+</svg>

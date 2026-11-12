@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0284C7"/>
+    </marker>
+    <marker id="arrr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="420" fill="#FFFFFF"/>
+  <text x="40" y="40" font-size="19" font-weight="700" fill="#0F172A">从 V2 迁移到 V4 · 节点归节点、边归字段、资源归字典</text>
+  <text x="40" y="62" font-size="12" fill="#64748B">迁移后跑 V4 校验器全量检查；同一套测试集对比识别结果——词法召回部分应 100% 一致</text>
+
+  <!-- V2 区 -->
+  <rect x="40" y="90" width="320" height="300" rx="14" fill="#F8FAFC" stroke="#64748B" stroke-width="1.8"/>
+  <text x="60" y="116" font-size="13" font-weight="700" fill="#334155">V2 图谱（运行中）</text>
+  <rect x="60" y="130" width="280" height="56" rx="8" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.4"/>
+  <text x="200" y="152" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">9 种节点混排</text>
+  <text x="200" y="172" text-anchor="middle" font-size="9" fill="#64748B">channel/menu/intent/skill/capability/provider/slot/policy…</text>
+  <rect x="60" y="196" width="280" height="56" rx="8" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.4"/>
+  <text x="200" y="218" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">10 种边</text>
+  <text x="200" y="238" text-anchor="middle" font-size="9" fill="#64748B">contains / REQUIRES_CAPABILITY / GUARDED_BY…</text>
+  <rect x="60" y="262" width="280" height="56" rx="8" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.4"/>
+  <text x="200" y="284" text-anchor="middle" font-size="10.5" font-weight="700" fill="#334155">固定三层 + 扁平字段</text>
+  <text x="200" y="304" text-anchor="middle" font-size="9" fill="#64748B">channel→menu→intent；二级菜单折叠</text>
+  <text x="60" y="350" font-size="9.5" fill="#64748B">统计被污染：526 节点只有 304 是意图</text>
+  <text x="60" y="368" font-size="9.5" fill="#64748B">slot 槽位也是节点，靠边连接</text>
+
+  <!-- V4 区 -->
+  <rect x="660" y="90" width="500" height="300" rx="14" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.8"/>
+  <text x="680" y="116" font-size="13" font-weight="700" fill="#0C4A6E">V4 图谱（本规范）</text>
+  <rect x="680" y="130" width="220" height="56" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="790" y="152" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1E3A8A">意图图谱（唯一节点类型）</text>
+  <text x="790" y="172" text-anchor="middle" font-size="9" fill="#1D4ED8">root/domain/category/leaf</text>
+  <rect x="920" y="130" width="220" height="56" rx="8" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.5"/>
+  <text x="1030" y="152" text-anchor="middle" font-size="10.5" font-weight="700" fill="#134E4A">资源注册表（数据字典）</text>
+  <text x="1030" y="172" text-anchor="middle" font-size="9" fill="#0F766E">能力(5种kind)/FAQ/策略</text>
+  <rect x="680" y="196" width="220" height="56" rx="8" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+  <text x="790" y="218" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4C1D95">有场景的节点 bindings 字段</text>
+  <text x="790" y="238" text-anchor="middle" font-size="9" fill="#4C1D95">资源引用（禁止悬空）</text>
+  <rect x="920" y="196" width="220" height="56" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="1030" y="218" text-anchor="middle" font-size="10.5" font-weight="700" fill="#78350F">八块功能节点结构</text>
+  <text x="1030" y="238" text-anchor="middle" font-size="9" fill="#92400E">字段按功能归位</text>
+  <rect x="680" y="262" width="460" height="56" rx="8" fill="#FFFFFF" stroke="#7DD3FC"/>
+  <text x="910" y="284" text-anchor="middle" font-size="10.5" font-weight="700" fill="#0C4A6E">槽位进任务块 slotContract（不再是节点）</text>
+  <text x="910" y="304" text-anchor="middle" font-size="9" fill="#0369A1">深度按业务实际不设上限；digest 覆盖 图谱+关系+字典</text>
+
+  <!-- 转换箭头 -->
+  <line x1="360" y1="150" x2="676" y2="152" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="520" y="140" text-anchor="middle" font-size="9" fill="#64748B">menu节点→domain/category</text>
+  <line x1="360" y1="216" x2="676" y2="216" stroke="#DC2626" stroke-width="1.6" marker-end="url(#arrr)"/>
+  <text x="520" y="206" text-anchor="middle" font-size="9" fill="#B91C1C">资源类边→bindings 引用</text>
+  <line x1="360" y1="282" x2="676" y2="282" stroke="#0284C7" stroke-width="1.6" marker-end="url(#arrb)"/>
+  <text x="520" y="272" text-anchor="middle" font-size="9" fill="#0369A1">skill/faq/capability节点→注册表</text>
+
+  <!-- 底部逐项表 -->
+  <text x="40" y="408" font-size="10" fill="#64748B">逐项规则见下方表格：channel→功能节点channels字段 · 二级菜单展开补回层级 · intent字段按八块归位 · slot+边→slotContract 直接沿用 · provider折叠为能力实现属性</text>
+</svg>

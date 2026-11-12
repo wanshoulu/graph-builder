@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="360" fill="#FFFFFF"/>
+  <text x="40" y="40" font-size="19" font-weight="700" fill="#0F172A">导入工具法 · Excel 一体化填报 → 候选层 → 审核 → 验收 → 入图</text>
+  <text x="40" y="62" font-size="12" fill="#64748B">业务人员参与的主力路径（/ontomind/knowledge/graph/intake）；不直接进图，人工+AI 双审后入图</text>
+
+  <rect x="40" y="100" width="180" height="76" rx="10" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+  <text x="130" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#1E3A8A">一体化 Excel 填报</text>
+  <text x="130" y="146" text-anchor="middle" font-size="9" fill="#1D4ED8">功能行 / 意图行 / 说法行</text>
+  <text x="130" y="163" text-anchor="middle" font-size="9" fill="#1D4ED8">别名逗号分隔·排除说法</text>
+  <line x1="220" y1="138" x2="246" y2="138" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <rect x="250" y="100" width="180" height="76" rx="10" fill="#F8FAFC" stroke="#64748B" stroke-width="1.6"/>
+  <text x="340" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">候选知识层</text>
+  <text x="340" y="146" text-anchor="middle" font-size="9" fill="#64748B">解析入库 · 不直接进图</text>
+  <text x="340" y="163" text-anchor="middle" font-size="9" fill="#64748B">可改可退</text>
+  <line x1="430" y1="138" x2="456" y2="138" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <rect x="460" y="100" width="200" height="76" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.8"/>
+  <text x="560" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#4C1D95">人工审核 + AI 审核</text>
+  <text x="560" y="146" text-anchor="middle" font-size="9" fill="#4C1D95">AI 逐节点四标准打分：</text>
+  <text x="560" y="163" text-anchor="middle" font-size="9" fill="#4C1D95">词群/负例/描述唯一/一致性</text>
+  <line x1="660" y1="138" x2="686" y2="138" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <rect x="690" y="100" width="180" height="76" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.6"/>
+  <text x="780" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#312E81">LLM 补全</text>
+  <text x="780" y="146" text-anchor="middle" font-size="9" fill="#312E81">缺的别名/负例/描述</text>
+  <text x="780" y="163" text-anchor="middle" font-size="9" fill="#312E81">（词群家族+操作家族）</text>
+  <line x1="870" y1="138" x2="896" y2="138" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <rect x="900" y="100" width="130" height="76" rx="10" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.8"/>
+  <text x="965" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#7F1D1D">验收报告</text>
+  <text x="965" y="146" text-anchor="middle" font-size="9" fill="#7F1D1D">error 阻断 / warn / info</text>
+  <text x="965" y="163" text-anchor="middle" font-size="9" fill="#7F1D1D">跨意图重复全查</text>
+  <line x1="1030" y1="138" x2="1056" y2="138" stroke="#059669" stroke-width="1.8" marker-end="url(#arr)"/>
+
+  <rect x="1060" y="100" width="100" height="76" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="1.8"/>
+  <text x="1110" y="126" text-anchor="middle" font-size="11" font-weight="700" fill="#065F46">入图</text>
+  <text x="1110" y="146" text-anchor="middle" font-size="9" fill="#047857">转 V4 节点</text>
+  <text x="1110" y="163" text-anchor="middle" font-size="9" fill="#047857">工具将升版</text>
+
+  <!-- 回路：不通过 -->
+  <path d="M965,176 V216 H560 V180" fill="none" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#arrr)"/>
+  <text x="762" y="234" text-anchor="middle" font-size="10" fill="#B91C1C" font-weight="700">验收有问题 → 打回人工审核修正</text>
+
+  <!-- AI 审核标准卡 -->
+  <rect x="40" y="256" width="1120" height="84" rx="12" fill="#FFFBEB" stroke="#D97706" stroke-width="1.3"/>
+  <text x="60" y="280" font-size="11.5" font-weight="700" fill="#92400E">AI 审核四标准（工具已内置，与本规范第 11 章校验规则一一对应）</text>
+  <text x="60" y="302" font-size="10" fill="#78350F">① 别名质量：≥3 条起步；词群家族摊开（交易/流水/明细各算一族）；办理属性意图必含"怎么开通/怎么办理"操作型说法</text>
+  <text x="60" y="322" font-size="10" fill="#78350F">② 排除说法：负例真实挡得住（命中 −160 最强纠错）　③ 描述唯一：跨意图不许套模板　④ 跨字段一致：类型/模式/别名/负例不自相矛盾</text>
+</svg>

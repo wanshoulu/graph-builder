@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>图谱构建（意图 + 组织图谱）| graph-builder</title>
+<script>var G6_LOADED=false;var DOMAIN={current:'intent'};</script>
+<script src="vendor/g6.min.js" onload="G6_LOADED=true" onerror="G6_LOADED=false"></script>
+<style>
+:root {
+  --bg:#fff;--bg2:#f8f9fb;--bg3:#f0f2f5;--border:#e5e7eb;
+  --text:#1f2937;--text2:#9ca3af;--accent:#2563eb;--green:#16a34a;
+  --orange:#ea580c;--red:#dc2626;--purple:#7c3aed;
+  --radius:8px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg3);color:var(--text);height:100vh;overflow:hidden}
+
+/* Top bar */
+.topbar{height:44px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:6px;flex-shrink:0}
+.topbar .logo{font-size:14px;font-weight:700;color:var(--accent);white-space:nowrap}
+.topbar .sep{flex:1}
+.topbar .btn-group{display:flex;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.topbar .btn-group button{border-radius:0;border:none;border-right:1px solid var(--border)}
+.topbar .btn-group button:last-child{border-right:none}
+.topbar select,.topbar button{font-family:var(--font);font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);height:32px;transition:all .15s}
+.topbar select{min-width:170px}
+.topbar button{cursor:pointer;font-weight:500;white-space:nowrap}
+.topbar button:hover{background:var(--bg3)}
+.topbar .btn-pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+.topbar .btn-pri:hover{background:#1d4ed8}
+.topbar .btn-ok{background:var(--green);color:#fff;border-color:var(--green)}
+.topbar .btn-ok:hover{background:#15803d}
+.badge{padding:2px 10px;border-radius:12px;font-size:10px;font-weight:600}
+.badge-ok{background:#dcfce7;color:var(--green)}
+.badge-err{background:#fef2f2;color:var(--red)}
+.badge-warn{background:#fffbeb;color:var(--orange)}
+
+/* == Three-column main == */
+.main{flex:1;display:flex;overflow:hidden}
+
+/* Resize handle */
+.resize-handle{width:5px;cursor:col-resize;background:transparent;flex-shrink:0;position:relative;z-index:5;transition:background .15s}
+.resize-handle:hover,.resize-handle.active{background:var(--accent)}
+.resize-handle::after{content:'';position:absolute;inset:-4px 0}
+
+/* Left: Workspace (default 32%) */
+.ws-panel{min-width:220px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+.ws-toolbar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--bg3);flex-shrink:0}
+.ws-toolbar input{flex:1;padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font);outline:none;transition:border-color .15s}
+.ws-toolbar input:focus{border-color:var(--accent)}
+.ws-toolbar button{padding:7px 16px;border-radius:6px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;transition:background .15s}
+.ws-toolbar button:hover{background:#1d4ed8}
+.ws-table-wrap{flex:1;overflow-y:auto}
+.ws-table-wrap table{width:100%;border-collapse:collapse;font-size:11px}
+.ws-table-wrap thead{position:sticky;top:0;z-index:2}
+.ws-table-wrap th{background:var(--bg2);padding:7px 8px;text-align:left;font-size:10px;font-weight:600;color:var(--text2);border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+.ws-table-wrap th:hover{color:var(--accent)}
+/* Tree view - recursive multi-level */
+.tree-wrap{flex:1;overflow-y:auto;padding:0}
+
+/* Domain header — simple collapsible, like a folder */
+.tree-dm-hd{display:flex;align-items:center;gap:4px;padding:6px 8px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text);user-select:none;border-top:1px solid var(--border);margin-top:-1px}
+.tree-dm-hd:hover{background:var(--bg2)}
+.tree-dm-hd .tree-arw{font-size:8px;width:14px;flex-shrink:0;color:var(--text2);transition:transform .15s;text-align:center}
+.tree-dm-hd .tree-arw.open{transform:rotate(90deg)}
+.tree-dm-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-dm-name.tree-dm-empty{color:var(--text2)}
+.tree-dm-meta{font-size:9px;color:var(--text2);font-weight:400;flex-shrink:0}
+.tree-dm-body{padding:0}
+
+/* Recursive tree rows with connector lines */
+.tree-row{display:flex;align-items:center;gap:4px;padding:3px 8px;cursor:pointer;font-size:10px;transition:background .1s;position:relative;min-height:22px}
+.tree-row:hover{background:#f0f5ff}
+.tree-row.active{background:#e6f4ff;font-weight:600}
+.tree-row.tree-agg-row{font-weight:600;font-size:11px}
+.tree-row.tree-agg-row:hover{background:#f5f0ff}
+.tree-row.tree-agg-row.active{background:#f0e8ff}
+.tree-row .tree-arw{font-size:8px;width:14px;flex-shrink:0;color:var(--text2);transition:transform .15s;text-align:center}
+.tree-row .tree-arw.open{transform:rotate(90deg)}
+.tree-row .tree-lv{position:absolute;width:1px;background:var(--border);top:0;bottom:0}
+.tree-row .tree-lh{position:absolute;height:1px;background:var(--border);top:50%}
+.tree-row:last-child .tree-lv{bottom:50%}
+.tree-row .tree-row-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-row .tree-row-type{font-size:8px;padding:1px 5px;border-radius:3px;color:#fff;font-weight:600;flex-shrink:0;white-space:nowrap}
+.tree-row .tree-row-actions{display:none;gap:2px;flex-shrink:0}
+.tree-row:hover .tree-row-actions{display:flex}
+.tree-row .tree-row-actions button{padding:0 4px;font-size:9px;border:1px solid var(--border);border-radius:3px;background:var(--bg);cursor:pointer}
+.tree-row .tree-row-actions button.del{color:var(--red);border-color:transparent}
+.tree-row .tree-row-actions button.del:hover{background:#fff2f0}
+
+/* Supporting nodes section */
+.tree-sup-hd{padding:10px 10px 5px;font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-top:2px solid var(--border);margin-top:4px}
+.tree-sup-node{display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;border-radius:3px;margin:1px 4px;transition:background .1s}
+.tree-sup-node:hover{background:#f0f5ff}
+.tree-sup-node.active{background:#e6f4ff;font-weight:600}
+.tree-sup-node .sup-icon{font-size:11px;flex-shrink:0;width:16px;text-align:center}
+.tree-sup-node .sup-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-sup-node .sup-type{font-size:8px;padding:1px 5px;border-radius:3px;color:#fff;font-weight:600;flex-shrink:0}
+.tree-sup-node .tn-actions{display:none;gap:2px;flex-shrink:0}
+.tree-sup-node:hover .tn-actions{display:flex}
+.tree-sup-node .tn-actions button{padding:0 4px;font-size:9px;border:1px solid var(--border);border-radius:3px;background:var(--bg);cursor:pointer}
+.tree-sup-node .tn-actions button.del{color:var(--red);border-color:transparent}
+.tree-empty{padding:40px 16px;text-align:center;color:var(--text2);font-size:12px}
+.type-tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;color:#fff;font-weight:600;white-space:nowrap}
+.type-tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;color:#fff;font-weight:600;white-space:nowrap}
+.ws-stats{padding:5px 10px;font-size:10px;color:var(--text2);border-top:1px solid var(--border);flex-shrink:0;display:flex;justify-content:space-between}
+
+/* Node type palette for drag-drop */
+.node-palette{padding:6px 8px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.node-palette .np-title{font-size:9px;font-weight:600;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.node-palette .np-title::before{content:'📦'}
+.node-palette .np-grid{display:flex;flex-wrap:wrap;gap:4px}
+.node-palette .np-item{padding:3px 7px;border-radius:5px;font-size:9px;font-weight:500;cursor:grab;transition:all .15s;user-select:none;border:1px solid transparent;display:flex;align-items:center;gap:3px}
+.node-palette .np-item:hover{background:var(--bg);border-color:var(--border);transform:translateY(-1px)}
+.node-palette .np-item:active{cursor:grabbing;transform:scale(0.95)}
+.node-palette .np-item.dragging{opacity:0.5;background:var(--accent);color:#fff}
+.node-palette .np-item .np-icon{font-size:10px}
+
+/* Legend */
+.legend-wrap{padding:6px 10px;border-top:1px solid var(--border);flex-shrink:0}
+.legend-wrap .l-title{font-size:9px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.legend-row{display:flex;flex-wrap:wrap;gap:3px 8px;font-size:9px;line-height:1.6}
+.legend-row .ldot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:2px;vertical-align:middle;flex-shrink:0}
+.legend-row .litem{white-space:nowrap}
+
+/* Center: Graph Canvas (42%) */
+.gcanvas-panel{flex:1;min-width:350px;background:#f8f9fb;position:relative;display:flex;flex-direction:column}
+.gcanvas-wrap{flex:1;position:relative}
+.gcanvas-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);font-size:13px;flex-direction:column;gap:8px}
+/* G6 create-edge ghost line */
+.g6-create-edge{stroke:#2563eb!important;stroke-width:2.5!important;stroke-dasharray:6 3!important;pointer-events:none!important}
+/* G6 node badges — port indicators rendered by G6 natively */
+.g6-badge circle{pointer-events:none!important}
+/* guide SVG unused, kept hidden */
+.guide-svg{display:none!important}
+
+/* Zoom toolbar (floating on canvas, bottom-left, like jena-fuseki-plus) */
+.zoom-bar{position:absolute;bottom:12px;left:12px;display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:8px;padding:3px;box-shadow:0 2px 10px rgba(0,0,0,.08);z-index:10;user-select:none}
+.zoom-bar button{width:28px;height:28px;border:none;background:none;cursor:pointer;border-radius:5px;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:background .15s,color .15s}
+.zoom-bar button:hover{background:#ecf5ff;color:var(--accent)}
+.zoom-bar .zoom-pct{font-size:10px;color:var(--text2);padding:2px 0;min-width:32px;text-align:center}
+/* Graph info badge (floating bottom-right, like jena-fuseki-plus) */
+.graph-badge{position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:3px 10px;border-radius:10px;pointer-events:none;z-index:5}
+
+/* Right: Info & Properties */
+.info-panel{min-width:240px;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;border-left:1px solid var(--border)}
+.info-stats-bar{display:flex;align-items:center;gap:14px;padding:10px 14px;font-size:10px;color:var(--text2);border-bottom:1px solid var(--bg3);flex-shrink:0;flex-wrap:wrap}
+.info-stats-bar .stat-chip{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.info-stats-bar .stat-chip .n{font-weight:700;color:var(--text)}
+.info-content{flex:1;overflow-y:auto;padding:14px}
+.info-empty{text-align:center;color:var(--text2);padding:80px 20px;font-size:13px;line-height:2.2}
+.info-empty .icon{font-size:44px;margin-bottom:12px;display:block;opacity:.35}
+
+/* Form elements */
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:10px;font-weight:600;color:var(--text2);margin-bottom:3px}
+.fg input,.fg select,.fg textarea{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font);background:var(--bg);color:var(--text);outline:none;transition:border-color .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(22,119,255,.1)}
+.fg textarea{min-height:56px;resize:vertical}
+.fg [data-required]{border-left:3px solid var(--red)}
+.array-row{display:flex;gap:4px;margin-bottom:3px}
+.array-row input{flex:1;font-size:11px;padding:4px 8px;border:1px solid var(--border);border-radius:4px}
+.array-row button{font-size:10px;padding:2px 8px;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--red);transition:background .1s}
+.array-row button:hover{background:#fff2f0}
+.array-add{font-size:10px;padding:3px 10px;cursor:pointer;border:1px dashed var(--border);border-radius:4px;background:none;color:var(--accent);margin-top:3px;transition:all .1s}
+.array-add:hover{border-color:var(--accent);background:#f0f7ff}
+
+/* Detail card sections */
+.detail-header{padding:0 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.detail-header .dh-name{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.detail-header .dh-id{font-family:monospace;font-size:10px;color:var(--text2);margin-bottom:6px;word-break:break-all}
+.detail-section{margin-bottom:12px}
+.detail-section-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--bg3);display:flex;align-items:center;gap:6px}
+.detail-section-title::after{content:'';flex:1;height:1px;background:var(--bg3)}
+
+/* Edge cards */
+.edge-card{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;font-size:11px;transition:all .1s}
+.edge-card:hover{background:var(--bg2);border-color:#d1d5db}
+.edge-card .ec-dir{font-weight:700;font-size:13px;width:20px;text-align:center;flex-shrink:0}
+.edge-card .ec-dir.out{color:var(--green)}
+.edge-card .ec-dir.in{color:var(--accent)}
+.edge-card .ec-type{background:var(--bg3);padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;color:var(--text2)}
+.edge-card .ec-target{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.edge-card .ec-del{color:var(--text2);cursor:pointer;font-size:14px;flex-shrink:0;opacity:0;transition:all .1s;padding:2px;border-radius:4px}
+.edge-card:hover .ec-del{opacity:1}
+.edge-card .ec-del:hover{color:var(--red);background:#fef2f2}
+
+/* Save button */
+.btn-save{display:block;width:100%;padding:10px;margin-top:14px;cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;transition:all .15s}
+.btn-save:hover{background:#1d4ed8}
+.btn-save:active{transform:scale(.98)}
+
+.validation{background:var(--bg);border-top:1px solid var(--border);padding:8px 16px;max-height:120px;overflow-y:auto;font-size:11px;flex-shrink:0;display:none}
+.validation .v-ok{color:var(--green);font-weight:600}
+.validation .v-err{color:var(--red);font-family:monospace;line-height:1.6}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg);border-radius:10px;padding:24px;min-width:380px;max-width:520px;box-shadow:0 16px 48px rgba(0,0,0,.15)}
+.modal h3{font-size:15px;margin-bottom:16px;font-weight:700}
+.modal .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.modal label{font-size:12px;font-weight:600;display:block;margin-bottom:4px;color:var(--text2)}
+.modal select,.modal input{width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;margin-bottom:12px;outline:none}
+.modal select:focus,.modal input:focus{border-color:var(--accent)}
+
+.ctx-menu{display:none;position:fixed;z-index:200;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:170px;padding:6px 0}
+.ctx-menu .ctx-item{padding:8px 16px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .1s}
+.ctx-menu .ctx-item:hover{background:var(--bg2)}
+.ctx-menu .ctx-div{border-top:1px solid var(--border);margin:6px 0}
+.ctx-menu .ctx-item.danger{color:var(--red)}
+.ctx-menu .ctx-item.danger:hover{background:#fef2f2}
+
+.guide-banner{background:linear-gradient(135deg,#eff6ff,#f5f3ff);border-bottom:1px solid var(--border);padding:10px 14px;font-size:11px;line-height:1.6;flex-shrink:0}
+.stage-tabs{display:flex;gap:6px;padding:10px 14px 0;flex-wrap:wrap}
+.stage-tab{padding:6px 10px;border:1px solid var(--border);border-radius:999px;background:var(--bg2);font-size:11px;cursor:pointer;color:var(--text2);transition:all .15s}
+.stage-tab.active{background:#eff6ff;border-color:#bfdbfe;color:var(--accent);font-weight:700}
+.stage-card{margin:0 14px 12px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2)}
+.stage-card h4{font-size:11px;margin-bottom:8px}
+.stage-check{font-size:11px;line-height:1.7;color:var(--text2)}
+.stage-check .ok{color:var(--green);font-weight:600}
+.stage-check .warn{color:var(--orange);font-weight:600}
+.stage-check .err{color:var(--red);font-weight:600}
+.home-panel{padding:18px 14px 14px}
+.home-hero{padding:14px;border:1px solid var(--border);border-radius:10px;background:linear-gradient(135deg,#fff,#f7fbff);margin-bottom:12px}
+.home-hero h3{font-size:16px;margin-bottom:6px}
+.home-hero p{font-size:12px;line-height:1.7;color:var(--text2)}
+.home-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.home-action{border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--bg)}
+.home-action h4{font-size:13px;margin-bottom:6px}
+.home-action p{font-size:11px;line-height:1.6;color:var(--text2);margin-bottom:8px}
+.home-action .row{display:flex;gap:8px;flex-wrap:wrap}
+.home-action button{padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);cursor:pointer;font-size:12px}
+.home-action button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.home-action select{width:100%;margin-bottom:8px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.topbar .btn-accent{border-color:#7c3aed;color:#7c3aed}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#9ca3af}
+
+/* ═══════ [IA] 信息架构壳：左导航（图谱类型注册制 + 领域插件）+ 阶段条（2026-08-25） ═══════ */
+.ia-current{font-size:11px;color:var(--accent);background:#eff6ff;border:1px solid #bfdbfe;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.ia-shell{flex:1;display:flex;min-height:0}
+.ia-side-nav{width:200px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);overflow-y:auto;padding:12px 8px}
+.ia-nav-group-title{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;padding:8px 8px 4px}
+.ia-nav-item{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:6px;font-size:12px;cursor:pointer;color:var(--text);transition:background .12s;margin-bottom:2px}
+.ia-nav-item:hover{background:var(--bg2)}
+.ia-nav-item.active{background:#eff6ff;color:var(--accent);font-weight:600}
+.ia-nav-item .ia-nav-tag{font-size:9px;color:var(--text2);margin-left:auto;background:var(--bg3);padding:0 6px;border-radius:8px}
+.ia-panel-btn{display:block;width:100%;margin-bottom:4px;padding:6px 10px;font-family:var(--font);font-size:11px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;text-align:left;transition:all .12s}
+.ia-panel-btn:hover{background:var(--bg2);border-color:var(--accent)}
+.ia-panel-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.ia-panel-text{font-size:10px;color:var(--text2);line-height:1.6;padding:2px 2px 8px}
+.ia-panel-chip{display:inline-block;font-size:9px;background:var(--bg3);border-radius:8px;padding:0 6px;margin:0 2px 2px 0;color:var(--text2)}
+.ia-stage{flex:1;display:flex;flex-direction:column;min-height:0}
+.ia-stage-content{flex:1;display:flex;flex-direction:column;min-height:0}
+.topbar .org-link{color:#7c3aed;text-decoration:none;font-size:12px;white-space:nowrap}
+
+/* ═══════ [multi-domain] 组织图谱领域样式（scoped：全部限定 #orgView / #orgBar，意图领域零影响） ═══════ */
+#orgView{flex:1;overflow:auto;display:none;
+  --org-bg:#0f172a;--org-panel:#1e293b;--org-panel2:#273449;--org-border:#334155;
+  --org-text:#e2e8f0;--org-muted:#94a3b8;--org-accent:#38bdf8;--org-primary:#2563eb;
+  --org-ok:#22c55e;--org-warn:#f59e0b;--org-danger:#ef4444;
+  background:var(--org-bg);color:var(--org-text);font:14px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+#orgView *{box-sizing:border-box}
+#orgView main{padding:20px;max-width:1280px;margin:0 auto}
+#orgView .view{display:none}
+#orgView .view.active{display:block}
+#orgView .muted{color:var(--org-muted)}
+#orgView .spacer{flex:1}
+#orgView .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+#orgView .card{background:var(--org-panel);border:1px solid var(--org-border);border-radius:12px;overflow:hidden}
+#orgView .card-wide{grid-column:1 / -1}
+#orgView .card-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--org-border)}
+#orgView .card-head h2{font-size:15px;font-weight:600}
+#orgView .card-body{padding:14px 16px}
+#orgView .btn{background:var(--org-panel2);color:var(--org-text);border:1px solid var(--org-border);padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px}
+#orgView .btn:hover{border-color:var(--org-accent)}
+#orgView .btn-primary{background:var(--org-primary);border-color:var(--org-primary)}
+#orgView .btn-primary:hover{opacity:0.9}
+#orgView .btn-warn{background:#78350f;border-color:#92400e}
+#orgView .btn-ghost{background:transparent}
+#orgView .btn-sm{padding:3px 10px;font-size:12px}
+#orgView .btn:disabled{opacity:0.5;cursor:not-allowed}
+#orgView .auto-entries{display:flex;flex-direction:column;gap:14px}
+#orgView .auto-entries.row{flex-direction:row;flex-wrap:wrap}
+#orgView .auto-entries.row .entry{flex:1;min-width:240px}
+#orgView .entry{background:var(--org-panel2);border:1px solid var(--org-border);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+#orgView .entry-title{font-weight:600}
+#orgView .entry-desc{color:var(--org-muted);font-size:13px;flex:1}
+#orgView .entry .btn{margin-top:4px}
+#orgView .wizard{max-width:900px;margin:0 auto}
+#orgView .wizard-step{background:var(--org-panel);border:1px solid var(--org-border);border-radius:12px;padding:20px}
+#orgView .wizard-step h2{font-size:16px;margin-bottom:10px}
+#orgView .wizard textarea{width:100%;background:var(--org-bg);color:var(--org-text);border:1px solid var(--org-border);border-radius:8px;padding:10px;font:13px/1.5 Consolas,"Courier New",monospace;resize:vertical}
+#orgView .wizard-actions{display:flex;gap:10px;margin-top:14px}
+#orgView .mapped-fields{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+#orgView .mapped-fields .chip{background:var(--org-panel2);border:1px solid var(--org-border);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--org-muted)}
+#orgView .mapped-fields .chip.ok{color:var(--org-ok);border-color:#166534}
+#orgView .mapped-fields .chip.bad{color:var(--org-warn);border-color:#92400e}
+#orgView .summary{background:var(--org-panel2);border-radius:8px;padding:10px 14px;margin:10px 0;font-size:13px}
+#orgView .summary .num{color:var(--org-accent);font-weight:700}
+#orgView .preview-list{max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+#orgView .preview-item{background:var(--org-panel2);border:1px solid var(--org-border);border-radius:8px;padding:8px 12px;display:flex;gap:10px;align-items:center;font-size:13px}
+#orgView .preview-item .tag{padding:1px 8px;border-radius:4px;font-size:11px;white-space:nowrap}
+#orgView .tag-update{background:#1e3a5f;color:#7dd3fc}
+#orgView .tag-create{background:#14532d;color:#86efac}
+#orgView .tag-new{background:#3b0764;color:#d8b4fe}
+#orgView .preview-item label{display:flex;gap:8px;align-items:center;flex:1;cursor:pointer}
+#orgView .workbench{display:grid;grid-template-columns:240px 1fr 320px;gap:12px;height:calc(100vh - 93px);min-height:560px;min-width:980px}
+#orgView .panel-left,#orgView .panel-right{background:var(--org-panel);border:1px solid var(--org-border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
+#orgView .panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--org-border)}
+#orgView .panel-head h3{font-size:13px;font-weight:600}
+#orgView .panel-tools{display:flex;gap:4px}
+#orgView .panel-body{padding:10px;overflow-y:auto;flex:1}
+#orgView .node-tree-item{padding:4px 8px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:6px}
+#orgView .node-tree-item:hover{background:var(--org-panel2)}
+#orgView .node-tree-item .dot{width:8px;height:8px;border-radius:2px;flex:none}
+#orgView .node-tree-group{margin-bottom:10px}
+#orgView .node-tree-group h4{font-size:12px;color:var(--org-muted);margin:6px 0 4px;text-transform:uppercase;letter-spacing:0.5px}
+#orgView .edge-head{border-top:1px solid var(--org-border)}
+#orgView .edge-table{display:flex;flex-direction:column;gap:6px}
+#orgView .edge-row{background:var(--org-panel2);border:1px solid var(--org-border);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer}
+#orgView .edge-row:hover{border-color:var(--org-accent)}
+#orgView .edge-row .w{color:var(--org-accent);font-weight:700}
+#orgView .edge-row .origin{float:right;font-size:10px;padding:0 6px;border-radius:4px}
+#orgView .origin-auto{background:#1e293b;color:#64748b}
+#orgView .origin-manual{background:#78350f;color:#fbbf24}
+#orgView .origin-expert{background:#14532d;color:#86efac}
+#orgView .canvas-wrap{background:var(--org-panel);border:1px solid var(--org-border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
+#orgView .canvas-toolbar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--org-border);font-size:12px}
+#orgView #g6-canvas{flex:1;min-height:0}
+#orgView .inspector-form{display:flex;flex-direction:column;gap:8px}
+#orgView .field-label{font-size:12px;color:var(--org-muted);margin-top:4px}
+#orgView .inspector-form input,#orgView .inspector-form textarea,#orgView .inspector-form select{background:var(--org-bg);color:var(--org-text);border:1px solid var(--org-border);border-radius:6px;padding:6px 8px;font-size:13px;width:100%}
+#orgView .inspector-form .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#orgView .inspector-form .btn{width:100%;margin-top:6px}
+#orgView .inspector-form .btn-danger{background:#7f1d1d;border-color:#991b1b;color:#fecaca}
+#orgView .publish{display:flex;flex-direction:column;gap:16px;max-width:900px;margin:0 auto}
+#orgView .publish-actions{display:flex;gap:10px;margin:12px 0}
+#orgView .validation-report{display:flex;flex-direction:column;gap:6px;font-size:13px}
+#orgView .validation-report .ok-line{color:var(--org-ok)}
+#orgView .validation-report .err-line{color:var(--org-danger)}
+#orgView .validation-report .warn-line{color:var(--org-warn)}
+#orgView .version-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--org-border);border-radius:8px;margin-bottom:8px;background:var(--org-panel2)}
+#orgView .version-row .ver{font-weight:700;color:var(--org-accent)}
+#orgView .version-row .note{color:var(--org-muted);flex:1;font-size:13px}
+#orgView .version-row .active-flag{color:var(--org-ok);font-size:12px}
+#orgView #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--org-panel2);border:1px solid var(--org-accent);color:var(--org-text);padding:10px 20px;border-radius:10px;z-index:100;font-size:14px;max-width:80vw;display:none}
+#orgView #toast.err{border-color:var(--org-danger)}
+#orgView #toast.ok{border-color:var(--org-ok)}
+
+/* orgBar 顶栏（编辑器浅色主题内嵌） */
+#orgBar{display:none;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--border);height:49px;flex-shrink:0}
+#orgBar .org-tab{font-family:var(--font);font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);height:32px;cursor:pointer;transition:all .15s}
+#orgBar .org-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+#orgBar .org-badge{background:#334155;color:#cbd5e1;padding:2px 10px;border-radius:999px;font-size:12px;white-space:nowrap}
+#orgBar .org-badge-draft{background:#78350f;color:#fbbf24}
+#orgBar .org-link{color:#7c3aed;text-decoration:none;font-size:12px;white-space:nowrap}
+#orgBar .sep{flex:1}
+</style>
+</head>
+<body>
+<div class="app" style="display:flex;flex-direction:column;height:100vh">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <span class="logo">🗺️ 图谱构建器</span>
+    <span class="ia-current" id="ia-current">🎯 意图图谱</span>
+    <span class="sep"></span>
+    <!-- [multi-domain] 意图领域控件（原样保留） -->
+    <div id="intentBar" style="display:flex;align-items:center;gap:6px;flex:1;min-width:0">
+      <span style="font-size:10px;color:var(--text2)">v2.1</span>
+      <select id="versionSelect"><option>加载中...</option></select>
+      <button onclick="onLoad()">📂 加载</button>
+      <div class="btn-group">
+        <button class="btn-pri" onclick="onCreate()">➕ 新建</button>
+        <button onclick="onValidate()">✓ 校验</button>
+        <button class="btn-ok" onclick="onExport()">⬇ 导出</button>
+      </div>
+      <button class="btn-accent" onclick="showWorkbenchHome()">模板开始</button>
+      <button class="btn-accent" onclick="window.IntentAutoBuild&&IntentAutoBuild.open()" title="从菜单树数据 AI 自动生成意图节点">🤖 自动构建</button>
+      <button onclick="startGuidedMode()" style="border-color:var(--purple);color:var(--purple)">🔰 引导</button>
+    </div>
+    <span class="sep" style="flex:0;width:8px"></span>
+    <a class="org-link" href="index.html" target="_blank">返回门户 ↗</a>
+    <span class="sep" style="flex:0;width:8px"></span>
+    <span id="badge" class="badge badge-warn">就绪</span>
+  </div>
+
+  <!-- [IA] 信息架构壳：左导航（图谱类型注册制 + 领域插件）+ 阶段条 + 内容区 -->
+  <div class="ia-shell">
+    <nav class="ia-side-nav" id="iaSideNav">
+      <div class="ia-nav-group-title">图谱类型</div>
+      <div id="iaNavGraphs"><div class="ia-nav-item">加载中…</div></div>
+      <div class="ia-nav-group-title">领域插件</div>
+      <div class="ia-nav-item active" id="iaNavIntent" data-graph="intent" onclick="window.IA&&IA.switchGraph('intent')">🎯 意图图谱</div>
+      <!-- [IA] 阶段功能侧边栏（随 org 四阶段切换内容；意图域隐藏） -->
+      <div class="ia-nav-divider" style="border-top:1px solid var(--border);margin:10px 0"></div>
+      <div class="ia-nav-group-title" id="iaStageTitle" style="display:none">当前阶段</div>
+      <div id="iaStagePanel" style="display:none"></div>
+    </nav>
+    <div class="ia-stage">
+      <!-- [multi-domain] 组织图谱阶段条（org 适配器四阶段 tab；意图域时隐藏） -->
+      <div id="orgBar">
+        <select id="orgAssetSelect" title="图谱数据类型" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:12px">
+          <option value="org-people">员工图谱</option>
+          <option value="customer-ecosystem">客户生态</option>
+        </select>
+        <button class="org-tab active" data-view="home">① 数据接入</button>
+        <button class="org-tab" data-view="auto">② 智能体构建</button>
+        <button class="org-tab" data-view="workbench">③ 专家精修</button>
+        <button class="org-tab" data-view="publish">④ 发布</button>
+        <span class="org-badge" id="hdr-version" style="display:none"></span>
+        <span class="org-badge org-badge-draft" id="hdr-draft" style="display:none">草稿未保存</span>
+      </div>
+      <div class="ia-stage-content">
+      <!-- Main: three columns -->
+      <div class="main">
+    <!-- Left: Development Workspace -->
+    <div class="ws-panel" id="wsPanel" style="width:32%">
+      <div class="ws-toolbar">
+        <input id="tableSearch" placeholder="🔍 搜索节点..." oninput="renderNodeTree()">
+        <button onclick="openAddNodeModal()">+ 添加</button>
+      </div>
+      <div class="node-palette" id="nodePalette">
+        <div class="np-title">拖拽节点类型到画布</div>
+        <div class="np-grid"></div>
+      </div>
+      <div class="tree-wrap" id="treeWrap"></div>
+      <div class="legend-wrap" id="legendWrap"></div>
+      <div class="ws-stats"><span id="treeStats">暂无节点</span></div>
+    </div>
+
+    <div class="resize-handle" id="resizeHandle1" onmousedown="startResize(event,'resizeHandle1')"></div>
+    <!-- Center: Graph Canvas -->
+    <div class="gcanvas-panel" id="gcanvasPanel">
+      <div class="gcanvas-wrap" id="gcanvasWrap">
+        <div class="gcanvas-empty" id="gcanvasEmpty">
+          <div style="font-size:40px">🗺️</div>
+          <div>暂无图谱数据</div>
+          <div style="font-size:11px;color:var(--text2)">点击「➕ 新建」或「📂 加载」开始</div>
+        </div>
+        <div id="g6container" style="position:absolute;inset:0;display:none"></div>
+        <svg class="guide-svg" id="guideSvg"></svg>
+        <div class="ghint" id="canvasHint"></div>
+        <div class="zoom-bar" id="zoomBar" style="display:none">
+          <button onclick="zoomCanvas(1.25)" title="放大">＋</button>
+          <span class="zoom-pct" id="zoomPct">100%</span>
+          <button onclick="zoomCanvas(0.8)" title="缩小">－</button>
+          <button onclick="fitCanvas()" title="适配画布" style="font-size:12px">⊡</button>
+        </div>
+        <div class="graph-badge" id="graphBadge" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="resize-handle" id="resizeHandle2" onmousedown="startResize(event,'resizeHandle2')"></div>
+    <!-- Right: Info & Properties -->
+    <div class="info-panel" id="infoPanel" style="width:26%">
+      <div class="guide-banner" id="guideBanner" style="display:none"></div>
+      <div class="info-stats-bar" id="infoStatsBar"></div>
+      <div class="info-content" id="infoContent">
+        <div class="info-empty"><div class="icon">👈</div>点击左侧树或画布上的节点<br>查看和编辑属性</div>
+      </div>
+    </div>
+
+    <!-- [multi-domain] 组织图谱领域容器（org 适配器注入四视图，与意图三栏互斥显示） -->
+    <div id="orgView" style="display:none"></div>
+    <!-- [autobuild] 意图自动构建 overlay 容器（适配器注入，覆盖三栏但不销毁 G6） -->
+    <div id="intentAutoView" style="display:none"></div>
+      </div><!-- /.main -->
+      </div><!-- /.ia-stage-content -->
+    </div><!-- /.ia-stage -->
+  </div><!-- /.ia-shell -->
+  </div><!-- /.app -->
+
+  <!-- Validation -->
+  <div class="validation" id="validation"></div>
+</div>
+
+<!-- Context Menu (dynamically built) -->
+<div class="ctx-menu" id="ctxMenu"></div>
+
+<!-- Add Node Modal -->
+<div class="modal-overlay" id="addNodeModal">
+  <div class="modal">
+    <h3>新增节点</h3>
+    <label>节点类型</label>
+    <select id="newNodeType" onchange="onNodeTypeChange()">
+      <option value="intent_node">📄 叶子意图 — 最终可执行的用户意图</option>
+      <option value="aggregate_intent">📁 聚合意图 — 分组容器</option>
+      <option value="business_object">📦 业务对象 — 意图操作的目标</option>
+      <option value="action">⚡ 动作 — 原子操作</option>
+      <option value="slot">🔧 槽位 — 意图参数</option>
+      <option value="state_constraint">🚦 状态约束 — 前置条件</option>
+      <option value="risk">⚠️ 风险 — 风控规则</option>
+      <option value="knowledge_answer">💡 知识答案 — FAQ内容</option>
+      <option value="runtime_boundary">🚫 运行时边界 — 非业务输入</option>
+    </select>
+    <div style="font-size:10px;color:var(--text2);margin:4px 0" id="newNodeHint">📄 叶子意图是最常用的节点类型</div>
+    <div id="newNodeFields"></div>
+    <div class="btn-row">
+      <button onclick="closeModal()" style="padding:6px 16px;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:var(--bg)">取消</button>
+      <button onclick="confirmAddNode()" style="padding:6px 16px;cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:4px">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Edge Modal -->
+<div class="modal-overlay" id="addEdgeModal">
+  <div class="modal">
+    <h3>新增边</h3>
+    <div style="font-size:11px;margin-bottom:8px;color:var(--text2)">
+      从 <strong id="edgeFromLabel">—</strong> 到 <strong id="edgeToLabel">—</strong>
+    </div>
+    <label>边类型</label>
+    <select id="newEdgeType"></select>
+    <div class="btn-row">
+      <button onclick="closeEdgeModal()" style="padding:6px 16px;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:var(--bg)">取消</button>
+      <button onclick="confirmAddEdge()" style="padding:6px 16px;cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:4px">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════ State ══════════════
+var S = {
+  graph:null, selNodeId:null, selEdgeIdx:null, schema:null, dirty:false, versions:[],
+  g6:null, guideMode:false, guideStep:0, ctxNodeId:null, edgeSrc:null, edgeTgt:null,
+  undoStack:[], redoStack:[], clipboard:null, maxUndo:50,
+  startMode:'home', workStage:'structure', templateContext:null, lastValidation:null
+};
+var WORK_STAGES=[
+  {key:'structure',label:'结构建模'},
+  {key:'semantics',label:'语义补全'},
+  {key:'runtime',label:'运行时绑定'},
+  {key:'release',label:'治理发布'}
+];
+var TEMPLATE_PATTERNS=[
+  {key:'query',label:'查询模式'},
+  {key:'ask',label:'问答模式'},
+  {key:'execution',label:'执行模式'},
+  {key:'clarify',label:'澄清模式'}
+];
+
+// ══════════════ Undo/Redo System ══════════════
+function saveSnapshot(){
+  if(!S.graph)return;
+  var snapshot=JSON.stringify(S.graph);
+  S.undoStack.push(snapshot);
+  if(S.undoStack.length>S.maxUndo)S.undoStack.shift();
+  S.redoStack=[];
+}
+function undo(){
+  if(S.undoStack.length===0){setBadge('warn','无撤销');return;}
+  if(S.graph)S.redoStack.push(JSON.stringify(S.graph));
+  var prev=S.undoStack.pop();
+  S.graph=JSON.parse(prev);
+  S.dirty=true;
+  S.selNodeId=null;S.selEdgeIdx=null;
+  renderAll();
+  setBadge('ok','已撤销');
+}
+function redo(){
+  if(S.redoStack.length===0){setBadge('warn','无重做');return;}
+  if(S.graph)S.undoStack.push(JSON.stringify(S.graph));
+  var next=S.redoStack.pop();
+  S.graph=JSON.parse(next);
+  S.dirty=true;
+  S.selNodeId=null;S.selEdgeIdx=null;
+  renderAll();
+  setBadge('ok','已重做');
+}
+
+// ══════════════ Clipboard (Copy/Paste) ══════════════
+function copyNode(){
+  if(!S.selNodeId){setBadge('warn','请先选中节点');return;}
+  var node=findNodeById(S.selNodeId);
+  if(!node){setBadge('warn','节点不存在');return;}
+  S.clipboard={node:JSON.parse(JSON.stringify(node)),type:getNodeType(node)};
+  setBadge('ok','已复制');
+}
+function pasteNode(){
+  if(!S.clipboard){setBadge('warn','剪贴板空');return;}
+  if(!S.graph){setBadge('warn','请先新建图谱');return;}
+  saveSnapshot();
+  var copied=JSON.parse(JSON.stringify(S.clipboard.node));
+  var type=S.clipboard.type;
+  var idMap={intent_node:'intent_leaf_',aggregate_intent:'intent_group_node_',business_object:'obj_',action:'act_',slot:'slot_',state_constraint:'state_',risk:'risk_',knowledge_answer:'knowledge_',runtime_boundary:'rb_'};
+  var newId=idMap[type]+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  if(copied.identity)copied.identity.intent_id=newId;
+  else if(copied.intent_id)copied.intent_id=newId;
+  else if(copied.object_id)copied.object_id=newId;
+  else if(copied.action_id)copied.action_id=newId;
+  else if(copied.slot_id)copied.slot_id=newId;
+  else if(copied.state_id)copied.state_id=newId;
+  else if(copied.risk_id)copied.risk_id=newId;
+  else if(copied.knowledge_id)copied.knowledge_id=newId;
+  else if(copied.runtime_boundary_id)copied.runtime_boundary_id=newId;
+  if(type==='intent_node'){if(!S.graph.intent_nodes)S.graph.intent_nodes=[];S.graph.intent_nodes.push(copied);}
+  else if(type==='aggregate_intent'){if(!S.graph.aggregate_intents)S.graph.aggregate_intents=[];S.graph.aggregate_intents.push(copied);}
+  else{var snMap={business_object:'business_objects',action:'actions',slot:'slots',state_constraint:'states',risk:'risks',knowledge_answer:'knowledge_answers',runtime_boundary:'runtime_boundaries'};var snKey=snMap[type];if(!S.graph.supporting_nodes)S.graph.supporting_nodes={};if(!S.graph.supporting_nodes[snKey])S.graph.supporting_nodes[snKey]=[];S.graph.supporting_nodes[snKey].push(copied);}
+  S.dirty=true;renderAll();setBadge('ok','已粘贴');
+}
+
+// ══════════════ Node Palette (Drag-Drop) ══════════════
+var PALETTE_NODE_TYPES=[
+  {type:'intent_node',icon:'📄',label:'叶子意图',color:'#1677ff'},
+  {type:'aggregate_intent',icon:'📁',label:'聚合意图',color:'#531dab'},
+  {type:'business_object',icon:'📦',label:'业务对象',color:'#08979c'},
+  {type:'action',icon:'⚡',label:'动作',color:'#d4380d'},
+  {type:'slot',icon:'🔧',label:'槽位',color:'#7cb305'},
+  {type:'state_constraint',icon:'🚦',label:'状态约束',color:'#eb2f96'},
+  {type:'risk',icon:'⚠️',label:'风险',color:'#cf1322'},
+  {type:'knowledge_answer',icon:'💡',label:'知识答案',color:'#1d39c4'},
+  {type:'runtime_boundary',icon:'🚫',label:'运行时边界',color:'#8c8c8c'}
+];
+function initNodePalette(){
+  var grid=document.querySelector('.node-palette .np-grid');
+  if(!grid)return;
+  grid.innerHTML=PALETTE_NODE_TYPES.map(function(nt){
+    return'<div class="np-item" draggable="true" data-type="'+nt.type+'" style="background:'+nt.color+'20;color:'+nt.color+'">'+
+      '<span class="np-icon">'+nt.icon+'</span>'+
+      '<span>'+nt.label+'</span>'+
+    '</div>';
+  }).join('');
+  grid.querySelectorAll('.np-item').forEach(function(item){
+    item.addEventListener('dragstart',function(e){
+      e.dataTransfer.setData('nodeType',item.dataset.type);
+      item.classList.add('dragging');
+    });
+    item.addEventListener('dragend',function(e){item.classList.remove('dragging');});
+  });
+  var container=document.getElementById('g6container');
+  if(container){
+    container.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='copy';});
+    container.addEventListener('drop',function(e){
+      e.preventDefault();
+      var nodeType=e.dataTransfer.getData('nodeType');
+      if(!nodeType||!S.graph)return;
+      var rect=container.getBoundingClientRect();
+      var x=e.clientX-rect.left,y=e.clientY-rect.top;
+      createNodeFromDrag(nodeType,x,y);
+    });
+  }
+}
+function createNodeFromDrag(type,x,y){
+  saveSnapshot();
+  var idMap={intent_node:'intent_leaf_',aggregate_intent:'intent_group_node_',business_object:'obj_',action:'act_',slot:'slot_',state_constraint:'state_',risk:'risk_',knowledge_answer:'knowledge_',runtime_boundary:'rb_'};
+  var id=idMap[type]+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  var name=PALETTE_NODE_TYPES.find(function(n){return n.type===type;}).label+'_'+Date.now().toString(36).slice(-4);
+  if(type==='intent_node'){
+    if(!S.graph.intent_nodes)S.graph.intent_nodes=[];
+    var domain=(S.schema&&S.schema.domains&&S.schema.domains[0])||'未分类';
+    S.graph.intent_nodes.push({
+      identity:{intent_id:id,intent_name:name,intent_type:'QUERY',intent_level:'leaf',parent_intent_id:null,domain:domain,is_executable_leaf:true,is_knowledge_intent:false},
+      semantic_definition:{user_goal:name,description:'拖拽创建 — '+name,scope_in:[name],scope_out:[]},
+      retrieval_profile:{utterance_view:[],semantic_view:[name],object_view:[],action_view:['query'],weights:{}},
+      task_binding:{action:{action_code:'query',action_name:'查询'},business_object:{object_name:'',object_type:''}},
+      decision_policy:{default_decision:'answer',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},
+      execution_binding:{route_type:'answer',standard_navigation_path:'',route_readiness:'draft'},
+      governance:{quality_flags:['drag_created'],review_status:'draft'}
+    });
+  }else if(type==='aggregate_intent'){
+    if(!S.graph.aggregate_intents)S.graph.aggregate_intents=[];
+    var domain=(S.schema&&S.schema.domains&&S.schema.domains[0])||'未分类';
+    S.graph.aggregate_intents.push({intent_id:id,intent_name:name,intent_level:'aggregate',domain:domain,modeling_role:'intent_candidate',semantic_definition:{user_goal:name,description:'拖拽创建 — '+name,scope_in:[name],scope_out:[]}});
+  }else{
+    var snMap={business_object:'business_objects',action:'actions',slot:'slots',state_constraint:'states',risk:'risks',knowledge_answer:'knowledge_answers',runtime_boundary:'runtime_boundaries'};
+    var idF={business_object:'object_id',action:'action_id',slot:'slot_id',state_constraint:'state_id',risk:'risk_id',knowledge_answer:'knowledge_id',runtime_boundary:'runtime_boundary_id'};
+    var nmF={business_object:'object_name',action:'action_name',slot:'slot_name',state_constraint:'state_name',risk:'risk_name',knowledge_answer:'knowledge_name',runtime_boundary:'runtime_boundary_name'};
+    if(!S.graph.supporting_nodes)S.graph.supporting_nodes={};
+    var snKey=snMap[type];
+    if(!S.graph.supporting_nodes[snKey])S.graph.supporting_nodes[snKey]=[];
+    var obj={};obj[idF[type]]=id;obj[nmF[type]]=name;
+    S.graph.supporting_nodes[snKey].push(obj);
+  }
+  S.dirty=true;renderAll();setBadge('ok','已创建: '+name);
+}
+
+// ══════════════ Schema Validation ══════════════
+function validateNodeRequired(node,type){
+  var errors=[];
+  if(type==='intent_node'){
+    if(!node.identity||!node.identity.intent_id)errors.push('intent_id必填');
+    if(!node.identity||!node.identity.intent_name)errors.push('intent_name必填');
+    if(!node.identity||!node.identity.intent_type)errors.push('intent_type必填');
+    if(!node.identity||!node.identity.domain)errors.push('domain必填');
+    if(S.schema&&S.schema.intent_types&&!S.schema.intent_types.includes(node.identity.intent_type))errors.push('intent_type不在schema中:'+node.identity.intent_type);
+  }else if(type==='aggregate_intent'){
+    if(!node.intent_id)errors.push('intent_id必填');
+    if(!node.intent_name)errors.push('intent_name必填');
+    if(!node.domain)errors.push('domain必填');
+  }
+  return errors;
+}
+function validateEdgeType(src,tgt,edgeType){
+  var srcNode=findNodeById(src),tgtNode=findNodeById(tgt);
+  var srcType=srcNode?getNodeType(srcNode):'unknown',tgtType=tgtNode?getNodeType(tgtNode):'unknown';
+  var rules={
+    'has_leaf_intent':{src:'aggregate_intent',tgt:'intent_node'},
+    'acts_on_object':{src:'intent_node',tgt:'business_object'},
+    'uses_action':{src:'intent_node',tgt:'action'},
+    'requires_slot':{src:'intent_node',tgt:'slot'},
+    'has_state_constraint':{src:'intent_node',tgt:'state_constraint'},
+    'has_risk_constraint':{src:'intent_node',tgt:'risk'},
+    'has_knowledge_answer':{src:'intent_node',tgt:'knowledge_answer'},
+    'references':{src:'intent_node',tgt:'runtime_boundary'}
+  };
+  var rule=rules[edgeType];
+  if(rule){
+    if(srcType!==rule.src)return['边类型'+edgeType+'要求源节点为'+rule.src+'，实际为'+srcType];
+    if(tgtType!==rule.tgt)return['边类型'+edgeType+'要求目标节点为'+rule.tgt+'，实际为'+tgtType];
+  }
+  return[];
+}
+
+// ══════════════ Colors & Labels ══════════════
+var NODE_STYLE = {
+  intent_node:       { size:18, color:'#1677ff', shape:'circle', label:'叶子意图' },
+  aggregate_intent:  { size:26, color:'#531dab', shape:'rect',   label:'聚合意图' },
+  business_object:   { size:20, color:'#08979c', shape:'diamond',label:'业务对象' },
+  action:            { size:16, color:'#d4380d', shape:'triangle',label:'动作' },
+  slot:              { size:14, color:'#7cb305', shape:'circle',  label:'槽位' },
+  state_constraint:  { size:16, color:'#eb2f96', shape:'diamond', label:'状态约束' },
+  risk:              { size:16, color:'#cf1322', shape:'triangle',label:'风险' },
+  knowledge_answer:  { size:18, color:'#1d39c4', shape:'rect',    label:'知识答案' },
+  runtime_boundary:  { size:16, color:'#8c8c8c', shape:'circle',  label:'运行时边界' },
+};
+// 叶子意图统一蓝色，类型差异通过文字标签体现
+var INTENT_COLORS = {ASK:'#1677ff', QUERY:'#1677ff', DO:'#1677ff', CHANGE:'#1677ff', CANCEL:'#1677ff', HELP:'#1677ff'};
+var INTENT_CN = {ASK:'询问', QUERY:'查询', DO:'执行', CHANGE:'修改', CANCEL:'取消', HELP:'帮助'};
+var CORE_DOMAINS = ['财富管理','企业服务','信用卡','权益服务','客户专享','支付管理','民生服务','账户管理','生活服务','网点服务','贷款服务','转账服务','金融助手'];
+var EDGE_CN = {
+  'has_leaf_intent':'包含子意图','is_child_of':'属于','same_as':'等同','related_to':'相关','attribute_of':'属性','setting_of':'设置项',
+  'has_business_object':'关联对象','acts_on_object':'操作对象','uses_action':'使用动作',
+  'requires_slot':'必填参数','optional_slot':'可选参数','has_state_constraint':'前置条件','has_risk_constraint':'风险约束',
+  'has_knowledge_answer':'知识答案','references':'引用',
+  'binds_to_workflow':'绑定流程','binds_to_api':'绑定API','binds_to_agent':'绑定智能体','has_navigation_path':'导航路径',
+  'clarify_to':'澄清引导','confusable_with':'易混淆'
+};
+var G6_SHAPES = {circle:'circle',rect:'rect',diamond:'diamond',triangle:'triangle'};
+
+// ══════════════ Init ══════════════
+async function init() {
+  try {
+    var r1=await fetch('/api/intent-graph/versions'),j1=await r1.json();
+    S.versions=j1.versions||[];
+    var sel=document.getElementById('versionSelect');
+    sel.innerHTML=S.versions.map(function(v){return '<option value="'+v.version+'">'+v.version+(v.stage?' ['+v.stage+']':'')+'</option>';}).join('');
+    if(S.versions.length>0)sel.value=S.versions[S.versions.length-1].version;
+  }catch(e){document.getElementById('versionSelect').innerHTML='<option>离线模式</option>';}
+
+  try {
+    var r2=await fetch('/api/intent-graph/schema');S.schema=await r2.json();
+    document.getElementById('newEdgeType').innerHTML=(S.schema.edge_types||[]).map(function(t){return'<option>'+t+'</option>';}).join('');
+  }catch(e){S.schema={intent_types:['ASK','QUERY','DO','CHANGE','CANCEL','HELP'],domains:['未分类'],edge_types:['has_leaf_intent'],node_types:['intent_node'],action_codes:['query']};}
+
+  // Initialize node type palette for drag-drop
+  initNodePalette();
+  renderAll();
+}
+
+function showWorkbenchHome(){
+  S.startMode='home';
+  S.selNodeId=null;
+  S.selEdgeIdx=null;
+  renderAll();
+  setBadge('warn','模板工作台');
+}
+
+function renderHomePanel(){
+  var domains=((S.schema&&S.schema.domains)||CORE_DOMAINS||[]).map(function(d){return '<option value="'+esc(d)+'">'+esc(d)+'</option>';}).join('');
+  var patterns=TEMPLATE_PATTERNS.map(function(p){return '<option value="'+p.key+'">'+esc(p.label)+'</option>';}).join('');
+  return '<div class="home-panel">'+
+    '<div class="home-hero"><h3>意图图谱低码开发台</h3><p>先生成骨架，再分阶段补全语义、运行时绑定和发布治理。画布用于确认结构，不再承担全部建模负担。</p></div>'+
+    '<div class="home-grid">'+
+      '<div class="home-action"><h4>从模板开始</h4><p>选领域模板和任务模式，生成一个可继续编辑的局部骨架。</p><select id="homeDomain">'+domains+'</select><select id="homePattern">'+patterns+'</select><div class="row"><button class="primary" onclick="startFromTemplate()">生成骨架</button></div></div>'+
+      '<div class="home-action"><h4>打开已有版本</h4><p>对既有图谱做局部增量建模，适合继续补图和修图。</p><div class="row"><button onclick="onLoad()">加载当前选中版本</button></div></div>'+
+      '<div class="home-action"><h4>空白草稿</h4><p>仅在模板不适配时使用。创建后默认进入结构阶段。</p><div class="row"><button onclick="createBlankGraphFlow()">创建草稿</button></div></div>'+
+    '</div>'+
+  '</div>';
+}
+
+function buildTemplateGraph(domain, pattern){
+  var version='template-'+pattern+'-'+Date.now().toString(36);
+  var graph=createBlank();
+  graph.meta.version=version;
+  graph.meta.graph_version_id=version;
+  graph.meta.graph_version_name='Intent Graph Template '+pattern;
+  graph.meta.release_status='draft';
+  graph.meta.graph_version_stage='p2_template_draft';
+  graph.meta.template_context={domain:domain,pattern:pattern};
+  var aggregateName=domain+'-'+((TEMPLATE_PATTERNS.find(function(p){return p.key===pattern;})||{}).label||'模板');
+  var aggId='agg_'+Date.now().toString(36);
+  var leafId1='leaf_'+Math.random().toString(36).slice(2,8);
+  var leafId2='leaf_'+Math.random().toString(36).slice(2,8);
+  var objId='obj_'+Math.random().toString(36).slice(2,8);
+  var actionId='act_'+Math.random().toString(36).slice(2,8);
+  var intentType=pattern==='execution'?'DO':pattern==='ask'?'ASK':'QUERY';
+  var actionCode=pattern==='execution'?'apply':pattern==='clarify'?'guide':'query';
+  graph.aggregate_intents.push({intent_id:aggId,intent_name:aggregateName,intent_level:'aggregate',domain:domain,modeling_role:'intent_candidate',semantic_definition:{user_goal:aggregateName,description:'模板骨架',scope_in:[aggregateName],scope_out:[]}});
+  graph.intent_nodes.push({
+    identity:{intent_id:leafId1,intent_name:aggregateName+'-主意图',intent_type:intentType,intent_level:'leaf',parent_intent_id:aggId,domain:domain,is_executable_leaf:intentType!=='ASK'&&intentType!=='HELP',is_knowledge_intent:intentType==='ASK'||intentType==='HELP'},
+    semantic_definition:{user_goal:aggregateName+'主路径',description:'模板骨架 - 主路径',scope_in:[aggregateName],scope_out:[]},
+    retrieval_profile:{utterance_view:[],semantic_view:[aggregateName],object_view:[],action_view:[actionCode],weights:{}},
+    task_binding:intentType==='ASK'?null:{action:{action_code:actionCode,action_name:actionCode},business_object:{object_name:domain+'对象',object_type:''}},
+    knowledge_binding:intentType==='ASK'?{knowledge_refs:[],answer_policy:'direct_answer'}:null,
+    decision_policy:{default_decision:intentType==='ASK'?'answer':'execute',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},
+    execution_binding:{route_type:intentType==='ASK'?'answer_or_entry_recommendation':'action_execution',standard_navigation_path:'',route_readiness:'draft'},
+    governance:{quality_flags:['template_seed'],review_status:'draft'}
+  });
+  graph.intent_nodes.push({
+    identity:{intent_id:leafId2,intent_name:aggregateName+'-补充意图',intent_type:'QUERY',intent_level:'leaf',parent_intent_id:aggId,domain:domain,is_executable_leaf:true,is_knowledge_intent:false},
+    semantic_definition:{user_goal:aggregateName+'补充路径',description:'模板骨架 - 补充路径',scope_in:[],scope_out:[]},
+    retrieval_profile:{utterance_view:[],semantic_view:[],object_view:[],action_view:['query'],weights:{}},
+    task_binding:{action:{action_code:'query',action_name:'query'},business_object:{object_name:'',object_type:''}},
+    decision_policy:{default_decision:'answer',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},
+    execution_binding:{route_type:'answer_or_entry_recommendation',standard_navigation_path:'',route_readiness:'draft'},
+    governance:{quality_flags:['template_seed'],review_status:'draft'}
+  });
+  graph.supporting_nodes.business_objects.push({object_id:objId,object_name:domain+'对象',object_type:''});
+  graph.supporting_nodes.actions.push({action_id:actionId,action_name:actionCode,action_code:actionCode});
+  graph.edges.push(
+    {edge_id:'edge_'+Date.now().toString(36)+'a',from:aggId,to:leafId1,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:version,owner:'template'},
+    {edge_id:'edge_'+Date.now().toString(36)+'b',from:aggId,to:leafId2,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:version,owner:'template'},
+    {edge_id:'edge_'+Date.now().toString(36)+'c',from:leafId1,to:objId,type:'acts_on_object',relation_category:'semantic',status:'active',version:version,owner:'template'},
+    {edge_id:'edge_'+Date.now().toString(36)+'d',from:leafId1,to:actionId,type:'uses_action',relation_category:'semantic',status:'active',version:version,owner:'template'}
+  );
+  return graph;
+}
+
+function startFromTemplate(){
+  var domainEl=document.getElementById('homeDomain');
+  var patternEl=document.getElementById('homePattern');
+  var domain=domainEl?domainEl.value:((S.schema&&S.schema.domains&&S.schema.domains[0])||CORE_DOMAINS[0]);
+  var pattern=patternEl?patternEl.value:'query';
+  S.graph=buildTemplateGraph(domain,pattern);
+  S.templateContext={domain:domain,pattern:pattern};
+  S.startMode='workbench';
+  S.workStage='structure';
+  S.dirty=false;
+  S.selNodeId=null;
+  S.selEdgeIdx=null;
+  renderAll();
+  setBadge('ok','模板骨架已生成');
+}
+
+function createBlankGraphFlow(){
+  S.graph=createBlank();
+  S.startMode='workbench';
+  S.workStage='structure';
+  S.templateContext={domain:null,pattern:'blank'};
+  S.dirty=false;
+  S.selNodeId=null;
+  S.selEdgeIdx=null;
+  renderAll();
+  setBadge('ok','空白草稿已创建');
+}
+
+function setWorkStage(stage){
+  S.workStage=stage;
+  renderAll();
+}
+
+function renderStageTabs(){
+  return '<div class="stage-tabs">'+WORK_STAGES.map(function(stage){
+    return '<button class="stage-tab'+(S.workStage===stage.key?' active':'')+'" onclick="setWorkStage(\''+stage.key+'\')">'+esc(stage.label)+'</button>';
+  }).join('')+'</div>';
+}
+
+function getModelingChecks(graph){
+  var report={errors:[],warnings:[],summaries:[]};
+  if(!graph)return report;
+  var leaves=graph.intent_nodes||[];
+  var aggs=graph.aggregate_intents||[];
+  report.summaries.push('聚合意图 '+aggs.length+'，叶子意图 '+leaves.length+'。');
+  leaves.forEach(function(leaf){
+    var id=leaf.identity||{};
+    var leafName=id.intent_name||id.intent_id||'未命名叶子';
+    if(!id.parent_intent_id)report.warnings.push(leafName+' 缺少父聚合意图');
+    if(id.intent_type==='DO'&&!leaf.task_binding)report.errors.push(leafName+' 是 DO，但缺少 task_binding');
+    if((id.intent_type==='ASK'||id.intent_type==='HELP')&&!leaf.knowledge_binding)report.warnings.push(leafName+' 是问答型，但缺少 knowledge_binding');
+    if(!leaf.semantic_definition||!(leaf.semantic_definition.scope_in||[]).length)report.warnings.push(leafName+' 缺少 scope_in');
+    if(!leaf.retrieval_profile||!(leaf.retrieval_profile.utterance_view||[]).length)report.warnings.push(leafName+' 缺少用户说法');
+    if(!leaf.execution_binding||!leaf.execution_binding.standard_navigation_path)report.warnings.push(leafName+' 缺少标准导航路径');
+  });
+  return report;
+}
+
+function renderStageChecklist(){
+  var report=getModelingChecks(S.graph);
+  var stageLabel=(WORK_STAGES.find(function(x){return x.key===S.workStage;})||{}).label||'';
+  var checks=[];
+  if(S.workStage==='structure'){
+    checks.push((S.graph&&((S.graph.aggregate_intents||[]).length>0)?'<span class="ok">已建立聚合骨架</span>':'<span class="err">至少需要一个聚合意图</span>'));
+    checks.push((report.warnings.filter(function(x){return x.indexOf('父聚合意图')>=0;}).length===0?'<span class="ok">叶子已挂到聚合下</span>':'<span class="warn">仍有叶子未归属到聚合</span>'));
+  }else if(S.workStage==='semantics'){
+    checks.push((report.warnings.filter(function(x){return x.indexOf('scope_in')>=0;}).length===0?'<span class="ok">语义范围已补齐</span>':'<span class="warn">仍有语义范围缺口</span>'));
+    checks.push((report.warnings.filter(function(x){return x.indexOf('用户说法')>=0;}).length===0?'<span class="ok">用户说法已补齐</span>':'<span class="warn">仍有用户说法缺口</span>'));
+  }else if(S.workStage==='runtime'){
+    checks.push((report.errors.length===0?'<span class="ok">运行时硬错误为 0</span>':'<span class="err">存在运行时硬错误 '+report.errors.length+' 个</span>'));
+    checks.push((report.warnings.filter(function(x){return x.indexOf('标准导航路径')>=0;}).length===0?'<span class="ok">导航路径已补齐</span>':'<span class="warn">仍有导航路径缺口</span>'));
+  }else if(S.workStage==='release'){
+    checks.push((report.errors.length===0?'<span class="ok">可导出候选版本</span>':'<span class="err">导出前需先清理硬错误</span>'));
+    checks.push((S.lastValidation&&S.lastValidation.success?'<span class="ok">最近一次服务端校验通过</span>':'<span class="warn">建议先运行服务端校验</span>'));
+  }
+  return '<div class="stage-card"><h4>'+esc(stageLabel)+'检查单</h4><div class="stage-check">'+checks.map(function(x){return '<div>'+x+'</div>';}).join('')+'</div></div>';
+}
+
+function renderInspectorEmpty(){
+  if(S.startMode==='home'||!S.graph){
+    document.getElementById('infoContent').innerHTML=renderHomePanel();
+    return;
+  }
+  document.getElementById('infoContent').innerHTML=renderStageTabs()+'<div class="info-empty"><div class="icon">👈</div>选择节点或边<br>当前阶段：'+esc((WORK_STAGES.find(function(x){return x.key===S.workStage;})||{}).label||'')+'</div>'+renderStageChecklist();
+}
+
+
+
+// ══════════════ Guided Mode ══════════════
+var GUIDE_STEPS = [
+  {title:'开始之前',html:function(){
+    var ni=S.graph?S.graph.intent_nodes||[]:[];
+    var na=S.graph?S.graph.aggregate_intents||[]:[];
+    var ne=S.graph?S.graph.edges||[]:[];
+    return'<div>'+
+      '<div style="font-size:12px;font-weight:600;margin-bottom:6px">📦 示例模板（'+na.length+'聚合 + '+ni.length+'叶子 + '+ne.length+'边）</div>'+
+      '<div style="background:var(--bg3);border-radius:6px;padding:8px 10px;font-size:9px;line-height:1.7;margin-bottom:8px">'+
+      '<div>📁 <b>账户查询</b> <span style="color:var(--purple)">聚合意图</span></div>'+
+      '<div style="margin-left:8px">├ 📄 <b>查询余额</b> <span style="color:var(--green)">QUERY</span> → 📦账户余额</div>'+
+      '<div style="margin-left:8px">├ 📄 <b>查询交易明细</b> <span style="color:var(--green)">QUERY</span> → 📦交易明细</div>'+
+      '<div style="margin-left:8px">└ 📄 <b>查询开户行</b> <span style="color:var(--accent)">ASK</span> 知识类</div>'+
+      '<div style="margin-top:3px">📁 <b>转账服务</b> <span style="color:var(--purple)">聚合意图</span></div>'+
+      '<div style="margin-left:8px">├ 📄 <b>查询转账记录</b> <span style="color:var(--green)">QUERY</span> → ⚡查询</div>'+
+      '<div style="margin-left:8px">├ 📄 <b>转账给他人</b> <span style="color:var(--orange)">DO</span> → ⚡转账</div>'+
+      '<div style="margin-left:8px">└ 📄 <b>咨询转账限额</b> <span style="color:var(--accent)">ASK</span> 知识类</div>'+
+      '<div style="margin-top:3px">📦 <b>账户余额</b> · <b>交易明细</b> — 2业务对象</div>'+
+      '<div>⚡ <b>查询</b> · <b>转账</b> — 2动作</div>'+
+      '</div>'+
+      '<div style="font-size:10px;color:var(--text2);line-height:1.6;margin-bottom:6px">'+
+      '<p>👆 <b>点击任意节点</b>，右侧面板展示详情可编辑保存</p>'+
+      '<p>✅ 直接修改模板属性 → 点「💾 保存」</p>'+
+      '<p>✅ 点下一步新增自己的意图</p>'+
+      '<p>✅ 或切专家模式自由增删改</p>'+
+      '</div>'+
+      '</div>';
+  }},
+  {title:'第1步：创建聚合意图',field:'name',label:'聚合意图名称',placeholder:'例如：账户查询',hint:'聚合意图是"文件夹"，一组相关意图的分类容器。\n如"账户查询"下包含"查余额""查明细"等。',action:'addAgg'},
+  {title:'第2步：创建叶子意图',field:'name',label:'叶子意图名称',placeholder:'例如：查询余额',hint:'叶子意图代表用户一句话能对应的最终意图。\n如"查余额""我的余额""还有多少钱"→ 都归到「查询余额」。',action:'addLeaf'},
+  {title:'第3步：设置意图类型',field:'itype',label:'意图类型',hint:'',action:'setType'},
+  {title:'第4步：添加用户说法',field:'utterances',label:'用户可能会怎么说？',placeholder:'每行一个说法，例如：\n查余额\n我的余额\n还有多少钱',hint:'尽量多列用户表达方式，用于检索匹配。',action:'addUtterances'},
+  {title:'第5步：绑定业务对象',field:'objName',label:'操作目标',placeholder:'例如：账户余额',hint:'业务对象是意图操作的具体目标。',action:'bindObject'},
+  {title:'第6步：设置导航路径',field:'navPath',label:'App里的位置',placeholder:'首页 > 我的账户 > 余额',hint:'从App首页到功能的菜单路径。',action:'setNav'},
+  {title:'完成！',html:function(){
+    var ni=S.graph?S.graph.intent_nodes||[]:[];
+    var na=S.graph?S.graph.aggregate_intents||[]:[];
+    var ne=S.graph?S.graph.edges||[]:[];
+    return'<div style="text-align:center;padding:15px 0">'+
+      '<div style="font-size:36px;margin-bottom:8px">🎉</div>'+
+      '<div style="font-size:13px;font-weight:600;margin-bottom:6px">图谱已就绪</div>'+
+      '<div style="font-size:11px;color:var(--text2);line-height:1.7">'+
+      '<p>'+na.length+' 聚合 + '+ni.length+' 叶子 + '+ne.length+' 边</p>'+
+      '<p style="margin-top:8px">点「完成」切专家模式</p>'+
+      '<p>左侧表格管理节点</p><p>中间画布实时展示</p><p>右侧面板编辑属性</p>'+
+      '</div></div>';
+  }},
+];
+
+function startGuidedMode(){
+  S.guideMode=true; S.guideStep=0;
+  if(!S.graph){S.graph=createDemo();S.dirty=false;}
+  showGuideStep(0);
+  renderAll();
+  setBadge('warn','引导模式');
+}
+
+function showGuideStep(idx){
+  S.guideStep=idx; var step=GUIDE_STEPS[idx];
+  var banner=document.getElementById('guideBanner');
+  banner.style.display='block';
+  banner.innerHTML='<div class="gstep">🔰 引导 · 步骤 '+(idx+1)+'/'+GUIDE_STEPS.length+'</div>'+step.title;
+
+  var html='';
+  if(step.html){html+=step.html();}
+  else {
+    if(step.hint)html+='<div style="font-size:10px;color:var(--text2);white-space:pre-line;background:var(--bg3);padding:8px 10px;border-radius:6px;margin-bottom:8px;line-height:1.6">'+step.hint+'</div>';
+    if(step.field==='name'){
+      html+='<input id="guideInput" placeholder="'+esc(step.placeholder||'')+'" style="width:100%;padding:7px 10px;border:1px solid var(--accent);border-radius:6px;font-size:12px;margin-bottom:8px" onkeydown="if(event.key===\'Enter\')guideNext()">';
+    }else if(step.field==='itype'){
+      html+='<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">';
+      (S.schema.intent_types||[]).forEach(function(t){
+        var descs={ASK:'咨询类',QUERY:'查询类',DO:'执行类',CHANGE:'修改类',CANCEL:'取消类',HELP:'帮助类'};
+        html+='<label style="display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:11px"><input type="radio" name="guideItype" value="'+t+'"><b>'+t+'</b> <span style="font-weight:400">'+(INTENT_CN[t]||'')+'</span> <span style="color:var(--text2);font-size:10px">— '+(descs[t]||'')+'</span></label>';
+      });
+      html+='</div>';
+    }else if(step.field==='utterances'){
+      html+='<textarea id="guideInput" placeholder="'+esc(step.placeholder||'')+'" style="width:100%;height:90px;padding:7px 10px;border:1px solid var(--accent);border-radius:6px;font-size:11px;margin-bottom:8px;resize:vertical"></textarea>';
+    }else if(step.field==='objName'||step.field==='navPath'){
+      html+='<input id="guideInput" placeholder="'+esc(step.placeholder||'')+'" style="width:100%;padding:7px 10px;border:1px solid var(--accent);border-radius:6px;font-size:12px;margin-bottom:8px" onkeydown="if(event.key===\'Enter\')guideNext()">';
+    }
+  }
+
+  html+='<div style="display:flex;gap:6px;justify-content:space-between;margin-top:4px">';
+  if(idx>0)html+='<button onclick="showGuideStep('+(idx-1)+')" style="padding:6px 14px;cursor:pointer;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:11px">← 上一步</button>';
+  else html+='<span></span>';
+  html+='<button onclick="guideNext()" style="padding:6px 18px;cursor:pointer;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600">'+(idx===0?'开始 →':(step.action?'下一步 →':'完成 ✓'))+'</button>';
+  html+='</div>';
+
+  document.getElementById('infoContent').innerHTML=html;
+}
+
+function guideNext(){
+  var step=GUIDE_STEPS[S.guideStep];
+  var val=document.getElementById('guideInput')?document.getElementById('guideInput').value.trim():'';
+
+  switch(step.action){
+    case 'addAgg':if(!val){alert('请输入聚合意图名称');return;}addAggFromGuide(val);S._guideAggName=val;break;
+    case 'addLeaf':if(!val){alert('请输入叶子意图名称');return;}addLeafFromGuide(val);S._guideLeafName=val;break;
+    case 'setType':var sel=document.querySelector('input[name="guideItype"]:checked');if(!sel){alert('请选择意图类型');return;}S._guideItype=sel.value;applyGuideItype(sel.value);break;
+    case 'addUtterances':val=document.getElementById('guideInput')?document.getElementById('guideInput').value.trim():'';applyGuideUtterances(val);break;
+    case 'bindObject':val=document.getElementById('guideInput')?document.getElementById('guideInput').value.trim():'';if(val)bindGuideObject(val);break;
+    case 'setNav':val=document.getElementById('guideInput')?document.getElementById('guideInput').value.trim():'';if(val)setGuideNav(val);break;
+  }
+  if(S.guideStep<GUIDE_STEPS.length-1){showGuideStep(S.guideStep+1);}else{switchToExpert();}
+}
+
+function addAggFromGuide(name){
+  var id='intent_group_'+Date.now().toString(36);
+  if(!S.graph.aggregate_intents)S.graph.aggregate_intents=[];
+  S.graph.aggregate_intents.push({intent_id:id,intent_name:name,intent_level:'aggregate',domain:'账户管理',modeling_role:'intent_candidate',semantic_definition:{user_goal:name,description:'引导模式 — '+name,scope_in:[name],scope_out:[]}});
+  S._guideAggId=id;S.dirty=true;renderAll();
+}
+function addLeafFromGuide(name){
+  var id='intent_leaf_'+Date.now().toString(36),pid=S._guideAggId||'';
+  if(!S.graph.intent_nodes)S.graph.intent_nodes=[];
+  S.graph.intent_nodes.push({
+    identity:{intent_id:id,intent_name:name,intent_type:'QUERY',intent_level:'leaf',parent_intent_id:pid,domain:'账户管理',is_executable_leaf:true,is_knowledge_intent:false},
+    semantic_definition:{user_goal:name,description:'引导模式 — '+name,scope_in:[name],scope_out:[]},
+    retrieval_profile:{utterance_view:[],semantic_view:[name],object_view:[],action_view:['query'],weights:{}},
+    task_binding:{action:{action_code:'query',action_name:'查询'},business_object:{object_name:'',object_type:''}},
+    decision_policy:{default_decision:'answer',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},
+    execution_binding:{route_type:'answer',standard_navigation_path:'',route_readiness:'draft'},
+    governance:{quality_flags:['guide'],review_status:'draft'}
+  });
+  S._guideLeafId=id;
+  if(pid){if(!S.graph.edges)S.graph.edges=[];S.graph.edges.push({edge_id:'edge_g1',from:pid,to:id,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:'guide',owner:'expert'});}
+  S.dirty=true;renderAll();
+}
+function applyGuideItype(itype){
+  var leaf=findNodeById(S._guideLeafId);if(!leaf||!leaf.identity)return;
+  leaf.identity.intent_type=itype;var isKnow=itype==='ASK'||itype==='HELP';
+  leaf.identity.is_executable_leaf=!isKnow;leaf.identity.is_knowledge_intent=isKnow;
+  if(isKnow){leaf.knowledge_binding={knowledge_refs:[],answer_policy:'direct_answer'};leaf.task_binding=null;}
+  else{leaf.task_binding={action:{action_code:itype.toLowerCase(),action_name:S._guideLeafName},business_object:{object_name:'',object_type:''}};leaf.knowledge_binding=null;}
+  S.dirty=true;renderAll();
+}
+function applyGuideUtterances(text){
+  var leaf=findNodeById(S._guideLeafId);if(!leaf||!leaf.retrieval_profile)return;
+  leaf.retrieval_profile.utterance_view=text.split('\n').map(function(s){return s.trim();}).filter(Boolean);S.dirty=true;
+}
+function bindGuideObject(name){
+  var leaf=findNodeById(S._guideLeafId);if(!leaf)return;
+  var objId='obj_guide_'+Date.now().toString(36);
+  if(!S.graph.supporting_nodes)S.graph.supporting_nodes={};
+  if(!S.graph.supporting_nodes.business_objects)S.graph.supporting_nodes.business_objects=[];
+  S.graph.supporting_nodes.business_objects.push({object_id:objId,object_name:name,object_type:''});
+  if(leaf.task_binding&&leaf.task_binding.business_object)leaf.task_binding.business_object.object_name=name;
+  if(!S.graph.edges)S.graph.edges=[];
+  S.graph.edges.push({edge_id:'edge_go',from:S._guideLeafId,to:objId,type:'acts_on_object',relation_category:'semantic',status:'active',version:'guide',owner:'expert'});
+  S.dirty=true;renderAll();
+}
+function setGuideNav(path){
+  var leaf=findNodeById(S._guideLeafId);if(!leaf||!leaf.execution_binding)return;
+  leaf.execution_binding.standard_navigation_path=path;S.dirty=true;
+}
+function switchToExpert(){
+  S.guideMode=false;
+  S.startMode='workbench';
+  document.getElementById('guideBanner').style.display='none';
+  renderAll();
+  setBadge('ok','专家模式');
+}
+
+// ══════════════ Create / Load ══════════════
+function createBlank(){
+  return {meta:{version:'blank',graph_version_id:'blank',generated_at:new Date().toISOString(),schema_profile:'ai_harbor_intent_graph_v2'},summary:{},aggregate_intents:[],intent_nodes:[],supporting_nodes:{business_objects:[],actions:[],slots:[],states:[],risks:[],knowledge_answers:[],runtime_boundaries:[]},edges:[]};
+}
+function createDemo(){
+  var now=new Date().toISOString();
+  var agg1='demo_agg_account',agg2='demo_agg_transfer';
+  var l1='demo_leaf_balance',l2='demo_leaf_detail',l3='demo_leaf_branch';
+  var l4='demo_leaf_transfer',l5='demo_leaf_txlog',l6='demo_leaf_limit';
+  var obj1='demo_obj_balance',obj2='demo_obj_detail';
+  var act1='demo_act_query',act2='demo_act_transfer';
+  return {
+    meta:{version:'demo-template',graph_version_id:'demo-template',generated_at:now,schema_profile:'ai_harbor_intent_graph_v2'},
+    summary:{},aggregate_intents:[
+      {intent_id:agg1,intent_name:'账户查询',intent_level:'aggregate',domain:'账户管理',modeling_role:'intent_candidate',semantic_definition:{user_goal:'查询账户相关信息',description:'示例模板 — 账户查询聚合：包含余额查询、交易明细等叶子意图',scope_in:['账户','我的账户','查账户','账户信息'],scope_out:['转账','理财','贷款']}},
+      {intent_id:agg2,intent_name:'转账服务',intent_level:'aggregate',domain:'转账服务',modeling_role:'intent_candidate',semantic_definition:{user_goal:'执行转账相关操作',description:'示例模板 — 转账服务聚合：包含转账执行、限额咨询等',scope_in:['转账','汇款','转钱'],scope_out:['查询余额','理财']}},
+    ],intent_nodes:[
+      {identity:{intent_id:l1,intent_name:'查询余额',intent_type:'QUERY',intent_level:'leaf',parent_intent_id:agg1,domain:'账户管理',is_executable_leaf:true,is_knowledge_intent:false},semantic_definition:{user_goal:'查询当前账户余额',description:'示例模板 — 用户想查看账户里还有多少钱',scope_in:['查余额','余额查询','我的余额','还有多少钱','卡里还有多少'],scope_out:['转账','修改密码','充值']},retrieval_profile:{utterance_view:['查余额','余额查询','我的余额','还有多少钱','卡里余额'],semantic_view:['查询余额'],object_view:['余额','账户','金额'],action_view:['query','查询'],weights:{query_vs_action:1.0,object_match:0.9}},task_binding:{action:{action_code:'query',action_name:'查询'},business_object:{object_name:'账户余额',object_type:'余额'}},decision_policy:{default_decision:'answer',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},execution_binding:{route_type:'answer_or_entry_recommendation',standard_navigation_path:'首页 > 我的账户 > 余额',route_readiness:'path_available'},governance:{quality_flags:['demo_template'],review_status:'demo'}},
+      {identity:{intent_id:l2,intent_name:'查询交易明细',intent_type:'QUERY',intent_level:'leaf',parent_intent_id:agg1,domain:'账户管理',is_executable_leaf:true,is_knowledge_intent:false},semantic_definition:{user_goal:'查询近期交易记录',description:'示例模板 — 用户想看最近的收支明细',scope_in:['交易明细','账单','流水','收支明细','最近交易','消费记录'],scope_out:['转账','理财购买']},retrieval_profile:{utterance_view:['交易明细','账单','流水','收支明细','消费记录'],semantic_view:['查询交易明细'],object_view:['交易','明细','账单','流水'],action_view:['query','查询'],weights:{query_vs_action:1.0,object_match:0.85}},task_binding:{action:{action_code:'query',action_name:'查询'},business_object:{object_name:'交易明细',object_type:'交易记录'}},decision_policy:{default_decision:'answer',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},execution_binding:{route_type:'answer_or_entry_recommendation',standard_navigation_path:'首页 > 我的账户 > 交易明细',route_readiness:'path_available'},governance:{quality_flags:['demo_template'],review_status:'demo'}},
+      {identity:{intent_id:l3,intent_name:'查询开户行',intent_type:'ASK',intent_level:'leaf',parent_intent_id:agg1,domain:'账户管理',is_executable_leaf:false,is_knowledge_intent:true},semantic_definition:{user_goal:'查询银行卡开户行信息',description:'示例模板 — 用户咨询开户行、联行号等信息',scope_in:['开户行','哪个支行','联行号','开户网点','在哪开的卡'],scope_out:['修改绑定','销户']},retrieval_profile:{utterance_view:['开户行','哪个支行','联行号','开户网点'],semantic_view:['查询开户行'],object_view:['开户行','支行','网点'],action_view:['ask','咨询'],weights:{query_vs_action:1.0,object_match:0.8}},knowledge_binding:{knowledge_refs:[],answer_policy:'direct_answer_or_recommend_entry'},decision_policy:{default_decision:'answer',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},execution_binding:{route_type:'answer_or_entry_recommendation',standard_navigation_path:'首页 > 我的账户 > 开户行查询',route_readiness:'path_available'},governance:{quality_flags:['demo_template'],review_status:'demo'}},
+      {identity:{intent_id:l4,intent_name:'查询转账记录',intent_type:'QUERY',intent_level:'leaf',parent_intent_id:agg2,domain:'转账服务',is_executable_leaf:true,is_knowledge_intent:false},semantic_definition:{user_goal:'查看历史转账记录',description:'示例模板 — 用户想查之前的转账记录',scope_in:['转账记录','转账历史','汇款记录','给谁转过','转账明细'],scope_out:['转账','修改转账']},retrieval_profile:{utterance_view:['转账记录','转账历史','汇款记录','转了多少钱'],semantic_view:['查询转账记录'],object_view:['转账','记录','历史'],action_view:['query','查询'],weights:{query_vs_action:1.0,object_match:0.85}},task_binding:{action:{action_code:'query',action_name:'查询'},business_object:{object_name:'转账记录',object_type:'交易记录'}},decision_policy:{default_decision:'answer',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},execution_binding:{route_type:'answer_or_entry_recommendation',standard_navigation_path:'首页 > 转账 > 转账记录',route_readiness:'path_available'},governance:{quality_flags:['demo_template'],review_status:'demo'}},
+      {identity:{intent_id:l5,intent_name:'转账给他人',intent_type:'DO',intent_level:'leaf',parent_intent_id:agg2,domain:'转账服务',is_executable_leaf:true,is_knowledge_intent:false},semantic_definition:{user_goal:'向他人转账汇款',description:'示例模板 — 用户要执行转账操作',scope_in:['转账','转钱','汇款','转给','给他转','转账给'],scope_out:['查询转账记录','查询余额']},retrieval_profile:{utterance_view:['转账','转钱','汇款','转给朋友','给他转账'],semantic_view:['转账给他人'],object_view:['转账','收款人','金额'],action_view:['transfer','转账','汇款'],weights:{query_vs_action:0.3,object_match:0.8}},task_binding:{action:{action_code:'transfer',action_name:'转账'},business_object:{object_name:'转账交易',object_type:'资金交易'}},decision_policy:{default_decision:'execute',low_confidence_strategy:'confirm_before_execution',clarify_questions:['请问要转给谁？','转账金额是多少？'],reject_policy:'fallback'},execution_binding:{route_type:'action_execution',standard_navigation_path:'首页 > 转账 > 向他人转账',route_readiness:'path_available'},governance:{quality_flags:['demo_template'],review_status:'demo'}},
+      {identity:{intent_id:l6,intent_name:'咨询转账限额',intent_type:'ASK',intent_level:'leaf',parent_intent_id:agg2,domain:'转账服务',is_executable_leaf:false,is_knowledge_intent:true},semantic_definition:{user_goal:'了解转账限额规则',description:'示例模板 — 用户咨询转账限额是多少、为什么限额',scope_in:['转账限额','限额多少','最多转多少','转账额度','一天能转多少','为什么限额'],scope_out:['修改限额','提升额度','大额转账']},retrieval_profile:{utterance_view:['转账限额','限额多少','最多转多少','一天能转多少'],semantic_view:['咨询转账限额'],object_view:['限额','转账','额度'],action_view:['ask','咨询'],weights:{query_vs_action:1.0,object_match:0.7}},knowledge_binding:{knowledge_refs:[],answer_policy:'direct_answer_or_recommend_entry'},decision_policy:{default_decision:'answer',low_confidence_strategy:'keep_topk',clarify_questions:[],reject_policy:'fallback'},execution_binding:{route_type:'answer_or_entry_recommendation',standard_navigation_path:'首页 > 转账 > 转账限额说明',route_readiness:'path_available'},governance:{quality_flags:['demo_template'],review_status:'demo'}},
+    ],supporting_nodes:{
+      business_objects:[
+        {object_id:obj1,object_name:'账户余额',object_type:'余额'},
+        {object_id:obj2,object_name:'交易明细',object_type:'交易记录'},
+      ],
+      actions:[
+        {action_id:act1,action_name:'查询',action_code:'query'},
+        {action_id:act2,action_name:'转账',action_code:'transfer'},
+      ],
+      slots:[],states:[],risks:[],knowledge_answers:[],runtime_boundaries:[]
+    },edges:[
+      // 账户查询 → 3个叶子
+      {edge_id:'demo_e1',from:agg1,to:l1,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:'demo',owner:'template'},
+      {edge_id:'demo_e2',from:agg1,to:l2,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:'demo',owner:'template'},
+      {edge_id:'demo_e3',from:agg1,to:l3,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:'demo',owner:'template'},
+      // 转账服务 → 3个叶子
+      {edge_id:'demo_e4',from:agg2,to:l4,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:'demo',owner:'template'},
+      {edge_id:'demo_e5',from:agg2,to:l5,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:'demo',owner:'template'},
+      {edge_id:'demo_e6',from:agg2,to:l6,type:'has_leaf_intent',relation_category:'hierarchy',status:'active',version:'demo',owner:'template'},
+      // 叶子 → 业务对象
+      {edge_id:'demo_e7',from:l1,to:obj1,type:'acts_on_object',relation_category:'semantic',status:'active',version:'demo',owner:'template'},
+      {edge_id:'demo_e8',from:l2,to:obj2,type:'acts_on_object',relation_category:'semantic',status:'active',version:'demo',owner:'template'},
+      // 叶子 → 动作
+      {edge_id:'demo_e9',from:l1,to:act1,type:'uses_action',relation_category:'semantic',status:'active',version:'demo',owner:'template'},
+      {edge_id:'demo_ea',from:l2,to:act1,type:'uses_action',relation_category:'semantic',status:'active',version:'demo',owner:'template'},
+      {edge_id:'demo_eb',from:l4,to:act1,type:'uses_action',relation_category:'semantic',status:'active',version:'demo',owner:'template'},
+      {edge_id:'demo_ec',from:l5,to:act2,type:'uses_action',relation_category:'semantic',status:'active',version:'demo',owner:'template'},
+    ]
+  };
+}
+async function onLoad(){
+  var v=document.getElementById('versionSelect').value;
+  try{
+    var r=await fetch('/api/intent-graph/load',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:v})});
+    var j=await r.json();
+    if(j.success){S.graph=j.graph;S.dirty=false;S.selNodeId=null;S.selEdgeIdx=null;S.startMode='workbench';S.workStage='structure';switchToExpert();setBadge('ok','已加载: '+v);}
+    else{alert('加载失败: '+j.error);}
+  }catch(e){alert('加载失败: '+e.message);}
+}
+async function onCreate(){
+  try{
+    var r=await fetch('/api/intent-graph/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({version:'intent-graph-v2.1-p2-batch1'})});
+    var j=await r.json();
+    if(j.success){S.graph=j.graph;S.dirty=false;S.selNodeId=null;S.selEdgeIdx=null;S.startMode='workbench';S.workStage='structure';switchToExpert();setBadge('ok','已新建');}
+  }catch(e){createBlankGraphFlow();setBadge('ok','已新建（离线）');}
+}
+
+// ══════════════ Workspace: Intent Framework Tree ══════════════
+var treeSections = {}; // sectionId → {open:bool}
+
+function renderNodeTree(){
+  if(!S.graph){
+    document.getElementById('treeWrap').innerHTML='<div class="tree-empty">请选择模板起点或加载已有版本</div>';
+    document.getElementById('treeStats').textContent='尚未开始建模';
+    return;
+  }
+  var all=getAllNodes(),search=document.getElementById('tableSearch').value.toLowerCase();
+  if(search)all=all.filter(function(x){return(getNodeName(x.node).toLowerCase().indexOf(search)>=0)||(getNodeId(x.node).toLowerCase().indexOf(search)>=0);});
+
+  // Group: domain → aggregate_intents → leaf intents
+  var byDomain={}, aggMap={}, leafByParent={}, orphanLeaves=[], supportingByType={};
+
+  all.forEach(function(x){
+    var n=x.node,t=x.type;
+    if(t==='aggregate_intent'){
+      var d=n.domain||'未分类';
+      if(!byDomain[d])byDomain[d]={aggs:[],leaves:[]};
+      byDomain[d].aggs.push(x);
+      aggMap[getNodeId(n)]=x;
+    }else if(t==='intent_node'){
+      var pid=(n.identity||{}).parent_intent_id;
+      if(pid&&pid!=='null'&&pid!==''){
+        if(!leafByParent[pid])leafByParent[pid]=[];
+        leafByParent[pid].push(x);
+      }else{orphanLeaves.push(x);}
+    }else{
+      if(!supportingByType[t])supportingByType[t]=[];
+      supportingByType[t].push(x);
+    }
+  });
+
+  // Assign orphan leaves to domains based on their own domain field
+  orphanLeaves.forEach(function(x){
+    var d=(x.node.identity||{}).domain||'未分类';
+    if(!byDomain[d])byDomain[d]={aggs:[],leaves:[]};
+    byDomain[d].leaves.push(x);
+  });
+
+  var html='';
+  var s=getStats();
+
+  // ═══ L0 + L1 → L2 → L3+ (recursive, all domains visible) ═══
+  // L0 root header
+  html+='<div style="padding:6px 10px;font-weight:700;font-size:11px;color:var(--text);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px">';
+  html+='📊 意图图谱 <span style="font-size:9px;color:var(--text2);font-weight:400">'+s.totalNodes+'节点 · '+s.edges+'边</span></div>';
+
+  // L1: All 13 domains, collapsed if empty
+  CORE_DOMAINS.forEach(function(domain,di){
+    var dg=byDomain[domain]||{aggs:[],leaves:[]};
+    var allAggs=dg.aggs;
+    var totalLeaf=0;
+    allAggs.forEach(function(ax){totalLeaf+=(leafByParent[getNodeId(ax.node)]||[]).length;});
+    totalLeaf+=dg.leaves.length;
+    var isEmpty=allAggs.length===0&&dg.leaves.length===0;
+    var open=!isEmpty; // auto-expand domains with data
+
+    html+='<div class="tree-dm-hd" onclick="toggleDomain(event,\'dm_'+di+'\')">';
+    html+='<span class="tree-arw'+(open?' open':'')+'">▶</span>';
+    html+='<span style="font-size:12px;width:16px;text-align:center">'+(isEmpty?'📭':'🏦')+'</span>';
+    html+='<span class="tree-dm-name'+(isEmpty?' tree-dm-empty':'')+'">'+esc(domain)+'</span>';
+    html+='<span class="tree-dm-meta">'+(isEmpty?'空':allAggs.length+'聚合 · '+totalLeaf+'叶子')+'</span>';
+    html+='</div>';
+
+    html+='<div class="tree-dm-body" id="tsec_dm_'+di+'" style="display:'+(open?'block':'none')+'">';
+    if(!isEmpty){
+      allAggs.forEach(function(ax,ai){
+        var aggId=getNodeId(ax.node);
+        var children=leafByParent[aggId]||[];
+        var isLastAgg=ai===allAggs.length-1&&dg.leaves.length===0;
+        html+=renderTreeNodeRecursive(ax.node,'aggregate_intent',1,children,isLastAgg);
+      });
+      dg.leaves.forEach(function(lx,li){
+        html+=renderTreeNodeRecursive(lx.node,'intent_node',1,null,li===dg.leaves.length-1);
+      });
+    }
+    html+='</div>';
+  });
+
+  // ── 支撑节点 ──
+  var supOrder=['business_object','action','slot','state_constraint','risk','knowledge_answer','runtime_boundary'];
+  var supIcons={business_object:'📦',action:'⚡',slot:'🔧',state_constraint:'🚦',risk:'⚠️',knowledge_answer:'💡',runtime_boundary:'🚫'};
+  var hasSupporting=false;
+  supOrder.forEach(function(t){if((supportingByType[t]||[]).length>0)hasSupporting=true;});
+  if(hasSupporting){
+    html+='<div class="tree-sup-hd">📦 支撑节点</div>';
+    supOrder.forEach(function(t){
+      var items=supportingByType[t]||[];if(items.length===0)return;
+      var st=NODE_STYLE[t]||{},label=st.label||t,color=st.color||'#888';
+      items.forEach(function(x){
+        var n=x.node,id=getNodeId(n),name=getNodeName(n);
+        html+='<div class="tree-sup-node'+(S.selNodeId===id?' active':'')+'" onclick="selectNode(\''+esc(id)+'\')">';
+        html+='<span class="sup-icon">'+(supIcons[t]||'•')+'</span>';
+        html+='<span class="sup-name" title="'+esc(id)+'">'+esc(name)+'</span>';
+        html+='<span class="sup-type" style="background:'+color+'">'+esc(label)+'</span>';
+        html+='<span class="tn-actions">';
+        html+='<button onclick="event.stopPropagation();selectNode(\''+esc(id)+'\')" title="编辑">🖊</button>';
+        html+='<button class="del" onclick="event.stopPropagation();if(confirm(\'删除 '+esc(name)+'?\')){deleteNode(\''+esc(id)+'\');renderAll();}" title="删除">×</button>';
+        html+='</span></div>';
+      });
+    });
+  }
+
+  document.getElementById('treeWrap').innerHTML=html||'<div class="tree-empty">暂无节点 — 点击「+ 添加」开始</div>';
+
+  var s=getStats();
+  document.getElementById('treeStats').textContent='共 '+s.totalNodes+' 节点 · '+s.edges+' 边';
+  renderLegend();
+}
+
+// Recursive tree node renderer: handles L2+ at any depth with full connector lines
+// children: array of {node, type} or null
+function renderTreeNodeRecursive(node, type, level, children, isLast){
+  var id=getNodeId(node),name=getNodeName(node);
+  var st=NODE_STYLE[type]||NODE_STYLE.intent_node,color=st.color;
+  var baseIndent=10; // px per level for tree line positioning
+  var lineX=baseIndent+(level-1)*18; // x position of vertical line
+  var contentIndent=lineX+16; // where content starts
+
+  var secId='tn_'+id;
+  var open=treeSections[secId]!==false;
+  var hasKids=children&&children.length>0;
+
+  // Icon and label
+  var icon='📄',typeLabel=st.label||type;
+  if(type==='aggregate_intent'){icon='📁';typeLabel='聚合';}
+  else if(type==='intent_node'){var it=(node.identity||{}).intent_type||'?';typeLabel=it+' '+(INTENT_CN[it]||'');icon='📄';}
+  else if(type==='business_object'){icon='📦';}
+  else if(type==='action'){icon='⚡';}
+  else if(type==='slot'){icon='🔧';}
+  else if(type==='state_constraint'){icon='🚦';}
+  else if(type==='risk'){icon='⚠️';}
+  else if(type==='knowledge_answer'){icon='💡';}
+  else if(type==='runtime_boundary'){icon='🚫';}
+
+  var html='';
+  html+='<div class="tree-row'+(type==='aggregate_intent'?' tree-agg-row':'')+(S.selNodeId===id?' active':'')+'" style="padding-left:'+contentIndent+'px" onclick="treeNodeClick(event,\''+esc(id)+'\',\''+secId+'\','+hasKids+')">';
+
+  // Vertical connector line (full height, half if last child)
+  if(level>=1){
+    html+='<span class="tree-lv" style="left:'+lineX+'px;'+(isLast?'bottom:50%':'')+'"></span>';
+    html+='<span class="tree-lh" style="left:'+lineX+'px;width:'+(contentIndent-lineX-4)+'px"></span>';
+  }
+
+  // Expand arrow (only for nodes with children)
+  if(hasKids){
+    html+='<span class="tree-arw'+(open?' open':'')+'">▶</span>';
+  }else{
+    html+='<span style="width:14px;flex-shrink:0"></span>';
+  }
+  html+='<span style="font-size:12px;flex-shrink:0">'+icon+'</span>';
+  html+='<span class="tree-row-name" title="'+esc(id)+'">'+esc(name)+'</span>';
+  html+='<span class="tree-row-type" style="background:'+color+'">'+esc(typeLabel)+'</span>';
+  html+='<span class="tree-row-actions">';
+  if(type==='aggregate_intent'){
+    html+='<button onclick="event.stopPropagation();addLeafUnderAgg(\''+esc(id)+'\')" title="添加子意图" style="color:var(--accent)">+子</button>';
+  }
+  html+='<button onclick="event.stopPropagation();selectNode(\''+esc(id)+'\')" title="编辑">🖊</button>';
+  html+='<button class="del" onclick="event.stopPropagation();if(confirm(\'删除 '+esc(name)+'?\')){deleteNode(\''+esc(id)+'\');renderAll();}" title="删除">×</button>';
+  html+='</span></div>';
+
+  // Children
+  if(hasKids){
+    html+='<div id="tsec_'+secId+'" style="display:'+(open?'block':'none')+'">';
+    // Draw continuation of parent's vertical line through child area
+    children.forEach(function(cx,ci){
+      html+=renderTreeNodeRecursive(cx.node,cx.type,level+1,null,ci===children.length-1);
+    });
+    html+='</div>';
+  }
+
+  return html;
+}
+
+// Toggle domain expand
+function toggleDomain(e, secId){
+  e.stopPropagation();
+  var body=document.getElementById('tsec_'+secId);
+  if(!body)return;
+  var v=body.style.display==='none';
+  body.style.display=v?'block':'none';
+  var arw=e.currentTarget.querySelector('.tree-arw');
+  if(arw)arw.classList.toggle('open',v);
+}
+
+// Click handler for tree nodes
+function treeNodeClick(e, id, secId, hasKids){
+  if(hasKids){
+    // Toggle expand
+    var body=document.getElementById('tsec_'+secId);
+    if(body){
+      var v=body.style.display==='none'||!body.style.display;
+      body.style.display=v?'block':'none';
+      treeSections[secId]=v;
+      // Update arrow
+      var row=e.currentTarget;
+      var arw=row.querySelector('.tree-arw');
+      if(arw)arw.classList.toggle('open',v);
+    }
+    e.stopPropagation();
+  }
+  selectNode(id);
+}
+
+// Add aggregate to a domain
+function addAggToDomain(domain){
+  document.getElementById('addNodeModal').classList.add('show');
+  document.getElementById('newNodeType').value='aggregate_intent';
+  onNodeTypeChange();
+  setTimeout(function(){
+    var d=document.getElementById('nf_domain');if(d)d.value=domain;
+  },50);
+}
+
+// Add leaf to a domain (orphan)
+function addLeafToDomain(domain){
+  document.getElementById('addNodeModal').classList.add('show');
+  document.getElementById('newNodeType').value='intent_node';
+  onNodeTypeChange();
+  setTimeout(function(){
+    var d=document.getElementById('nf_domain');if(d)d.value=domain;
+  },50);
+}
+
+// Add leaf under a specific aggregate
+function addLeafUnderAgg(aggId){
+  document.getElementById('addNodeModal').classList.add('show');
+  document.getElementById('newNodeType').value='intent_node';
+  onNodeTypeChange();
+  setTimeout(function(){
+    var p=document.getElementById('nf_pid');if(p)p.value=aggId;
+    var n=findNodeById(aggId);
+    var d=document.getElementById('nf_domain');if(d&&n&&n.domain)d.value=n.domain;
+  },50);
+}
+
+function renderLegend(){
+  var html='<div class="l-title">🎨 图例</div><div class="legend-row">';
+  // Node type colors (leaf intents all same blue, differentiated by type label)
+  ['intent_node','aggregate_intent','business_object','action','slot','state_constraint','risk','knowledge_answer','runtime_boundary'].forEach(function(t){
+    var st=NODE_STYLE[t];if(!st)return;
+    html+='<span class="litem"><span class="ldot" style="background:'+st.color+'"></span>'+(st.label||t)+'</span>';
+  });
+  html+='</div>';
+  document.getElementById('legendWrap').innerHTML=html;
+}
+
+// ── Canvas zoom controls (like jena-fuseki-plus) ──
+function zoomCanvas(factor){
+  if(!S.g6)return;
+  try{var z=S.g6.getZoom();z=Math.min(Math.max(z*factor,0.1),5);S.g6.zoomTo(z);updateZoomBadge();}catch(e){}
+}
+function fitCanvas(){
+  if(!S.g6)return;
+  try{S.g6.fitView();updateZoomBadge();}catch(e){}
+}
+function updateZoomBadge(){
+  if(!S.g6)return;
+  try{var z=Math.round(S.g6.getZoom()*100);document.getElementById('zoomPct').textContent=z+'%';}catch(e){}
+}
+
+// ══════════════ Right Panel: Compact Stats Bar ══════════════
+function renderStats(){
+  var s=getStats();
+  var bar=document.getElementById('infoStatsBar');if(!bar)return;
+  var html='<span style="color:var(--red);font-size:9px">* 必填</span>';
+  html+='<span class="stat-chip">阶段 <span class="n">'+esc((WORK_STAGES.find(function(x){return x.key===S.workStage;})||{}).label||'未开始')+'</span></span>';
+  html+='<span class="stat-chip">📁<span class="n">'+s.agg+'</span>聚合</span>';
+  html+='<span class="stat-chip">📄<span class="n">'+s.leaf+'</span>叶子</span>';
+  html+='<span class="stat-chip">📦<span class="n">'+s.other+'</span>其他</span>';
+  html+='<span class="stat-chip">🔗<span class="n">'+s.edges+'</span>边</span>';
+  Object.keys(s.itypeCount).sort().forEach(function(t){
+    html+='<span class="stat-chip"><span style="color:'+(INTENT_COLORS[t]||'#888')+'">'+t+'</span> ×'+s.itypeCount[t]+'</span>';
+  });
+  bar.innerHTML=html;
+}
+
+function getStats(){
+  var ni=S.graph?S.graph.intent_nodes||[]:[];
+  var na=S.graph?S.graph.aggregate_intents||[]:[];
+  var sn=S.graph?S.graph.supporting_nodes||{}:{};
+  var so=0;Object.keys(sn).forEach(function(k){so+=(sn[k]||[]).length;});
+  var ne=S.graph?S.graph.edges||[]:[];
+  var itc={};ni.forEach(function(n){var t=(n.identity||{}).intent_type||'?';itc[t]=(itc[t]||0)+1;});
+  return {totalNodes:ni.length+na.length+so,agg:na.length,leaf:ni.length,other:so,edges:ne.length,itypeCount:itc};
+}
+
+function selectNode(id){
+  S.selNodeId=id;S.selEdgeIdx=null;
+  var n=findNodeById(id);
+  renderNodeTree();
+  highlightSelectedEdge();
+  highlightSelectedNode();
+  showNodeDetail(n,id);       // properties + edges combined
+}
+
+// Show properties AND edges for selected node in one view
+function showNodeDetail(n,id){
+  if(!n){document.getElementById('infoContent').innerHTML='<div class="info-empty">节点未找到</div>';return;}
+  // Properties on top, edges below
+  var html=renderStageTabs()+renderPropsHTML(n,id);
+  html+=renderEdgesHTML(id);
+  html+=renderStageChecklist();
+  document.getElementById('infoContent').innerHTML=html;
+}
+
+// ══════════════ Property Editor (card-style) ══════════════
+function renderPropsHTML(n,id){
+  if(!n)return'<div class="info-empty">节点未找到</div>';
+  var t=getNodeType(n),st=NODE_STYLE[t]||NODE_STYLE.intent_node;
+  var html='';
+
+  // ── Header: name + ID + type badge ──
+  html+='<div class="detail-header">';
+  html+='<div class="dh-name">'+esc(getNodeName(n))+'</div>';
+  html+='<div class="dh-id">'+esc(id)+'</div>';
+  html+='<span class="type-tag" style="background:'+st.color+';font-size:10px;padding:2px 8px">'+esc(st.label||t)+'</span>';
+  html+='</div>';
+
+  if(S.graph.intent_nodes&&S.graph.intent_nodes.indexOf(n)>=0){
+    var idn=n.identity||{};
+    var itOpts=(S.schema.intent_types||[]).map(function(x){return{value:x,label:x+' '+(INTENT_CN[x]||'')};});
+    if(S.workStage==='structure'){
+      html+='<div class="detail-section"><div class="detail-section-title">📋 基本信息</div>'+fg('intent_name','节点名称','text',idn.intent_name||'',null,true)+fg('intent_type','意图类型','select',idn.intent_type||'ASK',itOpts,true)+fg('domain','所属领域','select',idn.domain||'',S.schema.domains,true)+fg('parent_intent_id','所属聚合（父节点ID）','text',idn.parent_intent_id||'')+'</div>';
+    }
+    var sd=n.semantic_definition||{};
+    if(S.workStage==='structure'||S.workStage==='semantics'){
+      html+='<div class="detail-section"><div class="detail-section-title">💬 语义配置</div>'+fgText('user_goal','用户目标（一句话描述用户想做什么）',sd.user_goal||'',true)+fgText('description','场景描述',sd.description||'',true)+arrEd('scope_in','匹配说法（用户说这些话会命中）',sd.scope_in||[])+arrEd('scope_out','排除说法（用户说这些话不会命中）',sd.scope_out||[])+'</div>';
+    }
+    var rp=n.retrieval_profile||{};
+    if(S.workStage==='semantics'){
+      html+='<div class="detail-section"><div class="detail-section-title">🔍 检索配置</div>'+arrEd('utterance_view','用户说法（意图识别的匹配词）',rp.utterance_view||[])+arrEd('object_view','关联对象词',rp.object_view||[])+arrEd('action_view','关联动作词',rp.action_view||[])+'</div>';
+    }
+    var tb=n.task_binding||{};
+    if(S.workStage==='runtime'){
+      html+='<div class="detail-section"><div class="detail-section-title">🔗 绑定关系</div>'+(tb&&tb.action?fg('tb_ac','动作类型','select',tb.action.action_code||'',S.schema.action_codes)+fg('tb_an','动作名称','text',tb.action.action_name||'')+fg('tb_on','操作的业务对象','text',(tb.business_object||{}).object_name||''):'<div style="font-size:11px;color:var(--text2);padding:4px 0">知识类意图（如 FAQ 咨询），不需要绑定动作</div>')+'</div>';
+      html+='<div class="detail-section"><div class="detail-section-title">🚀 执行配置</div>'+fg('route_type','响应方式','text',(n.execution_binding||{}).route_type||'')+fg('nav_path','App 菜单路径（如：首页 > 我的账户 > 余额）','text',(n.execution_binding||{}).standard_navigation_path||'')+'</div>';
+    }
+  }else if(S.graph.aggregate_intents&&S.graph.aggregate_intents.indexOf(n)>=0){
+    html+='<div class="detail-section"><div class="detail-section-title">📁 聚合属性</div>'+fg('intent_name','名称','text',n.intent_name||'')+fg('domain','所属领域','select',n.domain||'',S.schema.domains)+'</div>';
+  }else{
+    html+='<div class="detail-section"><div class="detail-section-title">📦 基本属性</div>'+fg('node_name','名称','text',getNodeName(n))+'</div>';
+  }
+  html+='<button class="btn-save" onclick="savePropsAndRefresh()">💾 保存修改</button>';
+  return html;
+}
+
+function savePropsAndRefresh(){
+  if(!S.selNodeId)return;var n=findNodeById(S.selNodeId);if(!n)return;
+  // Validate required fields
+  var content=document.getElementById('infoContent');
+  var requiredEls=content.querySelectorAll('[data-required="1"]');
+  var hasError=false;
+  requiredEls.forEach(function(el){
+    if(!el.value.trim()){
+      el.style.borderColor='var(--red)';
+      el.style.background='#fff5f5';
+      hasError=true;
+    }else{
+      el.style.borderColor='';
+      el.style.background='';
+    }
+  });
+  if(hasError){
+    setBadge('err','请填写所有必填字段（标有 * 的为必填）');
+    return;
+  }
+  var els=content.querySelectorAll('input,select,textarea');
+  els.forEach(function(el){
+    var id=el.id,val=el.value;if(!id)return;
+    if(id==='intent_name'&&n.identity)n.identity.intent_name=val;
+    else if(id==='intent_type'&&n.identity)n.identity.intent_type=val;
+    else if(id==='domain'){if(n.identity)n.identity.domain=val;else n.domain=val;}
+    else if(id==='parent_intent_id'&&n.identity)n.identity.parent_intent_id=val;
+    else if(id==='user_goal'&&n.semantic_definition)n.semantic_definition.user_goal=val;
+    else if(id==='description'&&n.semantic_definition)n.semantic_definition.description=val;
+    else if(id==='route_type'&&n.execution_binding)n.execution_binding.route_type=val;
+    else if(id==='nav_path'&&n.execution_binding)n.execution_binding.standard_navigation_path=val;
+    else if(id==='tb_ac'&&n.task_binding&&n.task_binding.action)n.task_binding.action.action_code=val;
+    else if(id==='tb_an'&&n.task_binding&&n.task_binding.action)n.task_binding.action.action_name=val;
+    else if(id==='tb_on'&&n.task_binding&&n.task_binding.business_object)n.task_binding.business_object.object_name=val;
+    else if(id==='node_name'&&!n.identity&&!n.intent_id)n.intent_name=val;
+  });
+  var arrMap={};
+  content.querySelectorAll('[data-arr]').forEach(function(el){
+    var key=el.getAttribute('data-arr');
+    if(!arrMap[key])arrMap[key]=[];
+    if(el.value.trim())arrMap[key].push(el.value.trim());
+  });
+  if(n.semantic_definition){
+    if(arrMap.scope_in)n.semantic_definition.scope_in=arrMap.scope_in;
+    if(arrMap.scope_out)n.semantic_definition.scope_out=arrMap.scope_out;
+  }
+  if(n.retrieval_profile){
+    if(arrMap.utterance_view)n.retrieval_profile.utterance_view=arrMap.utterance_view;
+    if(arrMap.object_view)n.retrieval_profile.object_view=arrMap.object_view;
+    if(arrMap.action_view)n.retrieval_profile.action_view=arrMap.action_view;
+  }
+  S.dirty=true;renderAll();setBadge('ok','已保存');
+}
+
+// ══════════════ Edge List (card-style) ══════════════
+function renderEdgesHTML(nodeId){
+  var edges=S.graph.edges||[];
+  var rel=edges.filter(function(e){return(e.from||e.source)===nodeId||(e.to||e.target)===nodeId;});
+  var html='<div class="detail-section"><div class="detail-section-title">🔗 关联边 ('+rel.length+')</div>';
+  if(rel.length===0){
+    html+='<div style="color:var(--text2);font-size:11px;padding:8px 0;text-align:center">暂无关联边</div>';
+    html+='<div style="font-size:10px;color:var(--text2);text-align:center">在画布上拖拽节点连线 或 右键节点 → 「从此节点连边」</div>';
+  }else{
+    rel.forEach(function(e,i){
+      var isOut=(e.from||e.source)===nodeId,other=isOut?(e.to||e.target):(e.from||e.source),otherNode=findNodeById(other);
+      var globalIdx=S.graph.edges.indexOf(e);
+      html+='<div class="edge-card'+(S.selEdgeIdx===globalIdx?' style="border-color:var(--accent);background:#f0f5ff"':'')+'" onclick="S.selNodeId=null;S.selEdgeIdx='+globalIdx+';selectEdge('+globalIdx+');">';
+      html+='<span class="ec-dir '+(isOut?'out':'in')+'">'+(isOut?'→':'←')+'</span>';
+      var etype=e.type||'',ecn=EDGE_CN[etype]||'';
+      html+='<span class="ec-type" title="'+esc(etype)+'">'+esc(ecn||etype.slice(0,20))+'</span>';
+      html+='<span class="ec-target" title="'+esc(other)+'">'+esc((getNodeName(otherNode)||other).slice(0,20))+'</span>';
+      html+='<span class="ec-del" onclick="event.stopPropagation();deleteEdgeFromRel('+globalIdx+')" title="删除边">×</span>';
+      html+='</div>';
+    });
+  }
+  html+='</div>';
+  return html;
+}
+
+function deleteEdgeFromRel(idx){
+  var nodeId=S.selNodeId,edges=S.graph.edges||[];
+  if(idx>=0&&idx<edges.length){
+    var e=edges[idx],other=(e.from||e.source)===nodeId?(e.to||e.target):(e.from||e.source);
+    if(!confirm('删除此边？\n'+(EDGE_CN[e.type]||e.type)+' → '+esc(other)))return;
+    edges.splice(idx,1);S.dirty=true;if(S.selEdgeIdx===idx)S.selEdgeIdx=null;
+    renderAll();showNodeDetail(findNodeById(nodeId),nodeId);
+  }
+}
+
+// ══════════════ G6 Canvas ══════════════
+function renderG6(){
+  var container=document.getElementById('g6container'),empty=document.getElementById('gcanvasEmpty');
+  if(!container)return;
+
+  if(S.g6){try{S.g6.destroy();}catch(e){}S.g6=null;S._g6events=false;}
+
+  var allNodes=getAllNodes();
+  if(!S.graph||allNodes.length===0){
+    container.style.display='none';empty.style.display='flex';
+    document.getElementById('zoomBar').style.display='none';
+    document.getElementById('graphBadge').style.display='none';
+    return;
+  }
+  container.style.display='block';empty.style.display='none';
+  container.innerHTML='';
+  if(typeof G6==='undefined'){container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text2);font-size:12px">G6 加载中...</div>';return;}
+
+  var g6Nodes=allNodes.map(function(x){
+    var n=x.node,t=x.type,id=getNodeId(n),name=getNodeName(n);if(!id)return null;
+    var st=NODE_STYLE[t]||NODE_STYLE.intent_node,color=st.color;
+    if(t==='intent_node'&&n.identity&&n.identity.intent_type)color=INTENT_COLORS[n.identity.intent_type]||color;
+    return {
+      id:id,
+      type:G6_SHAPES[st.shape]||'circle',
+      data:{
+        label:(name||id).slice(0,18),
+        nodeType:t,
+        color:color,
+        size:st.size
+      }
+    };
+  }).filter(Boolean);
+
+  var g6Edges=(S.graph.edges||[]).map(function(e,i){
+    var src=e.from||e.source,tgt=e.to||e.target;
+    if(!src||!tgt)return null;
+    return {id:e.edge_id||('e'+i),source:src,target:tgt,data:{label:(e.type||'').slice(0,14)}};
+  }).filter(Boolean);
+
+  try{
+    S.g6=new G6.Graph({
+      container:container,width:container.parentElement.clientWidth,height:container.parentElement.clientHeight,
+      data:{nodes:g6Nodes,edges:g6Edges},
+      layout:g6Nodes.length>0?{type:'force',preventOverlap:true,linkDistance:100,nodeSize:30}:{type:'force'},
+      node:{
+        type:'circle',
+        style:function(d){
+          var isSel=S.selNodeId===d.id;
+          return{
+            size:(d.data&&d.data.size)||20,
+            fill:(d.data&&d.data.color)||'#1677ff',
+            labelText:(d.data&&d.data.label)||d.id,
+            labelFontSize:9,
+            labelPlacement:'bottom',
+            labelFill:isSel?'#cf1322':'#555',
+            stroke:isSel?'#cf1322':'#fff',
+            lineWidth:isSel?3:1,
+            // Halo (glow effect) - show on hover to indicate connection point
+            halo:false,
+            haloFill:'rgba(37,99,235,0.15)',
+            haloStroke:'#2563eb',
+            haloLineWidth:3
+          };
+        },
+        state:{
+          hover:{
+            stroke:'#2563eb',
+            lineWidth:2,
+            halo:true,
+            haloFill:'rgba(37,99,235,0.25)',
+            haloStroke:'#2563eb',
+            haloLineWidth:4
+          },
+          selected:{stroke:'#cf1322',lineWidth:3}
+        }
+      },
+      edge:{type:'line',style:function(d){
+        var edges=S.graph.edges||[];
+        var isSel=S.selEdgeIdx!==null&&S.selEdgeIdx>=0&&S.selEdgeIdx<edges.length&&(edges[S.selEdgeIdx].edge_id||edges[S.selEdgeIdx].id)===d.id;
+        return{stroke:isSel?'#2563eb':'#bbb',lineWidth:isSel?3:1,endArrow:true,labelText:(d.data&&d.data.label)||'',labelFontSize:7,labelFill:isSel?'#2563eb':'#999',labelFontWeight:isSel?'bold':'normal'};
+      }},
+      behaviors:['drag-canvas','zoom-canvas','drag-element',{
+        key:'create-edge-custom',
+        type:'create-edge',
+        trigger:'drag',
+        style:{
+          stroke:'#2563eb',
+          strokeWidth:2,
+          lineDash:[6,3],
+          endArrow:true,
+          // Show anchors when dragging
+          sourceAnchor:{
+            fill:'#2563eb',
+            stroke:'#fff',
+            strokeWidth:2,
+            size:10,
+            r:5
+          },
+          targetAnchor:{
+            fill:'#16a34a',
+            stroke:'#fff',
+            strokeWidth:2,
+            size:10,
+            r:5
+          }
+        },
+        onCreate:function(evt){
+          var srcId=evt.source;
+          var node=findNodeById(srcId);
+          if(!node)return false;
+          return true;
+        }
+      }],
+      autoFit:'view',
+    });
+    S.g6.render();
+
+    if(!S._g6events){
+      S._g6events=true;
+      S.g6.on('canvas:dblclick',function(){if(!S.guideMode)openAddNodeModal();});
+
+      // G6 create-edge behavior: listen to aftercreateedge event
+      S.g6.on('aftercreateedge',function(evt){
+        var edge=evt.edge;
+        if(!edge||!edge.source||!edge.target)return;
+        var srcId=edge.source,tgtId=edge.target;
+        // Validate and show edge type selector
+        var n1=findNodeById(srcId),n2=findNodeById(tgtId);
+        if(!n1||!n2){setBadge('warn','节点不存在');return;}
+        var t1=getNodeType(n1),t2=getNodeType(n2);
+        var candidates=suggestEdgeTypes(t1,t2);
+        if(candidates.length===0){
+          alert('无法连接：'+getNodeName(n1)+'（'+t1+'）和 '+getNodeName(n2)+'（'+t2+'）之间没有合适的边类型');
+          // Remove the created edge
+          S.g6.removeData('edge',edge.id);
+          S.g6.draw();
+          return;
+        }
+        // Remove G6's auto-created edge (we'll add our own with proper metadata)
+        S.g6.removeData('edge',edge.id);
+        S.g6.draw();
+        // Show edge type selector
+        openEdgeModalWithNodes(srcId,tgtId);
+      });
+
+      // Hover effects with tooltip hint
+      S.g6.on('node:pointerenter',function(evt){
+        var nodeId=evt.target.id;
+        S.g6.setElementState(nodeId,{hover:true});
+        S.g6.draw();
+        setBadge('warn','拖拽节点连线');
+      });
+      S.g6.on('node:pointerleave',function(evt){
+        var nodeId=evt.target.id;
+        S.g6.setElementState(nodeId,{hover:false});
+        S.g6.draw();
+        setBadge('ok','就绪');
+      });
+
+      // Node/Edge/Canvas interaction
+      S.g6.on('node:click',function(evt){
+        if(S.selEdgeIdx!==null){S.selEdgeIdx=null;highlightSelectedEdge();}
+        S.selNodeId=evt.target.id;selectNode(S.selNodeId);
+        setBadge('ok','已选中');
+      });
+      S.g6.on('canvas:click',function(evt){
+        if(S.selNodeId||S.selEdgeIdx!==null){
+          S.selNodeId=null;S.selEdgeIdx=null;
+          renderNodeTree();renderG6();
+          document.getElementById('infoContent').innerHTML='<div class="info-empty"><div class="icon">👈</div>点击节点或边<br>查看和编辑属性</div>';
+          setBadge('ok','已取消选择');
+        }
+      });
+      function ctxPos(evt){return{x:evt.clientX||(evt.client?evt.client.x:0)||(evt.canvas?evt.canvas.x:0)||0,y:evt.clientY||(evt.client?evt.client.y:0)||(evt.canvas?evt.canvas.y:0)||0};}
+      S.g6.on('node:contextmenu',function(evt){if(evt.preventDefault)evt.preventDefault();if(evt.stopPropagation)evt.stopPropagation();S.ctxNodeId=evt.target.id;var p=ctxPos(evt);showCtxMenu(p.x,p.y,'node');});
+      S.g6.on('canvas:contextmenu',function(evt){if(evt.preventDefault)evt.preventDefault();if(evt.stopPropagation)evt.stopPropagation();S.ctxNodeId=null;var p=ctxPos(evt);showCtxMenu(p.x,p.y,'canvas');});
+      S.g6.on('edge:click',function(evt){
+        var eid=evt.target.id;if(!eid)return;
+        S.selNodeId=null;S.selEdgeIdx=findEdgeIdx(eid);
+        selectEdge(S.selEdgeIdx);
+      });
+      S.g6.on('edge:contextmenu',function(evt){
+        if(evt.preventDefault)evt.preventDefault();if(evt.stopPropagation)evt.stopPropagation();
+        S.ctxNodeId=evt.target.id;var p=ctxPos(evt);showCtxMenu(p.x,p.y,'edge');
+      });
+      document.addEventListener('keydown',function(e){
+        if(window.DOMAIN&&DOMAIN.current!=='intent')return; // [multi-domain hook] org 领域禁用意图快捷键
+        if(e.key==='Delete'&&S.selNodeId&&document.activeElement===document.body){
+          e.preventDefault();var n=findNodeById(S.selNodeId);
+          if(confirm('删除 '+getNodeName(n)+'？')){deleteNode(S.selNodeId);S.selNodeId=null;renderAll();}
+        }
+        if(e.ctrlKey&&!e.shiftKey&&e.key==='c'){copyNode();}
+        if(e.ctrlKey&&!e.shiftKey&&e.key==='v'){pasteNode();}
+        if(e.ctrlKey&&!e.shiftKey&&e.key==='z'){undo();}
+        if(e.ctrlKey&&e.shiftKey&&e.key==='Z'){redo();}
+      });
+    }
+    updateCanvasHint();
+    // Show zoom controls & graph badge
+    document.getElementById('zoomBar').style.display='flex';
+    var s=getStats();document.getElementById('graphBadge').style.display='block';
+    document.getElementById('graphBadge').textContent='节点 '+s.totalNodes+' · 边 '+s.edges;
+    updateZoomBadge();
+    if(S.selEdgeIdx!==null)highlightSelectedEdge();
+  }catch(e){container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--red);font-size:11px">渲染失败: '+esc(e.message)+'</div>';}
+}
+
+function highlightSelectedNode(){
+  if(!S.g6||!S.selNodeId)return;
+  try{
+    // 清除所有节点的高亮，只高亮选中节点
+    var allNodes=getAllNodes();
+    var states={};
+    allNodes.forEach(function(x){var id=getNodeId(x.node);if(id)states[id]={selected:false};});
+    states[S.selNodeId]={selected:true};
+    S.g6.setElementState(states);
+    S.g6.draw();
+  }catch(e){}
+}
+function updateCanvasHint(){
+  var hint=document.getElementById('canvasHint');if(!hint)return;
+  var nodes=getAllNodes(),edges=S.graph?S.graph.edges||[]:[];
+  if(!S.graph||nodes.length===0)hint.textContent='';
+  else hint.textContent='💡 拖拽节点到另一节点连线 · 点击编辑 · 右键更多';
+}
+
+// ══════════════ Context Menu (dynamic, type-sensitive) ══════════════
+function showCtxMenu(x,y,target){
+  var menu=document.getElementById('ctxMenu');
+  var items=[];
+  if(target==='node'){
+    var n=findNodeById(S.ctxNodeId),t=getNodeType(n),name=getNodeName(n);
+    items.push({label:'✏️ 编辑属性',cls:'',action:function(){hideCtxMenu();S.selNodeId=S.ctxNodeId;selectNode(S.ctxNodeId);}});
+    if(t==='aggregate_intent'){
+      items.push({label:'➕ 添加子意图',cls:'',action:function(){hideCtxMenu();openAddNodeModalForParent(S.ctxNodeId);}});
+    }
+    items.push({label:'—',cls:'ctx-div',action:null});
+    items.push({label:'🗑 删除节点「'+esc(name).slice(0,10)+'」',cls:'danger',action:function(){hideCtxMenu();if(confirm('删除 '+getNodeName(findNodeById(S.ctxNodeId))+'？')){deleteNode(S.ctxNodeId);if(S.selNodeId===S.ctxNodeId)S.selNodeId=null;renderAll();}}});
+  }else if(target==='edge'){
+    var ei=findEdgeIdx(S.ctxNodeId),e=S.graph.edges&&ei>=0?S.graph.edges[ei]:null;
+    var eDesc=e?(EDGE_CN[e.type]||e.type)+'  '+(e.from||e.source)+' → '+(e.to||e.target):'';
+    items.push({label:'✏️ 编辑边属性',cls:'',action:function(){hideCtxMenu();S.selNodeId=null;S.selEdgeIdx=ei;selectEdge(ei);}});
+    items.push({label:'—',cls:'ctx-div',action:null});
+    items.push({label:'🗑 删除边「'+esc(eDesc.slice(0,24))+'」',cls:'danger',action:function(){hideCtxMenu();if(ei>=0&&confirm('确认删除此边？')){S.graph.edges.splice(ei,1);S.dirty=true;renderAll();}}});
+  }else{
+    items.push({label:'➕ 在此添加节点',cls:'',action:function(){hideCtxMenu();openAddNodeModal();}});
+    items.push({label:'📊 适配画布',cls:'',action:function(){hideCtxMenu();fitCanvas();}});
+  }
+
+  var html='',idx=0;
+  items.forEach(function(it){
+    if(it.label==='—'){html+='<div class="ctx-div"></div>';return;}
+    var fnName='_ctxFn'+idx;
+    window[fnName]=it.action||function(){};
+    html+='<div class="ctx-item'+(it.cls?' '+it.cls:'')+'" onclick="window.'+fnName+'();">'+it.label+'</div>';
+    idx++;
+  });
+  menu.innerHTML=html;
+
+  // Position within viewport
+  var mw=menu.offsetWidth||180,mh=menu.offsetHeight||200;
+  if(x+mw>window.innerWidth)x=window.innerWidth-mw-5;
+  if(y+mh>window.innerHeight)y=window.innerHeight-mh-5;
+  menu.style.display='block';menu.style.left=x+'px';menu.style.top=y+'px';
+  // Ignore clicks for 300ms after opening (the right-click mouseup fires a click)
+  var openTime=Date.now();
+  if(S._ctxHideFn)document.removeEventListener('click',S._ctxHideFn);
+  S._ctxHideFn=function(e){
+    if(Date.now()-openTime<300)return;
+    hideCtxMenu();
+    document.removeEventListener('click',S._ctxHideFn);
+    S._ctxHideFn=null;
+  };
+  setTimeout(function(){document.addEventListener('click',S._ctxHideFn);},0);
+}
+function hideCtxMenu(){document.getElementById('ctxMenu').style.display='none';S.ctxNodeId=null;if(S._ctxHideFn){document.removeEventListener('click',S._ctxHideFn);S._ctxHideFn=null;}}
+
+// Open edge modal with source and target node IDs (from Shift+drag)
+function openEdgeModalWithNodes(srcId,tgtId){
+  var n1=findNodeById(srcId),n2=findNodeById(tgtId);
+  if(!n1||!n2){setBadge('warn','节点不存在');return;}
+  var t1=getNodeType(n1),t2=getNodeType(n2);
+  var candidates=suggestEdgeTypes(t1,t2);
+  if(candidates.length===0){
+    alert('无法连接：'+getNodeName(n1)+'（'+t1+'）和 '+getNodeName(n2)+'（'+t2+'）之间没有合适的边类型');
+    return;
+  }
+  S.edgeSrc=srcId;S.edgeTgt=tgtId;
+  document.getElementById('edgeFromLabel').textContent=getNodeName(n1)||srcId;
+  document.getElementById('edgeToLabel').textContent=getNodeName(n2)||tgtId;
+  var sel=document.getElementById('newEdgeType');
+  sel.innerHTML=candidates.map(function(c){return'<option>'+c+'</option>';}).join('');
+  document.getElementById('addEdgeModal').classList.add('show');
+  setBadge('ok','选择边类型');
+}
+
+// ═══ Smart edge connection with auto-type detection ═══
+function smartConnect(srcId,tgtId){
+  var n1=findNodeById(srcId),n2=findNodeById(tgtId);
+  if(!n1||!n2)return;
+  var t1=getNodeType(n1),t2=getNodeType(n2);
+  var candidates=suggestEdgeTypes(t1,t2);
+  if(candidates.length===0){
+    alert('无法连接：'+getNodeName(n1)+'（'+t1+'）和 '+getNodeName(n2)+'（'+t2+'）之间没有合适的边类型');
+    return;
+  }
+  if(candidates.length===1){
+    // Auto-create with the single best type
+    addEdge(srcId,tgtId,candidates[0]);
+    setBadge('ok','已添加边: '+candidates[0]);
+  }else{
+    // Multiple options: ask user
+    S.edgeSrc=srcId;S.edgeTgt=tgtId;
+    document.getElementById('edgeFromLabel').textContent=getNodeName(n1)||srcId;
+    document.getElementById('edgeToLabel').textContent=getNodeName(n2)||tgtId;
+    // Pre-select the first (best) candidate
+    var sel=document.getElementById('newEdgeType');
+    sel.innerHTML=candidates.map(function(c){return'<option>'+c+'</option>';}).join('');
+    document.getElementById('addEdgeModal').classList.add('show');
+  }
+}
+
+// Suggest valid edge types between two node types
+function suggestEdgeTypes(t1,t2){
+  var rules={
+    'aggregate_intent->intent_node':['has_leaf_intent'],
+    'intent_node->business_object':['acts_on_object','has_business_object'],
+    'intent_node->action':['uses_action'],
+    'intent_node->slot':['requires_slot','optional_slot'],
+    'intent_node->state_constraint':['has_state_constraint'],
+    'intent_node->risk':['has_risk_constraint'],
+    'intent_node->knowledge_answer':['has_knowledge_answer'],
+    'intent_node->runtime_boundary':['references'],
+    'aggregate_intent->aggregate_intent':['related_to'],
+    'intent_node->intent_node':['confusable_with','related_to','clarify_to'],
+    'business_object->intent_node':['acts_on_object'],
+    'action->intent_node':['uses_action'],
+  };
+  var key=t1+'->'+t2;
+  return rules[key]||['related_to']; // fallback: generic relation
+}
+
+function addEdge(src,tgt,type){
+  saveSnapshot();
+  var errors=validateEdgeType(src,tgt,type);
+  if(errors.length>0){alert(errors.join('\n'));return;}
+  if(!S.graph.edges)S.graph.edges=[];
+  // Check for duplicate
+  var dup=S.graph.edges.some(function(e){return ((e.from||e.source)===src&&(e.to||e.target)===tgt&&e.type===type);});
+  if(dup){setBadge('warn','边已存在，跳过');return;}
+  S.graph.edges.push({edge_id:'edge_'+Date.now().toString(36),from:src,to:tgt,type:type,relation_category:'hierarchy',status:'active',version:'v2.1-p2-manual',owner:'expert',weight:1,priority:100});
+  S.dirty=true;
+  renderAll();
+}
+
+// Open add-node modal with parent pre-filled
+function openAddNodeModalForParent(parentId){
+  var parent=findNodeById(parentId);
+  document.getElementById('addNodeModal').classList.add('show');
+  document.getElementById('newNodeType').value='intent_node';
+  onNodeTypeChange();
+  // Pre-fill parent ID
+  setTimeout(function(){
+    var pidEl=document.getElementById('nf_pid');
+    if(pidEl)pidEl.value=parentId;
+    var domainEl=document.getElementById('nf_domain');
+    if(domainEl&&parent&&parent.domain)domainEl.value=parent.domain;
+  },50);
+}
+
+// ══════════════ Add Node Modal ══════════════
+function openAddNodeModal(){document.getElementById('addNodeModal').classList.add('show');onNodeTypeChange();}
+function onNodeTypeChange(){
+  var t=document.getElementById('newNodeType').value;
+  var hints={intent_node:'📄 叶子意图 — 用户一句话对应的最终意图',aggregate_intent:'📁 聚合意图 — 分类容器',business_object:'📦 业务对象 — 意图操作的目标',action:'⚡ 动作 — 原子操作',slot:'🔧 槽位 — 意图参数',state_constraint:'🚦 状态约束 — 前置条件',risk:'⚠️ 风险 — 风控规则',knowledge_answer:'💡 知识答案 — FAQ内容',runtime_boundary:'🚫 运行时边界 — 非业务输入'};
+  document.getElementById('newNodeHint').textContent=hints[t]||'';
+  var f=document.getElementById('newNodeFields');
+  if(t==='intent_node'){f.innerHTML='<label>名称</label><input id="nf_name" placeholder="如 查询余额"><label>意图类型</label><select id="nf_itype">'+(S.schema.intent_types||[]).map(function(x){return'<option value="'+x+'">'+x+' '+(INTENT_CN[x]||'')+'</option>';}).join('')+'</select><label>领域</label><select id="nf_domain">'+S.schema.domains.map(function(x){return'<option>'+x+'</option>';}).join('')+'</select><label>父聚合ID (可选)</label><input id="nf_pid" placeholder="留空=无">';}
+  else if(t==='aggregate_intent'){f.innerHTML='<label>名称</label><input id="nf_name" placeholder="如 账户查询"><label>领域</label><select id="nf_domain">'+S.schema.domains.map(function(x){return'<option>'+x+'</option>';}).join('')+'</select>';}
+  else{var ph={business_object:'如 账户余额',action:'如 查询',slot:'如 金额',state_constraint:'如 已登录',risk:'如 超额风险',knowledge_answer:'如 余额说明',runtime_boundary:'如 idle_chat'};f.innerHTML='<label>名称</label><input id="nf_name" placeholder="'+(ph[t]||'')+'">';}
+}
+
+function confirmAddNode(){
+  var t=document.getElementById('newNodeType').value,name=document.getElementById('nf_name').value.trim();
+  if(!name){alert('请输入名称');return;}if(!S.graph){alert('请先新建或加载图谱');return;}
+  var idMap={intent_node:'intent_leaf_',aggregate_intent:'intent_group_node_',business_object:'obj_',action:'act_',slot:'slot_',state_constraint:'state_',risk:'risk_',knowledge_answer:'knowledge_',runtime_boundary:'rb_'};
+  var id=idMap[t]+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  if(t==='intent_node'){
+    if(!S.graph.intent_nodes)S.graph.intent_nodes=[];
+    var itype=document.getElementById('nf_itype').value,domain=document.getElementById('nf_domain').value,pid=document.getElementById('nf_pid').value.trim(),isKnow=itype==='ASK'||itype==='HELP';
+    S.graph.intent_nodes.push({identity:{intent_id:id,intent_name:name,intent_type:itype,intent_level:'leaf',parent_intent_id:pid||null,domain:domain,is_executable_leaf:!isKnow,is_knowledge_intent:isKnow},semantic_definition:{user_goal:name,description:'手工建模 — '+name,scope_in:[name],scope_out:[],confusable_intents:[],disambiguation_hints:[]},retrieval_profile:{utterance_view:[name],semantic_view:[name],object_view:[],action_view:[itype.toLowerCase()],weights:{}},task_binding:isKnow?null:{action:{action_code:'query',action_name:'查询'},business_object:{object_name:name,object_type:''}},knowledge_binding:isKnow?{knowledge_refs:[],answer_policy:'direct_answer_or_recommend_entry'}:null,decision_policy:{default_decision:isKnow?'answer':'execute',low_confidence_strategy:'keep_topk_then_graph_reasoning_or_clarify',clarify_questions:[],reject_policy:'fallback_when_out_of_scope'},execution_binding:{route_type:isKnow?'answer':'action_execution',standard_navigation_path:'',source_navigation_paths:[],route_readiness:'draft'},governance:{quality_flags:['expert_draft'],review_status:'draft'}});
+  }else if(t==='aggregate_intent'){
+    if(!S.graph.aggregate_intents)S.graph.aggregate_intents=[];
+    var domain=document.getElementById('nf_domain').value;
+    S.graph.aggregate_intents.push({intent_id:id,intent_name:name,intent_level:'aggregate',domain:domain,modeling_role:'intent_candidate',semantic_definition:{user_goal:name,description:'手工建模 — '+name,scope_in:[name],scope_out:[]}});
+  }else{
+    if(!S.graph.supporting_nodes)S.graph.supporting_nodes={};
+    var snMap={business_object:'business_objects',action:'actions',slot:'slots',state_constraint:'states',risk:'risks',knowledge_answer:'knowledge_answers',runtime_boundary:'runtime_boundaries'},snKey=snMap[t];
+    if(!S.graph.supporting_nodes[snKey])S.graph.supporting_nodes[snKey]=[];
+    var idF={business_object:'object_id',action:'action_id',slot:'slot_id',state_constraint:'state_id',risk:'risk_id',knowledge_answer:'knowledge_id',runtime_boundary:'runtime_boundary_id'};
+    var nmF={business_object:'object_name',action:'action_name',slot:'slot_name',state_constraint:'state_name',risk:'risk_name',knowledge_answer:'knowledge_name',runtime_boundary:'runtime_boundary_name'};
+    var obj={};obj[idF[t]]=id;obj[nmF[t]]=name;S.graph.supporting_nodes[snKey].push(obj);
+  }
+  S.dirty=true;closeModal();renderAll();setBadge('ok','已添加: '+name);
+}
+
+function deleteNode(id){
+  ['intent_nodes','aggregate_intents'].forEach(function(k){if(S.graph[k])S.graph[k]=S.graph[k].filter(function(n){return getNodeId(n)!==id;});});
+  var sn=S.graph.supporting_nodes||{};Object.keys(sn).forEach(function(k){sn[k]=sn[k].filter(function(n){return getNodeId(n)!==id;});});
+  S.graph.edges=(S.graph.edges||[]).filter(function(e){return(e.from||e.source)!==id&&(e.to||e.target)!==id;});S.dirty=true;
+}
+
+// ══════════════ Add Edge ══════════════
+function confirmAddEdge(){
+  var type=document.getElementById('newEdgeType').value;
+  if(!S.graph.edges)S.graph.edges=[];
+  S.graph.edges.push({edge_id:'edge_'+Date.now().toString(36),from:S.edgeSrc,to:S.edgeTgt,type:type,relation_category:'hierarchy',status:'active',version:'v2.1-p2-manual',owner:'expert'});
+  S.dirty=true;closeEdgeModal();renderAll();setBadge('ok','已添加边: '+type);
+}
+
+// ══════════════ Validate / Export ══════════════
+async function onValidate(){
+  if(!S.graph){alert('请先新建或加载图谱');return;}
+  try{
+    var r=await fetch('/api/intent-graph/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({graph:S.graph})});
+    var j=await r.json(),panel=document.getElementById('validation');panel.style.display='block';
+    S.lastValidation=j;
+    var modeling=j.modeling||{errors:[],warnings:[]};
+    if(j.errors.length===0&&modeling.errors.length===0){
+      panel.innerHTML='<div class="v-ok">✓ 校验通过</div>'+(modeling.warnings.length?'<div style="color:var(--orange);margin-top:4px">'+modeling.warnings.slice(0,8).map(function(e){return'<div>'+esc(e)+'</div>';}).join('')+'</div>':'');
+      setBadge('ok','校验通过');
+    } else {
+      panel.innerHTML='<div style="color:var(--red);font-weight:600;margin-bottom:4px">✗ '+(j.errors.length+modeling.errors.length)+' 错误</div>'+
+        j.errors.slice(0,20).map(function(e){return'<div class="v-err">'+esc(e)+'</div>';}).join('')+
+        modeling.errors.slice(0,10).map(function(e){return'<div class="v-err">'+esc(e)+'</div>';}).join('')+
+        (modeling.warnings.length?'<div style="color:var(--orange);margin-top:6px">'+modeling.warnings.slice(0,8).map(function(e){return'<div>'+esc(e)+'</div>';}).join('')+'</div>':'');
+      setBadge('err',(j.errors.length+modeling.errors.length)+' 错误');
+    }
+    renderAll();
+  }catch(e){alert('校验失败: '+e.message);}
+}
+async function onExport(){
+  if(!S.graph){alert('请先新建或加载图谱');return;}
+  var v=prompt('导出版本号:','intent-graph-v2.1-p2-batch1');if(!v)return;
+  var changes=prompt('变更说明:','低码工作台导出候选版本');if(!changes)return;
+  try{
+    var r=await fetch('/api/intent-graph/export',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({graph:S.graph,version:v,changes:changes,release_stage:'p2_candidate',release_status:'candidate',promote_to_active:false})});
+    var j=await r.json();
+    if(j.success){alert('导出成功!\n文件: '+j.file+'\n状态: '+(j.release_status||'candidate')+'\n节点: '+j.stats.intent_nodes+' 叶子 + '+j.stats.aggregate_intents+' 聚合\n边: '+j.stats.edges);setBadge('ok','已导出候选');}
+    else{alert('导出失败: '+(j.errors||[]).length+' 错误');}
+  }catch(e){alert('导出失败: '+e.message);}
+}
+
+// ══════════════ Utils ══════════════
+function renderAll(){renderNodeTree();renderStats();renderG6();if(!S.selNodeId&&S.selEdgeIdx===null&&!S.guideMode)renderInspectorEmpty();}
+
+function getNodeType(n){
+  if(S.graph.aggregate_intents&&S.graph.aggregate_intents.indexOf(n)>=0)return'aggregate_intent';
+  if(S.graph.intent_nodes&&S.graph.intent_nodes.indexOf(n)>=0)return'intent_node';
+  return n.node_type||(n.identity?'intent_node':'unknown');
+}
+function getNodeId(n){
+  if(n.identity)return n.identity.intent_id;
+  return n.intent_id||n.object_id||n.action_id||n.knowledge_id||n.slot_id||n.state_id||n.risk_id||n.runtime_boundary_id||n.id||'';
+}
+function getNodeName(n){
+  if(n.identity)return n.identity.intent_name;
+  return n.intent_name||n.object_name||n.action_name||n.knowledge_name||n.slot_name||n.state_name||n.risk_name||n.runtime_boundary_name||n.name||getNodeId(n);
+}
+function getAllNodes(){
+  if(!S.graph)return [];
+  var arr=[];
+  (S.graph.intent_nodes||[]).forEach(function(n){arr.push({node:n,type:'intent_node'});});
+  (S.graph.aggregate_intents||[]).forEach(function(n){arr.push({node:n,type:'aggregate_intent'});});
+  var sn=S.graph.supporting_nodes||{};
+  ['business_objects','actions','slots','states','risks','knowledge_answers','runtime_boundaries'].forEach(function(k){
+    var tm={business_objects:'business_object',actions:'action',slots:'slot',states:'state_constraint',risks:'risk',knowledge_answers:'knowledge_answer',runtime_boundaries:'runtime_boundary'};
+    (sn[k]||[]).forEach(function(n){arr.push({node:n,type:tm[k]});});
+  });
+  return arr;
+}
+function findNodeById(id){var all=getAllNodes();for(var i=0;i<all.length;i++){if(getNodeId(all[i].node)===id)return all[i].node;}return null;}
+function closeModal(){document.getElementById('addNodeModal').classList.remove('show');}
+function closeEdgeModal(){document.getElementById('addEdgeModal').classList.remove('show');S.edgeSrc=S.edgeTgt=null;}
+
+// ══════════════ Edge Selection & Editing ══════════════
+function findEdgeIdx(eid){
+  var edges=S.graph.edges||[];
+  for(var i=0;i<edges.length;i++){if((edges[i].edge_id||edges[i].id)===eid)return i;}
+  return -1;
+}
+function selectEdge(idx){
+  S.selNodeId=null;S.selEdgeIdx=idx;
+  var edges=S.graph.edges||[],e=idx>=0&&idx<edges.length?edges[idx]:null;
+  renderNodeTree();
+  renderG6();
+  highlightSelectedEdge();
+  showEdgeDetail(e,idx);
+}
+function showEdgeDetail(e,idx){
+  if(!e){document.getElementById('infoContent').innerHTML='<div class="info-empty">边未找到</div>';return;}
+  var src=e.from||e.source,tgt=e.to||e.target;
+  var srcNode=findNodeById(src),tgtNode=findNodeById(tgt);
+  document.getElementById('infoContent').innerHTML=renderStageTabs()+renderEdgeEditHTML(e,idx,src,tgt,srcNode,tgtNode)+renderStageChecklist();
+}
+function renderEdgeEditHTML(e,idx,src,tgt,srcNode,tgtNode){
+  var etype=e.type||'related_to',ecn=EDGE_CN[etype]||'';
+  var html='';
+  html+='<div class="detail-header">';
+  html+='<div class="dh-name">🔗 编辑边</div>';
+  html+='<div class="dh-id">'+(e.edge_id||e.id||('e'+idx))+'</div>';
+  html+='</div>';
+  html+='<div class="detail-section"><div class="detail-section-title">📋 基本信息</div>';
+  html+=fg('edge_type','边类型','select',etype,(S.schema.edge_types||[]).map(function(t){return{value:t,label:t+' ('+(EDGE_CN[t]||'')+')'};}),true);
+  html+=fg('edge_rc','关系类别','text',e.relation_category||'');
+  html+=fg('edge_st','状态','select',e.status||'active',[{value:'active',label:'active — 生效中'},{value:'draft',label:'draft — 草稿'},{value:'deprecated',label:'deprecated — 已废弃'},{value:'review',label:'review — 待审核'}]);
+  html+=fg('edge_wt','权重','number',e.weight||1);
+  html+=fg('edge_pr','优先级','number',e.priority||100);
+  html+='</div>';
+  html+='<div class="detail-section"><div class="detail-section-title">🔗 端点</div>';
+  html+='<div class="fg"><label>源节点（from）</label><div style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;background:var(--bg2)">'+(srcNode?esc(getNodeName(srcNode))+' <span style="color:var(--text2);font-size:9px">('+esc(src)+')</span>':esc(src))+'</div></div>';
+  html+='<div class="fg"><label>目标节点（to）</label><div style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;background:var(--bg2)">'+(tgtNode?esc(getNodeName(tgtNode))+' <span style="color:var(--text2);font-size:9px">('+esc(tgt)+')</span>':esc(tgt))+'</div></div>';
+  html+='</div>';
+  html+='<button class="btn-save" onclick="saveEdgeAndRefresh()">💾 保存修改</button>';
+  html+='<button style="display:block;width:100%;padding:8px;margin-top:6px;cursor:pointer;background:none;color:var(--red);border:1px solid var(--red);border-radius:6px;font-size:12px;font-weight:600" onclick="deleteEdgeFromPanel()">🗑 删除此边</button>';
+  return html;
+}
+function saveEdgeAndRefresh(){
+  if(S.selEdgeIdx===null||S.selEdgeIdx<0)return;
+  var edges=S.graph.edges||[];if(S.selEdgeIdx>=edges.length)return;
+  var e=edges[S.selEdgeIdx];
+  var els=document.getElementById('infoContent').querySelectorAll('input,select');
+  els.forEach(function(el){
+    var id=el.id,val=el.value;if(!id)return;
+    if(id==='edge_type')e.type=val;
+    else if(id==='edge_rc')e.relation_category=val;
+    else if(id==='edge_st')e.status=val;
+    else if(id==='edge_wt')e.weight=parseFloat(val)||1;
+    else if(id==='edge_pr')e.priority=parseInt(val)||100;
+  });
+  S.dirty=true;
+  // Re-render canvas + tree, keep edge editor visible
+  renderNodeTree();renderG6();renderStats();
+  showEdgeDetail(e,S.selEdgeIdx);
+  setBadge('ok','边已保存');
+}
+function deleteEdgeFromPanel(){
+  if(S.selEdgeIdx===null||S.selEdgeIdx<0)return;
+  var edges=S.graph.edges||[];if(S.selEdgeIdx>=edges.length)return;
+  var e=edges[S.selEdgeIdx],desc=(EDGE_CN[e.type]||e.type)+' ['+((e.from||e.source)||'')+' → '+(e.to||e.target)+']';
+  if(!confirm('确认删除此边？\n'+desc))return;
+  edges.splice(S.selEdgeIdx,1);S.selEdgeIdx=null;S.dirty=true;
+  renderAll();setBadge('ok','边已删除');
+}
+function highlightSelectedEdge(){
+  if(!S.g6)return;
+  try{
+    var allEdges=S.graph.edges||[];
+    if(S.selEdgeIdx!==null&&S.selEdgeIdx>=0&&S.selEdgeIdx<allEdges.length){
+      var eid=allEdges[S.selEdgeIdx].edge_id||allEdges[S.selEdgeIdx].id;
+      if(eid)S.g6.setElementState(eid,{selected:true});
+    }
+    S.g6.draw();
+  }catch(e){}
+}
+
+// ══════════════ Form Helpers ══════════════
+function section(title,body){return'<details open style="margin-bottom:6px"><summary style="font-size:10px;font-weight:600;color:var(--accent);cursor:pointer">'+title+'</summary><div style="padding:3px 0">'+body+'</div></details>';}
+function fg(id,label,type,value,opts,required){
+  var input='',reqMark=required?' <span style="color:var(--red);font-weight:700">*</span>':'';
+  if(type==='select'&&opts)input='<select id="'+id+'"'+(required?' data-required="1"':'')+'>'+opts.map(function(o){var v=typeof o==='object'?o.value:o,l=typeof o==='object'?o.label:o;return'<option value="'+esc(v)+'"'+(v===value?' selected':'')+'>'+esc(l)+'</option>';}).join('')+'</select>';
+  else input='<input type="'+type+'" id="'+id+'" value="'+esc(String(value||''))+'"'+(required?' data-required="1"':'')+'>';
+  return'<div class="fg"><label>'+label+reqMark+'</label>'+input+'</div>';
+}
+function fgText(id,label,value,required){
+  var reqMark=required?' <span style="color:var(--red);font-weight:700">*</span>':'';
+  return'<div class="fg"><label>'+label+reqMark+'</label><textarea id="'+id+'"'+(required?' data-required="1"':'')+'>'+esc(String(value||''))+'</textarea></div>';
+}
+function arrEd(id,label,arr){
+  var items=(arr||[]).map(function(v,i){return'<div class="array-row"><input value="'+esc(String(v))+'" data-arr="'+id+'" data-idx="'+i+'"><button onclick="this.parentElement.remove();S.dirty=true">×</button></div>';}).join('');
+  return'<div class="fg"><label>'+label+'</label>'+items+'<button class="array-add" onclick="addArrItem(\''+id+'\')">+</button></div>';
+}
+function addArrItem(id){
+  var container=document.querySelector('[data-arr="'+id+'"]'),parent=container?container.parentElement:null;if(!parent)return;
+  var div=document.createElement('div');div.className='array-row';
+  div.innerHTML='<input value="" data-arr="'+id+'" data-idx="'+parent.querySelectorAll('.array-row').length+'"><button onclick="this.parentElement.remove();S.dirty=true">×</button>';
+  parent.insertBefore(div,parent.querySelector('.array-add'));
+}
+function setBadge(type,msg){var b=document.getElementById('badge');b.textContent=msg;b.className='badge badge-'+(type==='ok'?'ok':type==='err'?'err':'warn');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// ══════════════ Panel Resize ══════════════
+var _resizeInfo=null;
+
+function startResize(e, handleId){
+  e.preventDefault();
+  _resizeInfo={handleId:handleId,startX:e.clientX};
+  document.getElementById(handleId).classList.add('active');
+  document.body.style.cursor='col-resize';
+  document.body.style.userSelect='none';
+  document.addEventListener('mousemove',onResizeMove);
+  document.addEventListener('mouseup',onResizeEnd);
+}
+
+function onResizeMove(e){
+  if(!_resizeInfo)return;
+  var dx=e.clientX-_resizeInfo.startX;
+  _resizeInfo.startX=e.clientX;
+  var main=document.querySelector('.main');
+  var totalW=main.clientWidth;
+  var left=document.getElementById('wsPanel');
+  var right=document.getElementById('infoPanel');
+  var leftW=left.offsetWidth,rightW=right.offsetWidth;
+  var minCenter=350;
+
+  if(_resizeInfo.handleId==='resizeHandle1'){
+    // Left handle: adjust wsPanel width, center takes rest
+    var newW=Math.max(220,Math.min(leftW+dx,totalW-rightW-minCenter-10));
+    left.style.width=newW+'px';
+  }else{
+    // Right handle: adjust infoPanel width, center takes rest
+    var newW=Math.max(220,Math.min(rightW-dx,totalW-leftW-minCenter-10));
+    right.style.width=newW+'px';
+  }
+  // Trigger G6 resize
+  if(S.g6)try{var c=document.getElementById('g6container');S.g6.setSize(c.parentElement.clientWidth,c.parentElement.clientHeight);}catch(e){}
+}
+
+function onResizeEnd(){
+  document.querySelectorAll('.resize-handle').forEach(function(h){h.classList.remove('active');});
+  document.body.style.cursor='';
+  document.body.style.userSelect='';
+  document.removeEventListener('mousemove',onResizeMove);
+  document.removeEventListener('mouseup',onResizeEnd);
+  _resizeInfo=null;
+}
+
+// ══════════════ Startup ══════════════
+init();
+</script>
+<!-- [multi-domain] 组织图谱领域：引擎 UMD + 适配器（IIFE，与意图 inline 脚本互不干扰） -->
+<script src="org-graph-model.js"></script>
+<script src="org-graph-signals.js"></script>
+<script src="knowledge-builder-data-import.js"></script>
+<script src="intent-graph-editor-org.js"></script>
+<script src="intent-graph-editor-ia.js"></script>
+<script src="intent-graph-editor-autobuild.js"></script>
+</body>
+</html>

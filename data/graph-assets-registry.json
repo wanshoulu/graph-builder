@@ -1,0 +1,34 @@
+{
+  "assets": [
+    {
+      "assetId": "personal-credit-risk",
+      "name": "个贷风控人员图谱",
+      "description": "借款人为中心的个贷风控知识图谱（亲属/担保/单位/负债/逾期/风险标签），当前为脱敏 mock 数据",
+      "templateFile": "personal-credit-risk.json",
+      "createdAt": "2026-09-03T09:42:05.056Z",
+      "createdFrom": "upload"
+    },
+    {
+      "assetId": "ccb-mobile-banking",
+      "name": "建行手机银行意图图谱",
+      "description": "建行手机银行功能意图图谱（查询/转账/理财/悦生活/信用卡/贷款/账户管理等）",
+      "templateFile": "ccb-mobile-banking.json",
+      "createdAt": "2026-09-15T17:42:07.589Z",
+      "createdFrom": "copy:intent-graph"
+    },
+    {
+      "assetId": "bank-semantic-graph",
+      "name": "银行业务语义图谱",
+      "description": "面向语义记忆的银行业务知识图谱：金融产品、账户、信用卡、贷款、服务、概念、规则，7种节点+10种边，77节点130边",
+      "templateFile": "bank-semantic-graph.json",
+      "createdAt": "2026-09-16T00:00:00.000Z",
+      "createdFrom": "upload"
+    }
+  ],
+  "builtinMeta": {
+    "generic-knowledge": {
+      "name": "通用知识图谱",
+      "description": ""
+    }
+  }
+}

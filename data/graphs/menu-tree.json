@@ -1,0 +1,170 @@
+{
+  "menu_nodes": [
+    {
+      "node_identity": {
+        "node_id": "MN-001",
+        "node_name": "账户查询",
+        "modeling_role": "intent_candidate",
+        "domain": "银行业务",
+        "level": 2,
+        "is_leaf": true,
+        "path": "银行业务/账户查询",
+        "aliases": [
+          "账户查询"
+        ],
+        "quality_flags": []
+      },
+      "navigation": {
+        "source_records": [
+          {
+            "trigger_texts": [
+              "查询余额",
+              "查明细"
+            ],
+            "page_titles": [
+              "账户查询页"
+            ]
+          }
+        ],
+        "standard_navigation_path": "首页 > 银行业务 > 账户查询"
+      },
+      "tree_position": {
+        "child_count": 0,
+        "sibling_count": 4
+      }
+    },
+    {
+      "node_identity": {
+        "node_id": "MN-002",
+        "node_name": "转账汇款",
+        "modeling_role": "intent_candidate",
+        "domain": "银行业务",
+        "level": 2,
+        "is_leaf": true,
+        "path": "银行业务/转账汇款",
+        "aliases": [
+          "转账汇款"
+        ],
+        "quality_flags": []
+      },
+      "navigation": {
+        "source_records": [
+          {
+            "trigger_texts": [
+              "行内转账",
+              "跨行转账"
+            ],
+            "page_titles": [
+              "转账汇款页"
+            ]
+          }
+        ],
+        "standard_navigation_path": "首页 > 银行业务 > 转账汇款"
+      },
+      "tree_position": {
+        "child_count": 0,
+        "sibling_count": 4
+      }
+    },
+    {
+      "node_identity": {
+        "node_id": "MN-003",
+        "node_name": "信用卡",
+        "modeling_role": "intent_candidate",
+        "domain": "银行业务",
+        "level": 2,
+        "is_leaf": true,
+        "path": "银行业务/信用卡",
+        "aliases": [
+          "信用卡"
+        ],
+        "quality_flags": []
+      },
+      "navigation": {
+        "source_records": [
+          {
+            "trigger_texts": [
+              "查账单",
+              "还款"
+            ],
+            "page_titles": [
+              "信用卡页"
+            ]
+          }
+        ],
+        "standard_navigation_path": "首页 > 银行业务 > 信用卡"
+      },
+      "tree_position": {
+        "child_count": 0,
+        "sibling_count": 4
+      }
+    },
+    {
+      "node_identity": {
+        "node_id": "MN-004",
+        "node_name": "理财",
+        "modeling_role": "intent_candidate",
+        "domain": "银行业务",
+        "level": 2,
+        "is_leaf": true,
+        "path": "银行业务/理财",
+        "aliases": [
+          "理财"
+        ],
+        "quality_flags": []
+      },
+      "navigation": {
+        "source_records": [
+          {
+            "trigger_texts": [
+              "买基金",
+              "赎回"
+            ],
+            "page_titles": [
+              "理财页"
+            ]
+          }
+        ],
+        "standard_navigation_path": "首页 > 银行业务 > 理财"
+      },
+      "tree_position": {
+        "child_count": 0,
+        "sibling_count": 4
+      }
+    },
+    {
+      "node_identity": {
+        "node_id": "MN-005",
+        "node_name": "贷款",
+        "modeling_role": "intent_candidate",
+        "domain": "银行业务",
+        "level": 2,
+        "is_leaf": true,
+        "path": "银行业务/贷款",
+        "aliases": [
+          "贷款"
+        ],
+        "quality_flags": []
+      },
+      "navigation": {
+        "source_records": [
+          {
+            "trigger_texts": [
+              "申请贷款",
+              "查额度"
+            ],
+            "page_titles": [
+              "贷款页"
+            ]
+          }
+        ],
+        "standard_navigation_path": "首页 > 银行业务 > 贷款"
+      },
+      "tree_position": {
+        "child_count": 0,
+        "sibling_count": 4
+      }
+    }
+  ],
+  "source": "graph-builder 内置示例（5 个候选）；替换为真实 menu-tree.json 即可接入自动建图"
+}

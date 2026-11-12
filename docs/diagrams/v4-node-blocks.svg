@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="560" fill="#FFFFFF"/>
+  <text x="40" y="38" font-size="19" font-weight="700" fill="#0F172A">功能节点 × 意图场景 · 意图的真正粒度是"功能 × 场景"，不是节点</text>
+  <text x="40" y="60" font-size="12" fill="#64748B">任意层级节点可声明 scenes（有场景=直接服务用户）；同功能场景间互配负例，消歧在结构内解决</text>
+
+  <!-- 功能节点 -->
+  <rect x="60" y="100" width="360" height="420" rx="14" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2.2"/>
+  <text x="240" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#78350F">功能节点（如"基金定投"）</text>
+  <text x="240" y="148" text-anchor="middle" font-size="9.5" fill="#92400E">任意层级；leaf = 最小不可再分功能</text>
+
+  <rect x="80" y="164" width="320" height="60" rx="8" fill="#FFFFFF" stroke="#FCD34D" stroke-width="1.4"/>
+  <text x="240" y="186" text-anchor="middle" font-size="10.5" font-weight="700" fill="#78350F">身份字段 + 边界声明</text>
+  <text x="240" y="206" text-anchor="middle" font-size="9" fill="#92400E">id/title/node_role/parent/path + scope/导航词</text>
+
+  <rect x="80" y="234" width="320" height="74" rx="8" fill="#FFFFFF" stroke="#FCD34D" stroke-width="1.4"/>
+  <text x="240" y="256" text-anchor="middle" font-size="10.5" font-weight="700" fill="#78350F">功能级绑定（全场景共享）</text>
+  <text x="240" y="276" text-anchor="middle" font-size="9" fill="#92400E">menu 菜单路径 · businessObjects</text>
+  <text x="240" y="294" text-anchor="middle" font-size="9" fill="#92400E">功能级 policies（如风险测评）</text>
+
+  <rect x="80" y="316" width="320" height="30" rx="8" fill="#F0F9FF" stroke="#7DD3FC" stroke-width="1.2"/>
+  <text x="240" y="336" text-anchor="middle" font-size="9.5" fill="#0C4A6E">可观测块 observability：sourceRecords · lastReviewedAt · lastReviewedBy</text>
+
+  <rect x="80" y="352" width="320" height="152" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.6"/>
+  <text x="240" y="376" text-anchor="middle" font-size="11" font-weight="700" fill="#78350F">scenes[] 意图场景数组</text>
+  <text x="240" y="396" text-anchor="middle" font-size="9.5" fill="#92400E">有 scenes 的节点直接服务用户</text>
+  <text x="240" y="414" text-anchor="middle" font-size="9" fill="#92400E">（无 scenes = 纯分类路标）</text>
+  <text x="240" y="442" text-anchor="middle" font-size="9.5" fill="#B45309">"查定投/开定投/定投规则"</text>
+  <text x="240" y="460" text-anchor="middle" font-size="9.5" fill="#B45309">= 一个功能的三个场景，</text>
+  <text x="240" y="478" text-anchor="middle" font-size="9.5" fill="#B45309">不再碎片化成三个兄弟功能节点</text>
+
+  <!-- 场景三个 -->
+  <line x1="420" y1="200" x2="500" y2="170" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="420" y1="330" x2="500" y2="300" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="420" y1="440" x2="500" y2="430" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- QUERY 场景 -->
+  <rect x="504" y="100" width="330" height="140" rx="12" fill="#ECFDF5" stroke="#059669" stroke-width="1.8"/>
+  <text x="669" y="124" text-anchor="middle" font-size="12" font-weight="700" fill="#065F46">场景 QUERY 查询</text>
+  <text x="669" y="146" text-anchor="middle" font-size="9" fill="#047857">召回块：查定投记录/定投扣款明细…（负例:开定投）</text>
+  <text x="669" y="166" text-anchor="middle" font-size="9" fill="#047857">任务块：可选槽位（查哪个账户）</text>
+  <text x="669" y="186" text-anchor="middle" font-size="9" fill="#047857">执行块：read-execute（默认推导）</text>
+  <text x="669" y="206" text-anchor="middle" font-size="9" fill="#047857">场景绑定：查询能力 fund.subscription.query</text>
+
+  <!-- DO 场景 -->
+  <rect x="504" y="252" width="330" height="170" rx="12" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.8"/>
+  <text x="669" y="276" text-anchor="middle" font-size="12" font-weight="700" fill="#312E81">场景 DO 办理</text>
+  <text x="669" y="298" text-anchor="middle" font-size="9" fill="#312E81">召回块：开定投/办理定投…（负例:查定投记录）</text>
+  <text x="669" y="318" text-anchor="middle" font-size="9" fill="#312E81">任务块：槽位契约（基金/金额/扣款日）+追问顺序</text>
+  <text x="669" y="338" text-anchor="middle" font-size="9" fill="#312E81">策略块：追问期间意图不丢</text>
+  <text x="669" y="358" text-anchor="middle" font-size="9" fill="#312E81">执行块：confirm-required</text>
+  <text x="669" y="378" text-anchor="middle" font-size="9" fill="#312E81">场景绑定：办理能力（skill 统一流程）</text>
+  <text x="669" y="400" text-anchor="middle" font-size="8.5" fill="#64748B">功能级 policies/菜单/业务对象不重复写</text>
+
+  <!-- ASK 场景 -->
+  <rect x="504" y="434" width="330" height="130" rx="12" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.8"/>
+  <text x="669" y="458" text-anchor="middle" font-size="12" font-weight="700" fill="#134E4A">场景 ASK 问答</text>
+  <text x="669" y="480" text-anchor="middle" font-size="9" fill="#0F766E">召回块：定投扣款规则/定投怎么暂停…（负例:帮我暂停）</text>
+  <text x="669" y="500" text-anchor="middle" font-size="9" fill="#0F766E">知识块：answerRefs → FAQ（唯一引用源）</text>
+  <text x="669" y="520" text-anchor="middle" font-size="9" fill="#0F766E">执行块：knowledge-only</text>
+  <text x="669" y="540" text-anchor="middle" font-size="9" fill="#0F766E">无任务块无能力（互斥规则）</text>
+
+  <!-- 右侧要点 -->
+  <rect x="880" y="100" width="280" height="200" rx="12" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.3"/>
+  <text x="900" y="126" font-size="11.5" font-weight="700" fill="#334155">识别两步走</text>
+  <text x="900" y="150" font-size="9.5" fill="#475569">① 功能定位：权威通道(词法+图谱扩召)</text>
+  <text x="900" y="170" font-size="9.5" fill="#475569">　 / advisory通道(语义) 命中功能节点</text>
+  <text x="900" y="194" font-size="9.5" fill="#475569">② 场景判定：场景别名打分</text>
+  <text x="900" y="214" font-size="9.5" fill="#475569">　 "查定投"→QUERY，"开定投"→DO</text>
+  <text x="900" y="238" font-size="9.5" fill="#475569">③ 裁判：候选=功能×场景组合</text>
+  <text x="900" y="258" font-size="9.5" fill="#475569">　 别名唯一性在场景维度校验</text>
+  <text x="900" y="282" font-size="9" fill="#64748B">（详见第 4 章识别架构）</text>
+
+  <rect x="880" y="316" width="280" height="118" rx="12" fill="#FFFBEB" stroke="#D97706" stroke-width="1.3"/>
+  <text x="900" y="340" font-size="11.5" font-weight="700" fill="#92400E">统一入口 = 场景制的自然结果</text>
+  <text x="900" y="364" font-size="9.5" fill="#78350F">"转账服务"(domain) 挂 DO 场景</text>
+  <text x="900" y="384" font-size="9.5" fill="#78350F">即成统一转账入口；子型节点挂</text>
+  <text x="900" y="404" font-size="9.5" fill="#78350F">自己的细化场景——不需要</text>
+  <text x="900" y="424" font-size="9.5" fill="#78350F">"聚合节点"这种特殊概念</text>
+</svg>

@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" font-family="'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1677FF"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="700" fill="#FFFFFF"/>
+  <text x="40" y="40" font-size="19" font-weight="700" fill="#0F172A">模板生态 · 一套引擎 × 13 张模板 × N 类图谱</text>
+  <text x="40" y="62" font-size="12" fill="#64748B">graph-builder ｜ 意图图谱只是打样：校验器是通用引擎，规则声明在模板 JSON——任何属性图类型都零代码接入</text>
+
+  <!-- 顶部：模板 JSON 结构 -->
+  <rect x="40" y="88" width="1120" height="86" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="64" y="114" font-size="13" font-weight="700" fill="#1E293B">模板 JSON（data/graph-builder-templates/*.json）三合一</text>
+  <rect x="64" y="126" width="330" height="34" rx="7" fill="#EFF6FF" stroke="#93C5FD"/>
+  <text x="229" y="148" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1E40AF">schema：node_types / edge_types 字段契约</text>
+  <rect x="435" y="126" width="330" height="34" rx="7" fill="#FFF7ED" stroke="#FDBA74"/>
+  <text x="600" y="148" text-anchor="middle" font-size="11.5" font-weight="700" fill="#9A3412">校验规则：conditional_requirements 条件必填</text>
+  <rect x="806" y="126" width="330" height="34" rx="7" fill="#F0FDF4" stroke="#86EFAC"/>
+  <text x="971" y="148" text-anchor="middle" font-size="11.5" font-weight="700" fill="#166534">种子图：starter_graph 起步节点</text>
+
+  <line x1="600" y1="174" x2="600" y2="204" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="616" y="196" font-size="11" fill="#64748B">注册表登记一行 → 全引擎复用</text>
+
+  <!-- 中部：通用校验引擎 -->
+  <rect x="240" y="208" width="720" height="96" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.5"/>
+  <text x="600" y="238" text-anchor="middle" font-size="15" font-weight="700" fill="#9A3412">通用三段校验引擎（template-driven validator）</text>
+  <text x="600" y="260" text-anchor="middle" font-size="11.5" fill="#7C2D12">骨架（ID/类型白名单/孤儿边/自环）→ 字段（必填/枚举/禁模板外字段）→ 条件必填（模板声明）</text>
+  <text x="600" y="282" text-anchor="middle" font-size="11" fill="#9A3412">同一道门管所有写入：Excel 合入 · AI 抽取 · 表格直转 · 手工编辑 ｜ valid:false 服务端强制阻断</text>
+  <text x="600" y="298" text-anchor="middle" font-size="10" fill="#B45309">草稿 · 版本链 · 回滚 · 发布 · 审计 —— 全部资产复用同一套流程</text>
+
+  <!-- 分发箭头 -->
+  <line x1="600" y1="304" x2="600" y2="330" stroke="#475569" stroke-width="2"/>
+  <line x1="100" y1="330" x2="1100" y2="330" stroke="#475569" stroke-width="2"/>
+  <line x1="100" y1="330" x2="100" y2="356" stroke="#1677FF" stroke-width="2" marker-end="url(#arrBlue)"/>
+  <line x1="360" y1="330" x2="360" y2="356" stroke="#1677FF" stroke-width="2" marker-end="url(#arrBlue)"/>
+  <line x1="600" y1="330" x2="600" y2="356" stroke="#1677FF" stroke-width="2" marker-end="url(#arrBlue)"/>
+  <line x1="840" y1="330" x2="840" y2="356" stroke="#1677FF" stroke-width="2" marker-end="url(#arrBlue)"/>
+  <line x1="1100" y1="330" x2="1100" y2="356" stroke="#1677FF" stroke-width="2" marker-end="url(#arrBlue)"/>
+
+  <!-- 五类图谱卡片 -->
+  <!-- 意图图谱（打样，高亮） -->
+  <rect x="40" y="360" width="200" height="264" rx="12" fill="#EFF6FF" stroke="#1677FF" stroke-width="2.5"/>
+  <rect x="40" y="360" width="200" height="30" rx="12" fill="#1677FF"/>
+  <rect x="40" y="376" width="200" height="14" fill="#1677FF"/>
+  <text x="140" y="380" text-anchor="middle" font-size="12.5" font-weight="700" fill="#FFFFFF">意图图谱（打样）</text>
+  <text x="56" y="412" font-size="10.5" fill="#1E293B">▸ intent-graph（9节点/21边）</text>
+  <text x="56" y="430" font-size="10.5" fill="#1E293B">▸ intent-graph-v4（4/4 场景制）</text>
+  <text x="56" y="448" font-size="10.5" fill="#1E293B">▸ ccb-mobile-banking（9/17）</text>
+  <text x="56" y="472" font-size="10" fill="#1D4ED8" font-weight="700">规则最深：10 条条件必填</text>
+  <text x="56" y="489" font-size="10" fill="#1D4ED8">355 节点种子图压测流水线</text>
+  <text x="56" y="506" font-size="10" fill="#1D4ED8">用最复杂场景锤打成熟</text>
+  <text x="56" y="540" font-size="10" fill="#475569">功能×场景模型，LLM 零幻觉</text>
+  <text x="56" y="557" font-size="10" fill="#475569">意图路由：候选集内挑，不猜</text>
+  <text x="56" y="574" font-size="10" fill="#475569">别名/负例/混淆对独立治理</text>
+  <text x="56" y="604" font-size="10" fill="#64748B">规范：schema-v4.md（13章）</text>
+
+  <!-- 组织人力 -->
+  <rect x="260" y="360" width="200" height="264" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="260" y="360" width="200" height="30" rx="12" fill="#475569"/>
+  <rect x="260" y="376" width="200" height="14" fill="#475569"/>
+  <text x="360" y="380" text-anchor="middle" font-size="12.5" font-weight="700" fill="#FFFFFF">组织与人力</text>
+  <text x="276" y="412" font-size="10.5" fill="#1E293B">▸ org-people（3节点/4边）</text>
+  <text x="276" y="430" font-size="10.5" fill="#1E293B">▸ icbc-hr（4/7 对齐工行GIL）</text>
+  <text x="276" y="448" font-size="10.5" fill="#1E293B">▸ work-relationship（6/7）</text>
+  <text x="276" y="472" font-size="10" fill="#166534" font-weight="700">✓ 已发布：173 节点/843 边</text>
+  <text x="276" y="489" font-size="10" fill="#166534">✓ 工行 HR：341 种子节点</text>
+  <text x="276" y="523" font-size="10" fill="#475569">员工/部门/项目/职务/指标</text>
+  <text x="276" y="540" font-size="10" fill="#475569">汇报·所属·参与·协作·任职</text>
+  <text x="276" y="557" font-size="10" fill="#475569">支撑 Agent 找人与排期推理</text>
+  <text x="276" y="604" font-size="10" fill="#64748B">同一引擎 · 零代码接入</text>
+
+  <!-- 客户风控 -->
+  <rect x="480" y="360" width="200" height="264" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="480" y="360" width="200" height="30" rx="12" fill="#475569"/>
+  <rect x="480" y="376" width="200" height="14" fill="#475569"/>
+  <text x="580" y="380" text-anchor="middle" font-size="12.5" font-weight="700" fill="#FFFFFF">客户与风控</text>
+  <text x="496" y="412" font-size="10.5" fill="#1E293B">▸ customer-ecosystem（3/7）</text>
+  <text x="496" y="430" font-size="10.5" fill="#1E293B">▸ personal-credit-risk（9/11）</text>
+  <text x="496" y="454" font-size="10" fill="#166534" font-weight="700">✓ 客户生态已发布</text>
+  <text x="496" y="488" font-size="10" fill="#475569">企业客户/决策人/担保人</text>
+  <text x="496" y="505" font-size="10" fill="#475569">供应链·任职·持股·逾期</text>
+  <text x="496" y="522" font-size="10" fill="#475569">担保圈/团伙关联预定义成</text>
+  <text x="496" y="539" font-size="10" fill="#475569">可查询结构，约束风控推理</text>
+  <text x="496" y="604" font-size="10" fill="#64748B">同一引擎 · 零代码接入</text>
+
+  <!-- 领域知识 -->
+  <rect x="700" y="360" width="200" height="264" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="700" y="360" width="200" height="30" rx="12" fill="#475569"/>
+  <rect x="700" y="376" width="200" height="14" fill="#475569"/>
+  <text x="800" y="380" text-anchor="middle" font-size="12.5" font-weight="700" fill="#FFFFFF">领域知识图谱</text>
+  <text x="716" y="412" font-size="10.5" fill="#1E293B">▸ finance-knowledge（5/7）</text>
+  <text x="716" y="430" font-size="10.5" fill="#1E293B">▸ bank-semantic-graph（7/10）</text>
+  <text x="716" y="448" font-size="10.5" fill="#1E293B">▸ knowledge-concept（4/4）</text>
+  <text x="716" y="472" font-size="10" fill="#166534" font-weight="700">✓ 金融知识已发布</text>
+  <text x="716" y="489" font-size="10" fill="#166534">✓ 银行语义已发布（77节点）</text>
+  <text x="716" y="523" font-size="10" fill="#475569">机构/产品/人物/概念/事件</text>
+  <text x="716" y="540" font-size="10" fill="#475569">发行·持股·任职·监管·影响</text>
+  <text x="716" y="557" font-size="10" fill="#475569">语义记忆与知识依赖建模</text>
+  <text x="716" y="604" font-size="10" fill="#64748B">同一引擎 · 零代码接入</text>
+
+  <!-- 通用底座 -->
+  <rect x="920" y="360" width="200" height="264" rx="12" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="920" y="360" width="200" height="30" rx="12" fill="#475569"/>
+  <rect x="920" y="376" width="200" height="14" fill="#475569"/>
+  <text x="1020" y="380" text-anchor="middle" font-size="12.5" font-weight="700" fill="#FFFFFF">通用底座</text>
+  <text x="936" y="412" font-size="10.5" fill="#1E293B">▸ generic-knowledge（5/6）</text>
+  <text x="936" y="430" font-size="10.5" fill="#1E293B">▸ blank-property-graph（1/1）</text>
+  <text x="936" y="464" font-size="10" fill="#475569">概念/实体/人物/组织/事件</text>
+  <text x="936" y="481" font-size="10" fill="#475569">关联·组成·使用·前驱·包含</text>
+  <text x="936" y="515" font-size="10" fill="#7C2D12" font-weight="700">白纸起步：一种实体一种边，</text>
+  <text x="936" y="532" font-size="10" fill="#7C2D12" font-weight="700">适合从零探索全新图谱类型</text>
+  <text x="936" y="566" font-size="10" fill="#475569">你的图谱类型不在列表里？</text>
+  <text x="936" y="583" font-size="10" fill="#475569">写一份模板 JSON 就是第 14 张</text>
+  <text x="936" y="604" font-size="10" fill="#64748B">同一引擎 · 零代码接入</text>
+
+  <!-- 底部结论条 -->
+  <rect x="40" y="644" width="1080" height="36" rx="8" fill="#FEF2F2" stroke="#FCA5A5"/>
+  <text x="580" y="667" text-anchor="middle" font-size="12" font-weight="700" fill="#991B1B">图谱类型会换，「预定义结构约束模型行为」的内核不变——模板即真理，校验即门，13 张模板一个引擎</text>
+</svg>

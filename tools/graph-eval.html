@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>意图评测 | graph-builder</title>
+<style>
+*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#0d1117;color:#e6edf3;font-family:"Microsoft YaHei",Arial,sans-serif}
+#app{display:flex;width:100vw;height:100vh}
+#sidebar{width:360px;background:#11161d;border-right:1px solid #30363d;display:flex;flex-direction:column;flex-shrink:0}
+#sidebarHeader{padding:14px 16px;border-bottom:1px solid #30363d}
+#sidebarHeader h2{margin:0 0 4px;font-size:16px;font-weight:700;color:#f0f6fc}
+#sidebarHeader p{margin:0;font-size:11px;color:#9da7b3}
+#config{padding:12px;border-bottom:1px solid #30363d}
+.cfg-row{margin-bottom:10px}
+.cfg-row label{display:block;font-size:12px;color:#9da7b3;margin-bottom:4px}
+.cfg-row input,.cfg-row select{width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:8px 10px;border-radius:6px;font-size:13px}
+.cfg-row input[type="checkbox"]{width:auto;margin-right:6px}
+.cfg-row.inline{display:flex;align-items:center;gap:8px}
+#mainTabs{display:flex;border-bottom:1px solid #30363d;flex-shrink:0}
+.mainTab{flex:1;padding:10px;border:0;background:#0d1117;color:#9da7b3;cursor:pointer;font-weight:700;font-size:13px}
+.mainTab.active{color:#f0f6fc;background:#161b22;border-bottom:2px solid #58a6ff}
+#testPanel{flex:1;overflow-y:auto;padding:12px}
+#testPanel textarea{width:100%;min-height:70px;resize:vertical;background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:10px;border-radius:6px;font-size:13px;margin-bottom:10px}
+#testPanel .btn-row{display:flex;gap:8px;margin-bottom:10px}
+.btn{background:#21262d;border:1px solid #30363d;color:#e6edf3;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px}
+.btn:hover{border-color:#58a6ff}
+.btn.primary{background:#1f3a5f;border-color:#58a6ff;color:#58a6ff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.progress{margin-top:10px}
+.progress-bar{height:6px;background:#21262d;border-radius:3px;overflow:hidden}
+.progress-inner{height:100%;background:#58a6ff;transition:width .3s}
+.progress-text{font-size:12px;color:#9da7b3;margin-top:4px}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{padding:12px 16px;border-bottom:1px solid #30363d;background:#11161d;display:flex;gap:12px;align-items:center;flex-shrink:0}
+#topbar h1{margin:0;font-size:16px;font-weight:700;color:#f0f6fc;flex:1}
+#stats{display:flex;gap:16px}
+.stat{text-align:center}
+.stat b{display:block;font-size:20px;color:#58a6ff}
+.stat span{font-size:11px;color:#9da7b3}
+.stat.success b{color:#3fb950}
+.stat.error b{color:#f85149}
+#content{flex:1;overflow-y:auto;padding:16px}
+.section{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.section h3{margin:0 0 10px;font-size:14px;font-weight:700;color:#f0f6fc;padding-bottom:8px;border-bottom:1px solid #30363d}
+.row{display:flex;padding:6px 0;font-size:13px}
+.label{color:#9da7b3;min-width:100px;flex-shrink:0}
+.value{color:#e6edf3;word-break:break-all;flex:1}
+.value.match{color:#3fb950}
+.value.mismatch{color:#f85149}
+.tag{display:inline-block;background:#21262d;color:#9da7b3;padding:2px 8px;border-radius:4px;margin:2px;font-size:11px}
+.tag.action{background:#1f3a5f;color:#58a6ff}
+.tag.match{background:#1a3d2e;color:#3fb950}
+.tag.mismatch{background:#3d1a1a;color:#f85149}
+.step-indicator{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.step{padding:4px 10px;border-radius:4px;font-size:11px;background:#21262d;color:#9da7b3}
+.step.done{background:#1a3d2e;color:#3fb950}
+.bar-chart{margin-top:8px}
+.bar-row{display:flex;align-items:center;margin:4px 0;font-size:12px}
+.bar-label{width:120px;flex-shrink:0;color:#9da7b3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-wrap{flex:1;height:14px;background:#21262d;border-radius:3px;overflow:hidden;min-width:60px}
+.bar-inner{height:100%;border-radius:3px}
+.bar-num{width:50px;text-align:right;color:#9da7b3;flex-shrink:0;padding-left:8px}
+#caseList{max-height:350px;overflow-y:auto}
+.case-item{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;margin-bottom:8px;cursor:pointer}
+.case-item:hover{border-color:#58a6ff}
+.case-item.error{border-color:#f8514940}
+.case-q{font-size:13px;color:#e6edf3;margin-bottom:4px}
+.case-meta{display:flex;gap:6px;flex-wrap:wrap;font-size:11px}
+.empty{text-align:center;color:#9da7b3;padding:30px;font-size:14px}
+.history-item{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer}
+.history-item:hover{border-color:#58a6ff}
+.history-title{font-size:14px;font-weight:700;color:#f0f6fc;margin-bottom:6px}
+.history-meta{display:flex;gap:12px;font-size:12px;color:#9da7b3}
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-row select,.filter-row input{background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:6px 10px;border-radius:6px;font-size:12px}
+.error-case-list{max-height:500px;overflow-y:auto}
+.error-case{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.error-case:hover{border-color:#58a6ff;transform:translateX(4px)}
+.error-case.selected{border-color:#58a6ff;background:#161b22}
+.error-case-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.error-case-query{font-size:14px;color:#f0f6fc;flex:1}
+.error-case-tags{display:flex;gap:4px}
+.error-case-body{display:flex;gap:16px;font-size:12px}
+.error-case-true,.error-case-pred{flex:1}
+.error-case-label{color:#9da7b3;margin-bottom:4px}
+.error-case-value{color:#e6edf3}
+.error-case-value.wrong{color:#f85149}
+.attribution{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;margin-top:12px}
+.attribution h4{margin:0 0 12px;font-size:14px;color:#f0f6fc}
+.attribution-item{margin-bottom:10px;padding:10px;background:#161b22;border-radius:6px}
+.attribution-title{font-size:13px;font-weight:700;color:#d29922;margin-bottom:6px}
+.attribution-content{font-size:12px;color:#9da7b3;line-height:1.6}
+.candidate-list{margin-top:8px}
+.candidate-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#0d1117;border-radius:4px;margin-bottom:4px;font-size:12px}
+.candidate-score{min-width:50px;color:#58a6ff}
+.candidate-name{flex:1;color:#e6edf3}
+.candidate-source{color:#9da7b3;font-size:11px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.tbl th{text-align:left;padding:5px 8px;color:#9da7b3;font-weight:600;border-bottom:1px solid #30363d}
+.tbl td{padding:4px 8px;border-bottom:1px solid #1a1d2e;vertical-align:top}
+.tbl tr:hover td{background:#1a1d2e}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="sidebar">
+<div id="sidebarHeader">
+<h2>意图评测配置</h2>
+<p>7步分层路由引擎 · 错误归因分析</p>
+</div>
+<div id="config">
+<div class="cfg-row">
+<label>API Key (百炼)</label>
+<input type="password" id="apiKey" placeholder="sk-xxx">
+</div>
+<div class="cfg-row inline">
+<input type="checkbox" id="useEmbedding" checked>
+<label>启用 Embedding 召回</label>
+</div>
+<div class="cfg-row inline">
+<input type="checkbox" id="useLlm" checked>
+<label>启用 LLM 灰色地带裁决</label>
+</div>
+<div class="cfg-row">
+<button class="btn primary" id="loadBtn">加载意图图谱</button>
+<span id="loadStatus" style="font-size:12px;color:#9da7b3;margin-left:8px"></span>
+</div>
+</div>
+<div id="mainTabs">
+<button class="mainTab active" data-tab="single">单条测试</button>
+<button class="mainTab" data-tab="batch">批量测试</button>
+<button class="mainTab" data-tab="history">历史报告</button>
+</div>
+<div id="testPanel">
+<div id="singleTab" class="tab-panel">
+<textarea id="queryInput" placeholder="输入用户query，例如：&#10;我想查一下信用卡账单&#10;帮我转账给张三"></textarea>
+<div class="btn-row">
+<button class="btn primary" id="runBtn">运行评测</button>
+<button class="btn" id="clearBtn">清空</button>
+</div>
+</div>
+<div id="batchTab" class="tab-panel" style="display:none">
+<p style="font-size:12px;color:#9da7b3;margin:0 0 8px">导入JSON格式测试用例：{"q":"query","t":"目标意图","td":"目标域"}</p>
+<textarea id="batchInput" placeholder='[{"q": "查信用卡账单", "t": "信用卡账单", "td": "信用卡"}]'></textarea>
+<div class="btn-row">
+<button class="btn primary" id="runBatchBtn">批量评测</button>
+<button class="btn" id="stopBtn" disabled>停止</button>
+</div>
+<div class="progress" id="progress" style="display:none">
+<div class="progress-bar"><div class="progress-inner" id="progressBar"></div></div>
+<div class="progress-text" id="progressText"></div>
+</div>
+</div>
+<div id="historyTab" class="tab-panel" style="display:none">
+<div id="historyList"></div>
+</div>
+</div>
+</div>
+<div id="main">
+<div id="topbar">
+<h1>意图评测</h1>
+<div id="stats">
+<div class="stat"><b id="totalCount">0</b><span>测试数</span></div>
+<div class="stat success"><b id="correctCount">0</b><span>正确数</span></div>
+<div class="stat error"><b id="errorCount">0</b><span>错误数</span></div>
+<div class="stat"><b id="accuracy">-</b><span>准确率</span></div>
+</div>
+</div>
+<div id="content">
+<div class="section" id="stepsSection" style="display:none">
+<h3>7步处理流程</h3>
+<div class="step-indicator" id="stepIndicator"></div>
+</div>
+	<div class="section" id="pipelineSection" style="display:none">
+	<h3>推理过程透视</h3>
+	<div id="pipelineContent"></div>
+	</div>
+	<div class="section" id="resultSection" style="display:none">
+	<h3>最终结果</h3>
+	<div id="resultContent"></div>
+	</div>
+<div class="section" id="reportSection" style="display:none">
+<h3>评测报告</h3>
+<div id="reportContent"></div>
+</div>
+<div class="section" id="errorAnalysisSection" style="display:none">
+<h3>错误Case归因分析</h3>
+<div class="filter-row">
+<select id="errorTypeFilter"><option value="">全部错误类型</option><option value="no_prediction">无预测结果</option><option value="clarify_wrong_top">澄清但top错误</option><option value="same_domain_wrong_node">同域不同节点</option><option value="wrong_domain">域错误</option></select>
+<select id="domainFilter"><option value="">全部业务域</option></select>
+<input type="text" id="searchInput" placeholder="搜索query...">
+</div>
+<div class="error-case-list" id="errorCaseList"></div>
+</div>
+<div class="section" id="attributionSection" style="display:none">
+<h3>归因详情</h3>
+<div id="attributionContent"></div>
+</div>
+<div class="section" id="caseSection" style="display:none">
+<h3>测试用例列表</h3>
+<div id="caseList"></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+const API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const EMBEDDING_MODEL = "text-embedding-v4";
+const LLM_MODEL = "qwen3-8b";
+
+const NODE_SIMILARITY_THRESHOLD = 0.70;
+const CLARIFY_SCORE_THRESHOLD = 0.30;
+const SINGLE_CONFIDENT_THRESHOLD = 0.90;
+const SCORE_GAP_THRESHOLD = 0.08;
+const LLM_GRAY_ZONE_LOW = 0.30;
+const LLM_GRAY_ZONE_HIGH = 0.60;
+
+let BUNDLE = null;
+let NODES_DB = [];
+let EMBEDDINGS = {nodes: [], scenes: []};
+let results = [];
+let running = false;
+let evalDetail = {};
+let errorCases = [];
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// 数据加载
+async function loadBundle(){
+  const status = document.getElementById('loadStatus');
+  status.textContent = '加载中...';
+  try{
+    const res = await fetch('../data/graphs/intent-graph-bundle.json');
+    BUNDLE = await res.json();
+    
+    NODES_DB = [];
+    for(const node of BUNDLE.nodes || []){
+      const id = node.node_identity || {};
+      const nav = node.navigation || {};
+      NODES_DB.push({
+        id: id.node_id,
+        name: id.node_name,
+        path: id.business_category_path || '',
+        navPath: nav.standard_navigation_path || id.business_category_path || '',
+        aliases: id.aliases || [id.node_name],
+        domain: id.domain || id.business_domain || '',
+        modelingRole: id.modeling_role,
+        actions: (node.actions || []).map(a => ({
+          code: a.action_code,
+          name: a.action_name,
+          triggers: a.action_aliases || [a.action_name],
+          scenes: (a.scenes || []).map(s => ({
+            sid: s.scene_id,
+            name: s.scene_name,
+            intentType: s.intent_type,
+            triggers: s.trigger_keywords || [],
+            similarQuestions: s.similar_questions || [],
+            slots: (s.required_slots || []).map(slot => typeof slot === 'string' ? slot : (slot.name || slot.slot_name || String(slot)))
+          }))
+        }))
+      });
+    }
+    
+    status.textContent = `已加载 ${NODES_DB.length} 节点`;
+    status.style.color = '#3fb950';
+    
+    await loadEmbeddingCache();
+    loadHistory();
+  }catch(e){
+    status.textContent = '加载失败: ' + e.message;
+    status.style.color = '#f85149';
+  }
+}
+
+async function loadEmbeddingCache(){
+  try{
+    const res = await fetch('../data/graphs/embeddings-cache.json');
+    const cache = await res.json();
+    EMBEDDINGS.nodes = cache.node_embeddings || [];
+    EMBEDDINGS.scenes = cache.scene_embeddings || [];
+  }catch(e){}
+}
+
+function loadHistory(){
+  const list = document.getElementById('historyList');
+  const histories = [
+    {id:'v0521',name:'意图评测报告 v0.5.21',date:'2026-05-21',accuracy:93.53,total:2966,file:'eval-summary-v0521.json',detailFile:'eval-detail.json'},
+    {id:'v0514',name:'意图评测报告 v0.5.14',date:'2026-05-14',accuracy:92.8,total:2800,file:'eval-summary-v0514.json'}
+  ];
+  
+  let html = '';
+  for(const h of histories){
+    html += `<div class="history-item" data-file="${h.file}" data-detail="${h.detailFile||''}">
+      <div class="history-title">${h.name}</div>
+      <div class="history-meta">
+        <span>日期: ${h.date}</span>
+        <span>准确率: ${h.accuracy}%</span>
+        <span>用例数: ${h.total}</span>
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html;
+  
+  list.querySelectorAll('.history-item').forEach(item => {
+    item.addEventListener('click', () => loadHistoryReport(item.dataset.file, item.dataset.detail));
+  });
+}
+
+async function loadHistoryReport(file, detailFile){
+  try{
+    const res = await fetch(`../data/graphs/${file}`);
+    const data = await res.json();
+    renderHistoryReport(data);
+    
+    // 加载详细用例数据
+    if(detailFile){
+      try{
+        const detailRes = await fetch(`../data/graphs/${detailFile}`);
+        evalDetail = await detailRes.json();
+        processErrorCases(data);
+      }catch(e){
+        console.log('加载详细数据失败:', e);
+      }
+    }
+  }catch(e){
+    alert('加载历史报告失败: ' + e.message);
+  }
+}
+
+function processErrorCases(summary){
+  errorCases = [];
+  const domainAcc = summary.domain_accuracy || {};
+  
+  for(const [idx, c] of Object.entries(evalDetail)){
+    if(!c.exact){
+      const domain = c.true || '';
+      errorCases.push({
+        idx,
+        query: c.query,
+        trueIntent: c.true,
+        predIntent: c.pred,
+        trueDomain: domain,
+        predDomain: c.pred_path?.split('/')[1] || '',
+        predPath: c.pred_path,
+        actionCode: c.action_code,
+        actionName: c.action_name,
+        intentType: c.intent_type,
+        confidence: c.confidence,
+        errorType: c.error_type,
+        needClarify: c.need_clarify,
+        latency: c.latency_ms,
+        llmUsed: c.llm_used,
+        routeType: c.route_type,
+        clarifyReason: c.clarify_reason,
+        topCandidates: c.top_candidates ? JSON.parse(c.top_candidates) : []
+      });
+    }
+  }
+  
+  // 更新域筛选器
+  const domains = [...new Set(errorCases.map(c => c.trueDomain))].sort();
+  const domainFilter = document.getElementById('domainFilter');
+  domainFilter.innerHTML = '<option value="">全部业务域</option>' + domains.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+  
+  renderErrorCases();
+}
+
+function renderErrorCases(){
+  const list = document.getElementById('errorCaseList');
+  const errorTypeFilter = document.getElementById('errorTypeFilter').value;
+  const domainFilter = document.getElementById('domainFilter').value;
+  const searchInput = document.getElementById('searchInput').value.toLowerCase();
+  
+  let filtered = errorCases;
+  if(errorTypeFilter) filtered = filtered.filter(c => c.errorType === errorTypeFilter);
+  if(domainFilter) filtered = filtered.filter(c => c.trueDomain === domainFilter);
+  if(searchInput) filtered = filtered.filter(c => c.query.toLowerCase().includes(searchInput));
+  
+  if(!filtered.length){
+    list.innerHTML = '<div class="empty">无匹配的错误Case</div>';
+    return;
+  }
+  
+  let html = '';
+  for(const c of filtered.slice(0, 100)){
+    const errorTypeLabel = {
+      'no_prediction': '无预测',
+      'clarify_wrong_top': '澄清错误',
+      'same_domain_wrong_node': '同域异节点',
+      'wrong_domain': '域错误'
+    }[c.errorType] || c.errorType;
+    
+    html += `<div class="error-case" data-idx="${c.idx}">
+      <div class="error-case-header">
+        <div class="error-case-query">${esc(c.query)}</div>
+        <div class="error-case-tags">
+          <span class="tag mismatch">${errorTypeLabel}</span>
+          <span class="tag">${(c.confidence*100).toFixed(0)}%</span>
+        </div>
+      </div>
+      <div class="error-case-body">
+        <div class="error-case-true">
+          <div class="error-case-label">目标意图</div>
+          <div class="error-case-value">${esc(c.trueIntent)}</div>
+        </div>
+        <div class="error-case-pred">
+          <div class="error-case-label">预测意图</div>
+          <div class="error-case-value wrong">${esc(c.predIntent || '(空)')}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  
+  if(filtered.length > 100) html += `<div class="empty">显示前100条，共${filtered.length}条</div>`;
+  list.innerHTML = html;
+  
+  // 绑定点击事件
+  list.querySelectorAll('.error-case').forEach(item => {
+    item.addEventListener('click', () => showAttribution(item.dataset.idx));
+  });
+}
+
+function showAttribution(idx){
+  const c = evalDetail[idx];
+  if(!c) return;
+  
+  // 高亮选中
+  document.querySelectorAll('.error-case').forEach(el => el.classList.remove('selected'));
+  document.querySelector(`.error-case[data-idx="${idx}"]`)?.classList.add('selected');
+  
+  const section = document.getElementById('attributionSection');
+  const content = document.getElementById('attributionContent');
+  section.style.display = 'block';
+  
+  // 解析候选列表
+  let candidates = [];
+  try{ candidates = c.top_candidates ? JSON.parse(c.top_candidates) : []; }catch(e){}
+  
+  // 归因分析
+  let attributionHtml = '';
+  
+  // 1. 基本信息
+  attributionHtml += `<div class="attribution-item">
+    <div class="attribution-title">基本信息</div>
+    <div class="attribution-content">
+      <div class="row"><span class="label">Query:</span><span class="value">${esc(c.query)}</span></div>
+      <div class="row"><span class="label">目标意图:</span><span class="value match">${esc(c.true)}</span></div>
+      <div class="row"><span class="label">预测意图:</span><span class="value mismatch">${esc(c.pred || '(空)')}</span></div>
+      <div class="row"><span class="label">预测路径:</span><span class="value">${esc(c.pred_path || '-')}</span></div>
+      <div class="row"><span class="label">错误类型:</span><span class="value">${esc(c.error_type)}</span></div>
+      <div class="row"><span class="label">置信度:</span><span class="value">${(c.confidence*100).toFixed(1)}%</span></div>
+      <div class="row"><span class="label">延迟:</span><span class="value">${c.latency_ms?.toFixed(0)||'-'}ms</span></div>
+    </div>
+  </div>`;
+  
+  // 2. 错误归因
+  attributionHtml += `<div class="attribution-item">
+    <div class="attribution-title">错误归因分析</div>
+    <div class="attribution-content">`;
+  
+  if(c.error_type === 'no_prediction'){
+    attributionHtml += `<p>⚠️ <b>无预测结果</b>：引擎未能识别出任何意图节点。</p>`;
+    attributionHtml += `<p>可能原因：</p><ul>`;
+    attributionHtml += `<li>Query过于模糊或属于闲聊</li>`;
+    attributionHtml += `<li>意图图谱中缺少相关节点</li>`;
+    attributionHtml += `<li>召回阈值设置过高</li>`;
+    attributionHtml += `</ul>`;
+  }else if(c.error_type === 'clarify_wrong_top'){
+    attributionHtml += `<p>⚠️ <b>澄清但top错误</b>：引擎判定需要澄清，但top候选不是正确答案。</p>`;
+    attributionHtml += `<p>可能原因：</p><ul>`;
+    attributionHtml += `<li>置信度低于阈值(${CLARIFY_SCORE_THRESHOLD})</li>`;
+    attributionHtml += `<li>候选节点得分过于接近</li>`;
+    attributionHtml += `<li>正确节点未被召回或排序靠后</li>`;
+    attributionHtml += `</ul>`;
+  }else if(c.error_type === 'same_domain_wrong_node'){
+    attributionHtml += `<p>⚠️ <b>同域不同节点</b>：预测的节点与目标节点在同一业务域，但节点不同。</p>`;
+    attributionHtml += `<p>可能原因：</p><ul>`;
+    attributionHtml += `<li>节点粒度过细，用户表达不够明确</li>`;
+    attributionHtml += `<li>相似节点混淆</li>`;
+    attributionHtml += `</ul>`;
+  }else if(c.error_type === 'wrong_domain'){
+    attributionHtml += `<p>⚠️ <b>域错误</b>：预测的业务域与目标域不同。</p>`;
+    attributionHtml += `<p>可能原因：</p><ul>`;
+    attributionHtml += `<li>Query存在歧义</li>`;
+    attributionHtml += `<li>跨域相似节点干扰</li>`;
+    attributionHtml += `<li>召回策略问题</li>`;
+    attributionHtml += `</ul>`;
+  }
+  
+  attributionHtml += `</div></div>`;
+  
+  // 3. 候选列表
+  if(candidates.length){
+    attributionHtml += `<div class="attribution-item">
+      <div class="attribution-title">Top 候选节点</div>
+      <div class="candidate-list">`;
+    
+    for(let i = 0; i < Math.min(candidates.length, 5); i++){
+      const cand = candidates[i];
+      const isTarget = cand.node_name === c.true;
+      attributionHtml += `<div class="candidate-item" style="${isTarget?'border:1px solid #3fb950':''}">
+        <span class="candidate-score">${(cand.score*100).toFixed(0)}%</span>
+        <span class="candidate-name">${esc(cand.node_name)} ${isTarget?'✓':''}</span>
+        <span class="candidate-source">${esc(cand.source||'')}</span>
+      </div>`;
+      if(cand.matched_terms?.length){
+        attributionHtml += `<div style="margin-left:58px;margin-bottom:4px;font-size:11px;color:#9da7b3">匹配词: ${cand.matched_terms.map(t=>esc(t)).join(', ')}</div>`;
+      }
+    }
+    
+    attributionHtml += `</div></div>`;
+  }
+  
+  // 4. 路由信息
+  attributionHtml += `<div class="attribution-item">
+    <div class="attribution-title">路由信息</div>
+    <div class="attribution-content">
+      <div class="row"><span class="label">路由类型:</span><span class="value">${esc(c.route_type||'-')}</span></div>
+      <div class="row"><span class="label">需要澄清:</span><span class="value">${c.need_clarify?'是':'否'}</span></div>
+      <div class="row"><span class="label">澄清原因:</span><span class="value">${esc(c.clarify_reason||'-')}</span></div>
+      <div class="row"><span class="label">动作:</span><span class="value"><span class="tag action">${esc(c.action_code||'-')}</span> ${esc(c.action_name||'-')}</span></div>
+      <div class="row"><span class="label">意图类型:</span><span class="value">${esc(c.intent_type||'-')}</span></div>
+      <div class="row"><span class="label">LLM裁决:</span><span class="value">${c.llm_used?'是':'否'}</span></div>
+    </div>
+  </div>`;
+  
+  content.innerHTML = attributionHtml;
+  section.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+function renderHistoryReport(data){
+  document.getElementById('stepsSection').style.display = 'none';
+  document.getElementById('pipelineSection').style.display='none'; document.getElementById('resultSection').style.display='none';
+  document.getElementById('reportSection').style.display = 'block';
+  document.getElementById('errorAnalysisSection').style.display = 'block';
+  document.getElementById('attributionSection').style.display = 'none';
+  document.getElementById('caseSection').style.display = 'none';
+  
+  const s = data;
+  let html = '';
+  
+  // 基础统计卡片
+  html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">`;
+  html += `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#58a6ff">${s.total?.toLocaleString()||'-'}</div><div style="font-size:12px;color:#9da7b3">总用例数</div></div>`;
+  html += `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#3fb950">${s.exact_accuracy?.toFixed(2)||'-'}%</div><div style="font-size:12px;color:#9da7b3">精确准确率</div></div>`;
+  html += `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#3fb950">${s.relaxed_accuracy?.toFixed(2)||'-'}%</div><div style="font-size:12px;color:#9da7b3">宽松准确率</div></div>`;
+  html += `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#d29922">${s.avg_latency_ms?.toFixed(0)||'-'}ms</div><div style="font-size:12px;color:#9da7b3">平均延迟</div></div>`;
+  html += `</div>`;
+  
+  // 错误类型分布
+  if(s.error_types){
+    html += `<div style="margin-bottom:16px"><b style="color:#9da7b3;font-size:12px">错误类型分布</b><div class="bar-chart">`;
+    const errorTypes = [['ok','正确','#3fb950'],['no_prediction','无预测结果','#f85149'],['clarify_wrong_top','澄清但top错误','#d29922'],['same_domain_wrong_node','同域不同节点','#58a6ff'],['wrong_domain','域错误','#f85149']];
+    const errTotal = Object.values(s.error_types).reduce((a,b)=>a+b,0);
+    for(const [key, label, color] of errorTypes){
+      const count = s.error_types[key] || 0;
+      const pct = count/errTotal*100;
+      html += `<div class="bar-row"><span class="bar-label">${label}</span><div class="bar-wrap"><div class="bar-inner" style="width:${pct}%;background:${color}"></div></div><span class="bar-num">${count}</span></div>`;
+    }
+    html += '</div></div>';
+  }
+  
+  // 业务域准确率 - 按准确率升序
+  if(s.domain_accuracy){
+    const domains = Object.entries(s.domain_accuracy).sort((a,b)=>a[1].exact_pct-b[1].exact_pct);
+    html += `<div style="margin-bottom:16px"><b style="color:#9da7b3;font-size:12px">业务域准确率 (按准确率升序，共${domains.length}个域)</b><div class="bar-chart" style="max-height:300px;overflow-y:auto">`;
+    domains.forEach(([name, d]) => {
+      const pct = d.exact_pct;
+      const color = pct >= 95 ? '#3fb950' : pct >= 80 ? '#d29922' : '#f85149';
+      html += `<div class="bar-row"><span class="bar-label" title="${esc(name)}">${esc(name)}</span><div class="bar-wrap"><div class="bar-inner" style="width:${pct}%;background:${color}"></div></div><span class="bar-num">${pct.toFixed(1)}% (${d.exact}/${d.total})</span></div>`;
+    });
+    html += '</div></div>';
+  }
+  
+  document.getElementById('reportContent').innerHTML = html;
+  
+  // 更新统计
+  document.getElementById('totalCount').textContent = s.total || 0;
+  document.getElementById('correctCount').textContent = s.exact_count || 0;
+  document.getElementById('errorCount').textContent = (s.total || 0) - (s.exact_count || 0);
+  document.getElementById('accuracy').textContent = (s.exact_accuracy?.toFixed(1) || '-') + '%';
+}
+
+// 7步引擎核心代码（保持不变）
+function preUnderstand(query){
+  const q = query.toLowerCase().trim();
+  const flags = [], negativeFilters = [];
+  const negPatterns = [[/不要\s*(.+?)(?:[，,。]|$)/,1],[/别\s*(.+?)(?:[，,。]|$)/,1],[/除了\s*(.+?)(?:[，,。]|$)/,1],[/不包括\s*(.+?)(?:[，,。]|$)/,1]];
+  for(const [pattern, group] of negPatterns){const m = q.match(pattern); if(m && m[group]) negativeFilters.push(m[group].trim());}
+  const actionHints = [];
+  const ACTION_PATTERNS = {'query':/查|看看?|查询|显示|列出|在哪|给我找/,'ask':/介绍|推荐|有什么|哪些|啥/,'transfer':/转|打钱|汇款|转给|转账|打一笔/,'repay':/还|还款|还卡|还贷|还账单/,'buy':/买|购|申购|定投|买一下/,'apply':/办|申请|开通|我要办理/,'appoint':/约|预约|取号|挂号/,'modify':/改|修改|换|调整|设置|变更/,'withdraw':/取|提现|取出来/,'pay':/缴|交|付|缴费|支付/};
+  for(const [actionCode, pattern] of Object.entries(ACTION_PATTERNS)){if(pattern.test(q)) actionHints.push(actionCode);}
+  const objectHints = [];
+  const OBJECT_PATTERNS = {'信用卡':/信用卡|账单|额度|还款|分期|办卡|e分期/,'转账汇款':/转账|汇款|打钱|境内汇款|跨境汇款|手机号转账/,'财富':/理财|基金|天天盈|存款|贵金属|财富|产品/,'贷款':/贷款|房贷|车贷|借款|我的贷款|还贷/,'账户':/账户|余额|明细|收支|账户管理|我的账户/,'预约服务':/预约|取号|纪念币|网点|网点预约|人民币预约/,'安全':/安全|密码|指纹|面容|设备/,'消息':/消息|通知|提醒|动账/,'客服':/客服|人工|帮助|咨询/,'公积金':/公积金/,'保险':/保险/,'外币':/外币|外汇|卢布|美元|欧元|兑换/};
+  for(const [objName, pattern] of Object.entries(OBJECT_PATTERNS)){if(pattern.test(q)) objectHints.push(objName);}
+  let isBroad = false;
+  if(!actionHints.length && !objectHints.length) isBroad = true;
+  else if(!actionHints.length && objectHints.length === 1 && !negativeFilters.length && /看看|了解|想|给我|帮我/.test(q) && !/理财|基金|信用卡|转账|贷款|公积金|保险|外币/.test(q)) isBroad = true;
+  if(actionHints.includes('ask') && objectHints.length) isBroad = false;
+  const isMulti = /(然后|再|顺便|和|以及|同时)/.test(q) && actionHints.length >= 2;
+  if(isBroad) flags.push('broad');
+  if(isMulti) flags.push('multi_intent');
+  if(negativeFilters.length) flags.push('has_negative_filter');
+  return {normalizedQuery:query,queryFlags:flags,explicitActionHints:actionHints,explicitObjectHints:objectHints,negativeFilters,isBroad,isMultiIntent:isMulti,llmUsed:false};
+}
+
+async function recallNodes(query, step1){
+  const q = query.toLowerCase();
+  const recalled = [];
+  let denseUsed = false;
+  for(const node of NODES_DB){
+    if(node.modelingRole && node.modelingRole !== 'intent_candidate') continue;
+    let score = 0, matchedAlias = null;
+    for(const alias of node.aliases){const aliasLower = alias.toLowerCase(); if(aliasLower && q.includes(aliasLower)){score = Math.max(score, aliasLower.length >= 4 ? 0.92 : 0.78); matchedAlias = alias;}}
+    if(score > 0) recalled.push({type:'node',id:node.id,name:node.name,path:node.navPath||node.path,domain:node.domain,matchKeyword:matchedAlias,score,source:'sparse'});
+  }
+  const DOMAIN_ACTION_MAP = {'信用卡':['信用卡','账户管理'],'转账汇款':['转账汇款'],'财富':['财富'],'贷款':['贷款服务'],'账户':['账户管理'],'预约服务':['生活服务'],'公积金':['公积金'],'保险':['保险'],'外币':['结售汇','外币'],'安全':['安全'],'客服':['客服']};
+  for(const objHint of step1.explicitObjectHints){
+    const domains = DOMAIN_ACTION_MAP[objHint] || [];
+    for(const node of NODES_DB){if(domains.some(d => node.domain.includes(d) || node.path.includes(d)) && !recalled.some(r => r.type==='node' && r.id===node.id)){recalled.push({type:'node',id:node.id,name:node.name,path:node.navPath||node.path,domain:node.domain,matchKeyword:objHint,score:0.65,source:'cross'});}}
+  }
+  if(step1.explicitActionHints.includes('transfer')){for(const node of NODES_DB){if(/转账|汇款/.test(node.name+node.path) && !recalled.some(r=>r.type==='node'&&r.id===node.id)) recalled.push({type:'node',id:node.id,name:node.name,path:node.navPath||node.path,domain:node.domain,matchKeyword:'transfer_action',score:0.72,source:'cross'});}}
+  if(step1.explicitActionHints.includes('repay')){for(const node of NODES_DB){if(/还款|还贷|还卡/.test(node.name+node.path) && !recalled.some(r=>r.type==='node'&&r.id===node.id)) recalled.push({type:'node',id:node.id,name:node.name,path:node.navPath||node.path,domain:node.domain,matchKeyword:'repay_action',score:0.72,source:'cross'});}}
+  if(EMBEDDINGS.nodes.length && document.getElementById('useEmbedding').checked){
+    const apiKey = document.getElementById('apiKey').value.trim();
+    if(apiKey){try{const queryVec = await embedTexts([query]); if(queryVec && queryVec[0]){for(const ne of EMBEDDINGS.nodes){const sim = cosineSimilarity(queryVec[0], ne.embedding); if(sim >= NODE_SIMILARITY_THRESHOLD){const existing = recalled.find(r => r.type==='node' && r.id===ne.id); if(!existing) recalled.push({type:'node',id:ne.id,name:ne.name,path:ne.navPath||ne.path,score:Math.round(sim*0.9*10000)/10000,source:'dense'}); else existing.score = Math.max(existing.score, Math.round(sim*0.9*10000)/10000);}} denseUsed = true;}}catch(e){}}
+  }
+  const seen = new Set();
+  const unique = [];
+  for(const r of recalled.sort((a,b)=>b.score-a.score)){if(!seen.has(r.id)){seen.add(r.id);unique.push(r);}}
+  return {query,recallMethod:'dense_first_guarded_hybrid',recalledNodes:unique.slice(0,12),denseUsed};
+}
+
+function reduceNodes(query, step1, step2){
+  const nodeCandidates = step2.recalledNodes.filter(c=>c.type==='node');
+  let scope = 'unknown';
+  if(nodeCandidates.length >= 4) scope = step1.explicitActionHints.length ? 'action_constrained_multi' : 'multi_candidate';
+  else if(nodeCandidates.length > 0) scope = (nodeCandidates.length===1 && nodeCandidates[0].score>=SINGLE_CONFIDENT_THRESHOLD) ? 'single_confident' : 'multi_candidate';
+  return {candidateNodes:nodeCandidates.slice(0,6),candidateScope:scope};
+}
+
+function expandScenes(query, step1, step3){
+  const candidateScenes = [];
+  const q = query.toLowerCase();
+  const HINT_TO_ACTION = {'query':['query'],'ask':['query'],'transfer':['do'],'repay':['do'],'buy':['do'],'apply':['do'],'appoint':['do'],'modify':['do'],'withdraw':['do'],'pay':['do']};
+  for(const cand of step3.candidateNodes){
+    const node = NODES_DB.find(n=>n.id===cand.id);
+    if(!node) continue;
+    for(const action of node.actions){
+      let actionScore = 0;
+      for(const alias of action.triggers){if(alias && q.includes(alias.toLowerCase())) actionScore = Math.max(actionScore, 0.92);}
+      for(const hint of step1.explicitActionHints){if(HINT_TO_ACTION[hint]?.includes(action.code)) actionScore = Math.max(actionScore, 0.88);}
+      if(actionScore===0 && action.code==='query' && /查|看|显示|介绍|推荐|列出/.test(q)) actionScore = 0.55;
+      if(actionScore===0 && action.code==='do' && /转|还|买|办|约|改|取|缴/.test(q)) actionScore = 0.55;
+      for(const scene of action.scenes){
+        let sceneScore = 0;
+        for(const kw of scene.triggers){if(kw && q.includes(kw.toLowerCase())) sceneScore = Math.max(sceneScore, kw.length>=4 ? 0.95 : 0.82);}
+        for(const sq of scene.similarQuestions){const sqLower = sq.toLowerCase(); let overlap = 0; for(let i=0;i<Math.min(q.length,sqLower.length);i++){if(q[i]===sqLower[i]) overlap++;} if(overlap>=4) sceneScore = Math.max(sceneScore, 0.45);}
+        if(actionScore>=0.8) sceneScore = Math.max(sceneScore, actionScore*0.85);
+        else if(actionScore>0) sceneScore = Math.max(sceneScore, actionScore*0.65);
+        if(cand.score>=0.8) sceneScore = Math.max(sceneScore, cand.score*0.6);
+        else if(cand.score>0) sceneScore = Math.max(sceneScore, cand.score*0.4);
+        candidateScenes.push({sceneId:scene.sid,sceneName:scene.name,intentType:scene.intentType,nodeId:node.id,nodeName:node.name,nodeNavPath:node.navPath||node.path,actionCode:action.code,actionName:action.name,score:Math.min(sceneScore,0.99),requiredSlots:scene.slots,hasSlots:scene.slots.length>0});
+      }
+    }
+  }
+  return {candidateScenes:candidateScenes.sort((a,b)=>b.score-a.score)};
+}
+
+function rankScenes(query, step1, step4){
+  const scenes = step4.candidateScenes.map(s=>({...s}));
+  const q = query.toLowerCase();
+  for(const s of scenes){
+    if(step1.negativeFilters.length){for(const neg of step1.negativeFilters){const negLower = neg.toLowerCase(); if(s.nodeName.toLowerCase().includes(negLower) || s.sceneName.toLowerCase().includes(negLower)){s.score=0;s.penalty=`negative_filter:${neg}`;}}}
+    if(step1.explicitActionHints.length && s.score>0){const ACTION_MAP = {'query':['query'],'ask':['query'],'transfer':['do'],'repay':['do'],'buy':['do'],'apply':['do'],'appoint':['do'],'modify':['do'],'withdraw':['do'],'pay':['do']}; const hasMatch = step1.explicitActionHints.some(hint=>ACTION_MAP[hint]?.includes(s.actionCode)); if(!hasMatch){s.score*=0.7;if(!s.penalty)s.penalty='action_hint_weak_match';}}
+    if(step1.isBroad && s.score>0 && s.score<0.6){s.score*=0.75;if(!s.penalty)s.penalty='broad_query_guard';}
+    if(s.hasSlots && s.score>0){const hasSlotContent = /\d+|[一二三四五六七八九十百千万]|元|块|角|分|手机号|电话|姓名|账户|卡号|密码|日期|时间|金额|数量/.test(q); s.score*=hasSlotContent?1.05:0.9; if(!hasSlotContent && !s.penalty)s.penalty='slot_hint_weak';}
+  }
+  const filteredScenes = scenes.filter(s=>s.score>0).sort((a,b)=>b.score-a.score);
+  const topScene = filteredScenes[0];
+  const needClarify = !topScene || topScene.score<CLARIFY_SCORE_THRESHOLD || (filteredScenes.length>1 && filteredScenes[0].score-filteredScenes[1].score<SCORE_GAP_THRESHOLD && topScene.score<0.5);
+  return {rankedScenes:filteredScenes.slice(0,5),topConfidence:topScene?Math.round(topScene.score*10000)/10000:0,needClarify,clarifyReason:!topScene?'no_matching_scene':topScene.score<CLARIFY_SCORE_THRESHOLD?'low_confidence':needClarify?'candidate_too_close':null};
+}
+
+async function routeDecision(query, step1, step5){
+  const top = step5.rankedScenes[0];
+  const scenes = step5.rankedScenes || [];
+  let routeType = 'direct_query', reason = '', llmUsed = false;
+  if(!top){routeType='clarify';reason='no_matching_scene';}
+  else if(step5.needClarify && top.score<CLARIFY_SCORE_THRESHOLD){routeType='clarify';reason=step5.clarifyReason||'uncertain';}
+  else if(step1.isBroad && top.score<0.45){routeType='semantic_redirect';reason='broad_query_need_scope_clarify';}
+  else {
+    const apiInput = document.getElementById('apiKey').value.trim();
+    const llmEnabled = document.getElementById('useLlm').checked && apiInput;
+    let shouldLLM = false;
+    let llmTriggerReason = '';
+    if(top.score >= 0.30 && top.score < 0.65){ shouldLLM = true; llmTriggerReason = 'gray_zone_'+top.score.toFixed(2); }
+    if(!shouldLLM && scenes.length >= 2 && top.score - scenes[1].score < 0.10 && top.score < 0.75){ shouldLLM = true; llmTriggerReason = 'close_peer_gap'; }
+    if(!shouldLLM && step5.needClarify){ shouldLLM = true; llmTriggerReason = 'need_clarify_'+step5.clarifyReason; }
+    if(shouldLLM && llmEnabled){
+      try{
+        const candSummary = scenes.slice(0,6).map(function(s,i){
+          return (i+1)+'. '+s.nodeName+' > '+s.sceneName+' ['+s.actionCode+'] '+(s.score*100).toFixed(0)+'%';
+        }).join('\n');
+        const prompt = '你是银行App意图识别审核器。用户问句: "'+query+'"\n\n候选场景:\n'+candSummary+'\n\n请判断:\n1. 用户最可能想操作哪个场景？只返回数字序号\n2. 置信度(0-1)\n3. 是否需要反问澄清(是/否)\n4. 判断理由\n\n返回JSON: {"choice":1,"confidence":0.85,"need_clarify":false,"reason":"一句话"}';
+        const llmResult = await callLLM(prompt, apiInput);
+        llmUsed = true;
+        try{
+          const m = llmResult.match(/\{[\s\S]*\}/);
+          if(m){
+            const parsed = JSON.parse(m[0]);
+            const choice = parseInt(parsed.choice)||1;
+            const chosen = scenes[choice-1];
+            if(chosen && parsed.confidence > 0.5){
+              if(choice !== 1) reason = 'llm_overturned_top1_to_'+chosen.sceneName;
+              else reason = 'llm_confirmed_top1';
+              if(parsed.need_clarify){ routeType='clarify'; reason='llm_clarify: '+parsed.reason; }
+              else{ routeType=intentTypeToRoute(chosen.intentType); }
+            }else{ routeType='clarify'; reason='llm_low_confidence'; }
+          }
+        }catch(parseErr){ routeType=intentTypeToRoute(top.intentType); reason='llm_parse_fallback'; }
+      }catch(e){ routeType=intentTypeToRoute(top.intentType); reason='llm_error_fallback'; }
+    }else if(shouldLLM && !llmEnabled){
+      routeType=intentTypeToRoute(top.intentType);
+      reason=llmTriggerReason+'_no_llm';
+    }else{
+      routeType=intentTypeToRoute(top.intentType);
+      if(top.intentType==='DO' && top.requiredSlots&&top.requiredSlots.length)reason='direct_execute_with_slot_filling';
+      else if(top.intentType==='DO')reason='scene_executable_no_slots';
+      else if(top.intentType==='QUERY')reason='query_scene_direct';
+      else if(top.intentType==='ASK')reason='ask_scene_direct';
+      else reason='default_query';
+    }
+  }
+  if(step1.isMultiIntent){routeType='split_multi_intent';reason='detected_multi_intent';}
+  return {routeType,routeReason:reason,topScene:top,confidence:step5.topConfidence,llmUsed};
+}
+function intentTypeToRoute(intentType){return{'DO':'direct_execute','QUERY':'direct_query','ASK':'direct_answer'}[intentType]||'direct_query';}
+
+function finalOutput(query, step1, step5, step6){
+  const top = step5.rankedScenes[0];
+  return{query,nodeId:top?.nodeId,nodeName:top?.nodeName,navigationPath:top?.nodeNavPath,actionCode:top?.actionCode,actionName:top?.actionName,sceneId:top?.sceneId,sceneName:top?.sceneName,intentType:top?.intentType,routeType:step6.routeType,routeReason:step6.routeReason,needClarify:step5.needClarify,clarifyReason:step5.clarifyReason,missingSlots:top?.requiredSlots||[],isMultiIntent:step1.isMultiIntent,queryFlags:step1.queryFlags,negativeFilters:step1.negativeFilters,confidence:step5.topConfidence,llmUsed:step1.llmUsed||step6.llmUsed,alternativeScenes:step5.rankedScenes.slice(1,4)};
+}
+
+async function embedTexts(texts){
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if(!apiKey) return null;
+  const res = await fetch(`${API_BASE}/embeddings`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},body:JSON.stringify({model:EMBEDDING_MODEL,input:texts,dimensions:1024})});
+  if(!res.ok) throw new Error(await res.text());
+  return (await res.json()).data.map(x=>x.embedding);
+}
+
+async function callLLM(prompt, apiKey){
+  const res = await fetch(`${API_BASE}/chat/completions`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},body:JSON.stringify({model:LLM_MODEL,messages:[{role:'system',content:'你是银行APP意图路由决策助手。判断用户query是否足够明确，可以直接执行/查询(DIRECT)，还是需要澄清(CLARIFY)。只回答 DIRECT 或 CLARIFY。'},{role:'user',content:prompt}],temperature:0.2,enable_thinking:false})});
+  if(!res.ok) throw new Error(await res.text());
+  return (await res.json()).choices[0].message.content;
+}
+
+function cosineSimilarity(a,b){let dot=0,na=0,nb=0;for(let i=0;i<Math.min(a.length,b.length);i++){dot+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];}return dot/(Math.sqrt(na)*Math.sqrt(nb)||1);}
+
+async function recognize(query){
+  if(!NODES_DB.length) throw new Error('请先加载意图图谱');
+  const steps = [];
+  const step1 = preUnderstand(query); steps.push({name:'预理解',status:'done'});
+  const step2 = await recallNodes(query,step1); steps.push({name:'召回',status:'done'});
+  const step3 = reduceNodes(query,step1,step2); steps.push({name:'归约',status:'done'});
+  const step4 = expandScenes(query,step1,step3); steps.push({name:'展开',status:'done'});
+  const step5 = rankScenes(query,step1,step4); steps.push({name:'排序',status:'done'});
+  const step6 = await routeDecision(query,step1,step5); steps.push({name:'决策',status:'done'});
+  const result = finalOutput(query,step1,step5,step6); steps.push({name:'输出',status:'done'});
+  return {result,steps,debug:{step1,step2,step3,step4,step5,step6}};
+}
+
+// UI事件
+async function runSingleTest(){
+  const query = document.getElementById('queryInput').value.trim();
+  if(!query) return;
+  if(!NODES_DB.length){alert('请先加载意图图谱');return;}
+  document.getElementById('stepsSection').style.display='block';
+  document.getElementById('pipelineSection').style.display='block'; document.getElementById('resultSection').style.display='block';
+  document.getElementById('reportSection').style.display='none';
+  document.getElementById('errorAnalysisSection').style.display='none';
+  document.getElementById('attributionSection').style.display='none';
+  document.getElementById('caseSection').style.display='none';
+  document.getElementById('resultContent').innerHTML='<div class="empty">识别中...</div>';
+  try{
+    const {result,steps,debug} = await recognize(query);
+    results = [result];
+    renderSteps(steps);
+    renderPipelineDebug(debug, result);
+    renderResult(result);
+    updateStats();
+  }catch(e){
+    document.getElementById('resultContent').innerHTML='<div class="empty">错误: '+esc(e.message)+'</div>';
+  }
+}
+
+function renderPipelineDebug(debug, result){
+  var html = '';
+  var colors = {sparse:'#3fb950',dense:'#bc8cff',cross:'#d29922'};
+
+  // ── Stage 1: Pre-Understand ──
+  var s1 = debug.step1 || {};
+  html += '<div class="section"><h3>🔍 Stage 1: Pre-Understand 预理解</h3>';
+  html += '<div style="font-size:12px;color:#9da7b3;line-height:1.8">';
+  html += '动作提示: ' + (s1.explicitActionHints||[]).map(function(h){return '<span class="tag">'+esc(h)+'</span>';}).join(' ') + '<br>';
+  html += '对象提示: ' + (s1.explicitObjectHints||[]).map(function(h){return '<span class="tag">'+esc(h)+'</span>';}).join(' ') + '<br>';
+  html += 'Broad: ' + (s1.isBroad?'是':'否') + ' | 多意图: ' + (s1.isMultiIntent?'是':'否');
+  if(s1.negativeFilters&&s1.negativeFilters.length) html += ' | 否定过滤: ' + s1.negativeFilters.map(function(f){return esc(f);}).join(', ');
+  html += '</div></div>';
+
+  // ── Stage 2: Recall ──
+  var s2 = debug.step2 || {};
+  var nodes = s2.recalledNodes || [];
+  var sparseNodes = nodes.filter(function(n){return n.source==='sparse'||n.source==='cross';});
+  var denseNodes = nodes.filter(function(n){return n.source==='dense';});
+  html += '<div class="section"><h3>📡 Stage 2: Recall 召回 (' + nodes.length + '条: ' + sparseNodes.length + ' sparse, ' + denseNodes.length + ' dense' + (s2.denseUsed?'':' 未启用') + ')</h3>';
+  if(nodes.length){
+    html += '<table class="tbl"><tr><th>#</th><th>节点</th><th>域</th><th>得分</th><th>来源</th><th>匹配</th></tr>';
+    nodes.slice(0,15).forEach(function(n,i){
+      var barW = Math.round(n.score * 100);
+      var srcLabel = {sparse:'词法',dense:'向量',cross:'交叉'}[n.source]||n.source;
+      html += '<tr><td>'+(i+1)+'</td><td><b>'+esc(n.name)+'</b></td><td>'+esc(n.domain||'')+'</td>'+
+        '<td><span style="display:inline-block;width:'+barW+'px;height:4px;background:'+(colors[n.source]||'#58a6ff')+';border-radius:2px;vertical-align:middle;margin-right:4px"></span>'+(n.score*100).toFixed(1)+'%</td>'+
+        '<td><span class="tag" style="background:'+(colors[n.source]||'#21262d')+'20;color:'+(colors[n.source]||'#9da7b3')+'">'+srcLabel+'</span></td>'+
+        '<td style="color:#9da7b3;font-size:11px">'+esc(n.matchKeyword||'')+'</td></tr>';
+    });
+    html += '</table>';
+  }else{html += '<div style="color:#9da7b3;font-size:12px">无召回节点</div>';}
+  html += '</div>';
+
+  // ── Stage 3: Reduce ──
+  var s3 = debug.step3 || {};
+  var cands = s3.candidateNodes || [];
+  html += '<div class="section"><h3>📉 Stage 3: Reduce 归约 (' + cands.length + '条, scope: ' + esc(s3.candidateScope||'') + ')</h3>';
+  if(cands.length){
+    html += '<table class="tbl"><tr><th>#</th><th>节点</th><th>域</th><th>得分</th></tr>';
+    cands.forEach(function(n,i){
+      html += '<tr><td>'+(i+1)+'</td><td><b>'+esc(n.name)+'</b></td><td>'+esc(n.domain||'')+'</td><td>'+(n.score*100).toFixed(1)+'%</td></tr>';
+    });
+    html += '</table>';
+  }
+  html += '</div>';
+
+  // ── Stage 4-5: Scene Expansion + Ranking ──
+  var s5 = debug.step5 || {};
+  var scenes = s5.rankedScenes || [];
+  html += '<div class="section"><h3>🎯 Stage 4-5: Scene 展开+排序 (' + scenes.length + ' scenes, top: ' + (s5.topConfidence*100).toFixed(1) + '%)</h3>';
+  if(scenes.length){
+    html += '<table class="tbl"><tr><th>#</th><th>节点</th><th>场景</th><th>动作</th><th>得分</th><th>类型</th></tr>';
+    scenes.forEach(function(s,i){
+      var isTop = s.sceneId === result.sceneId;
+      html += '<tr style="'+(isTop?'background:#1a2332':'')+'"><td>'+(i+1)+(isTop?' ★':'')+'</td><td><b>'+esc(s.nodeName)+'</b></td>'+
+        '<td>'+esc(s.sceneName)+'</td><td><span class="tag action">'+esc(s.actionCode)+'</span></td>'+
+        '<td><b>'+(s.score*100).toFixed(1)+'%</b></td><td>'+esc(s.intentType)+'</td></tr>';
+    });
+    html += '</table>';
+  }
+  html += '</div>';
+
+  // ── Stage 6: Route Decision ──
+  var s6 = debug.step6 || {};
+  html += '<div class="section"><h3>⚖️ Stage 6: Route Decision 路由决策</h3>';
+  html += '<div style="font-size:12px;line-height:1.8">';
+  html += '<span class="label">路由:</span> <b>' + esc(s6.routeType||'') + '</b><br>';
+  html += '<span class="label">原因:</span> ' + esc(s6.routeReason||'') + '<br>';
+  html += '<span class="label">置信度:</span> ' + ((s6.confidence||0)*100).toFixed(1) + '%<br>';
+  html += '<span class="label">LLM介入:</span> ' + (s6.llmUsed ? '<span class="tag mismatch">是</span>' : '<span class="tag match">否</span>') + '<br>';
+  html += '<span class="label">需澄清:</span> ' + (s5.needClarify ? '<span class="tag mismatch">是 ('+esc(s5.clarifyReason||'')+')</span>' : '<span class="tag match">否</span>');
+  html += '</div></div>';
+
+  document.getElementById('pipelineContent').innerHTML = html;
+}
+
+function renderSteps(steps){
+  document.getElementById('stepIndicator').innerHTML = steps.map(s=>`<span class="step done">${s.name}</span>`).join('');
+}
+
+function renderResult(r){
+  let html = `<div class="row"><span class="label">用户输入:</span><span class="value">${esc(r.query)}</span></div>`;
+  html += `<div class="row"><span class="label">识别意图:</span><span class="value">${esc(r.nodeName)}</span></div>`;
+  html += `<div class="row"><span class="label">业务域:</span><span class="value">${esc(NODES_DB.find(n=>n.id===r.nodeId)?.domain||'-')}</span></div>`;
+  html += `<div class="row"><span class="label">导航路径:</span><span class="value">${esc(r.navigationPath||'-')}</span></div>`;
+  html += `<div class="row"><span class="label">动作:</span><span class="value"><span class="tag action">${esc(r.actionCode||'-')}</span> ${esc(r.actionName||'-')}</span></div>`;
+  html += `<div class="row"><span class="label">场景:</span><span class="value">${esc(r.sceneName||'-')}</span></div>`;
+  html += `<div class="row"><span class="label">意图类型:</span><span class="value">${esc(r.intentType||'-')}</span></div>`;
+  html += `<div class="row"><span class="label">路由:</span><span class="value">${esc(r.routeType)} (${esc(r.routeReason||'')})</span></div>`;
+  html += `<div class="row"><span class="label">置信度:</span><span class="value">${(r.confidence*100).toFixed(1)}%</span></div>`;
+  html += `<div class="row"><span class="label">需要澄清:</span><span class="value">${r.needClarify?'是':'否'}</span></div>`;
+  if(r.queryFlags.length) html += `<div class="row"><span class="label">标记:</span><span class="value">${r.queryFlags.map(f=>`<span class="tag">${esc(f)}</span>`).join('')}</span></div>`;
+  if(r.alternativeScenes?.length) html += `<div class="row"><span class="label">备选场景:</span><span class="value">${r.alternativeScenes.map(s=>`<span class="tag">${esc(s.sceneName)}(${(s.score*100).toFixed(0)}%)</span>`).join('')}</span></div>`;
+  document.getElementById('resultContent').innerHTML = html;
+}
+
+async function runBatchTest(){
+  const input = document.getElementById('batchInput').value.trim();
+  if(!input){alert('请输入测试用例');return;}
+  if(!NODES_DB.length){alert('请先加载意图图谱');return;}
+  let cases;
+  try{cases=JSON.parse(input);if(!Array.isArray(cases))throw new Error('需要数组格式');}catch(e){alert('JSON格式错误: '+e.message);return;}
+  running = true;
+  results = [];
+  document.getElementById('progress').style.display='block';
+  document.getElementById('stopBtn').disabled=false;
+  document.getElementById('stepsSection').style.display='none';
+  document.getElementById('resultSection').style.display='none'; document.getElementById('pipelineSection').style.display='none';
+  document.getElementById('reportSection').style.display='none';
+  document.getElementById('errorAnalysisSection').style.display='none';
+  document.getElementById('attributionSection').style.display='none';
+  document.getElementById('caseSection').style.display='block';
+  document.getElementById('caseList').innerHTML='';
+  const total = cases.length;
+  let correct = 0, error = 0;
+  for(let i=0;i<total && running;i++){
+    const c = cases[i];
+    const q = c.q || c.query;
+    if(!q) continue;
+    try{
+      const {result} = await recognize(q);
+      result.target = c.t || c.target || '';
+      result.targetDomain = c.td || c.targetDomain || '';
+      result.match = result.nodeName === result.target || NODES_DB.find(n=>n.id===result.nodeId)?.domain === result.targetDomain;
+      if(result.match) correct++; else error++;
+      results.push(result);
+    }catch(e){error++;results.push({query:q,error:e.message,match:false,target:c.t,targetDomain:c.td});}
+    document.getElementById('progressBar').style.width = ((i+1)/total*100)+'%';
+    document.getElementById('progressText').textContent = `${i+1}/${total} 完成，正确 ${correct}，错误 ${error}`;
+    updateStats();
+    await new Promise(r=>setTimeout(r,50));
+  }
+  running = false;
+  document.getElementById('stopBtn').disabled = true;
+  renderReport();
+  renderCaseList();
+}
+
+function stopBatch(){running=false;}
+
+function updateStats(){
+  const total = results.length;
+  const correct = results.filter(r=>r.match).length;
+  document.getElementById('totalCount').textContent = total;
+  document.getElementById('correctCount').textContent = correct;
+  document.getElementById('errorCount').textContent = total - correct;
+  document.getElementById('accuracy').textContent = total > 0 ? (correct/total*100).toFixed(1)+'%' : '-';
+}
+
+function renderReport(){
+  if(!results.length) return;
+  document.getElementById('reportSection').style.display = 'block';
+  const total = results.length;
+  const correct = results.filter(r=>r.match).length;
+  let html = `<div class="row"><span class="label">总测试数:</span><span class="value">${total}</span></div>`;
+  html += `<div class="row"><span class="label">正确数:</span><span class="value match">${correct}</span></div>`;
+  html += `<div class="row"><span class="label">错误数:</span><span class="value mismatch">${total-correct}</span></div>`;
+  html += `<div class="row"><span class="label">准确率:</span><span class="value">${(correct/total*100).toFixed(1)}%</span></div>`;
+  document.getElementById('reportContent').innerHTML = html;
+}
+
+function renderCaseList(){
+  const list = document.getElementById('caseList');
+  if(!results.length){list.innerHTML='<div class="empty">无测试结果</div>';return;}
+  let html = '';
+  for(const r of results.slice(0,100)){
+    html += `<div class="case-item ${r.match?'':'error'}"><div class="case-q">${esc(r.query)}</div><div class="case-meta"><span class="tag ${r.match?'match':'mismatch'}">${r.match?'✓':'✗'}</span><span class="tag">${esc(r.nodeName||'-')}</span><span class="tag action">${esc(r.actionCode||'-')}</span><span class="tag">${(r.confidence*100||0).toFixed(0)}%</span></div></div>`;
+  }
+  if(results.length>100) html += `<div class="empty">显示前100条，共${results.length}条</div>`;
+  list.innerHTML = html;
+}
+
+// 事件绑定
+document.getElementById('loadBtn').addEventListener('click', loadBundle);
+document.getElementById('runBtn').addEventListener('click', runSingleTest);
+document.getElementById('clearBtn').addEventListener('click', ()=>{document.getElementById('queryInput').value='';document.getElementById('stepsSection').style.display='none';document.getElementById('pipelineSection').style.display='none'; document.getElementById('resultSection').style.display='none'; document.getElementById('errorAnalysisSection').style.display='none';document.getElementById('attributionSection').style.display='none';results=[];updateStats();});
+document.getElementById('runBatchBtn').addEventListener('click', runBatchTest);
+document.getElementById('stopBtn').addEventListener('click', stopBatch);
+
+document.querySelectorAll('.mainTab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.mainTab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+    document.getElementById(t.dataset.tab+'Tab').style.display='block';
+    if(t.dataset.tab==='history') loadHistory();
+  });
+});
+
+// 筛选器事件
+document.getElementById('errorTypeFilter').addEventListener('change', renderErrorCases);
+document.getElementById('domainFilter').addEventListener('change', renderErrorCases);
+document.getElementById('searchInput').addEventListener('input', renderErrorCases);
+
+loadBundle();
+</script>
+</body>
+</html>
