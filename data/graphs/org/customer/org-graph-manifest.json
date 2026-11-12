@@ -1,0 +1,20 @@
+{
+  "asset_id": "customer-ecosystem",
+  "active_version": "org-graph-v1",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "customer-ecosystem-doc",
+      "document_version": "1.1.0",
+      "template_id": "customer-ecosystem",
+      "published_at": "2026-08-24T16:21:12.399Z",
+      "enriched_at": "2026-09-13T10:00:00.000Z",
+      "note": "客户生态图谱 v1.1：25家对公客户画像 + 39个关联企业（属性已填充） + 10个金融产品 + 77条产品推荐关系（origin=corporate-marketing-enrichment）",
+      "stats": {
+        "nodes": 99,
+        "edges": 142
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "template_id": "knowledge-concept",
+  "template_version": "1.0.0",
+  "name": "知识概念图模板",
+  "name_en": "Knowledge Concept Graph Template",
+  "description": "组织概念、文档、能力和智能体之间的知识依赖。",
+  "origin": "builtin",
+  "parent_template_id": null,
+  "node_types": [
+    { "type": "CONCEPT", "label": "概念", "style": { "color": "#2563eb", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] },
+    { "type": "DOCUMENT", "label": "文档", "style": { "color": "#16a34a", "shape": "rect" }, "fields": [{ "key": "title", "label": "标题", "type": "string", "required": true, "default": "" }] },
+    { "type": "CAPABILITY", "label": "能力", "style": { "color": "#ea580c", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] },
+    { "type": "AGENT", "label": "智能体", "style": { "color": "#7c3aed", "shape": "rect" }, "fields": [{ "key": "name", "label": "名称", "type": "string", "required": true, "default": "" }] }
+  ],
+  "edge_types": [
+    { "type": "CONTAINS", "label": "包含", "source_types": ["DOCUMENT", "CONCEPT"], "target_types": ["CONCEPT", "DOCUMENT"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "DEPENDS_ON", "label": "依赖", "source_types": ["CONCEPT", "CAPABILITY", "AGENT"], "target_types": ["CONCEPT", "CAPABILITY"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "RELATED_TO", "label": "关联", "source_types": ["CONCEPT", "DOCUMENT", "CAPABILITY", "AGENT"], "target_types": ["CONCEPT", "DOCUMENT", "CAPABILITY", "AGENT"], "style": { "color": "#64748b" }, "fields": [] },
+    { "type": "PRODUCES", "label": "产出", "source_types": ["AGENT", "CAPABILITY"], "target_types": ["DOCUMENT", "CONCEPT"], "style": { "color": "#64748b" }, "fields": [] }
+  ],
+  "starter_graph": { "nodes": [{ "id": "concept:graph", "type": "CONCEPT", "properties": { "name": "知识图谱" } }, { "id": "doc:guide", "type": "DOCUMENT", "properties": { "title": "图谱构建指南" } }, { "id": "agent:builder", "type": "AGENT", "properties": { "name": "知识构建智能体" } }], "edges": [{ "id": "edge:contains", "type": "CONTAINS", "source": "doc:guide", "target": "concept:graph", "properties": {} }, { "id": "edge:produces", "type": "PRODUCES", "source": "agent:builder", "target": "doc:guide", "properties": {} }] },
+  "validation_rules": { "unique_node_ids": true, "unique_edge_ids": true, "no_orphan_edges": true, "allow_self_loop": false },
+  "metadata": { "created_at": "2026-08-21T00:00:00.000Z", "updated_at": "2026-08-21T00:00:00.000Z" }
+}

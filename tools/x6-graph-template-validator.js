@@ -5,8 +5,8 @@
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.X6GraphTemplateValidator = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
-  const FIELD_TYPES = new Set(['string', 'multiline', 'number', 'boolean', 'date', 'enum', 'multi_enum', 'tags', 'url']);
-  const FIELD_KEYS = new Set(['field_id', 'key', 'label', 'data_type', 'type', 'required', 'default', 'options', 'constraints', 'semantics', 'status', 'order', 'description']);
+  const FIELD_TYPES = new Set(['string', 'multiline', 'number', 'boolean', 'date', 'enum', 'multi_enum', 'tags', 'url', 'scenes_array']);
+  const FIELD_KEYS = new Set(['field_id', 'key', 'label', 'data_type', 'type', 'required', 'default', 'options', 'constraints', 'semantics', 'status', 'order', 'description', 'item_schema']);
   const CONSTRAINT_KEYS = new Set(['unique', 'pattern', 'min', 'max']);
   const SEMANTIC_KEYS = new Set(['primary_label', 'searchable', 'filterable', 'sensitive']);
 
@@ -70,6 +70,7 @@
     if (dataType === 'date') return strictDate(value);
     if (dataType === 'enum') return Array.isArray(field.options) && field.options.includes(value);
     if (dataType === 'multi_enum' || dataType === 'tags') return validArrayForType(field, value, dataType);
+    if (dataType === 'scenes_array') return typeof value === 'string' || Array.isArray(value);
     if (dataType === 'url') return validUrl(value);
     return false;
   }
@@ -199,6 +200,11 @@
     }
     if (dataType === 'multi_enum' || dataType === 'tags') {
       if (!validArrayForType(field, value, dataType)) { add(report, 'FIELD_ARRAY_INVALID', '数组字段值无效：' + field.key, path); return false; }
+      return true;
+    }
+    if (dataType === 'scenes_array') {
+      // scenes 为 V4.1 场景数组：存为 JSON 字符串（v4-graph-validator.parseScenes 解析）；default 为数组。结构校验由 v4-graph-validator 负责
+      if (typeof value !== 'string' && !Array.isArray(value)) { add(report, 'FIELD_TYPE_INVALID', '字段值类型无效：' + field.key, path); return false; }
       return true;
     }
     if (dataType === 'url') {

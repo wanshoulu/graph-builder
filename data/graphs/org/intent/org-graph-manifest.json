@@ -1,6 +1,6 @@
 {
   "asset_id": "intent-graph",
-  "active_version": "org-graph-v5",
+  "active_version": "org-graph-v6",
   "versions": [
     {
       "version": "org-graph-v1",
@@ -66,6 +66,84 @@
         "nodes": 355,
         "edges": 851
       }
+    },
+    {
+      "version": "org-graph-v6",
+      "file": "org-graph-v6.json",
+      "document_id": "intent-graph-seed",
+      "document_version": "1.0.0",
+      "template_id": "intent-graph",
+      "published_at": "2026-10-27T08:06:47.339Z",
+      "note": "（审批通过后发布）",
+      "name": "intent - 2026-10-13",
+      "stats": {
+        "nodes": 354,
+        "edges": 849
+      }
+    }
+  ],
+  "publishRequests": [
+    {
+      "id": "pr-mvqefudm-rsu40r",
+      "status": "approved",
+      "note": "",
+      "snapshotFile": "publish-requests/pr-mvqefudm-rsu40r.json",
+      "stats": {
+        "nodes": 354,
+        "edges": 849
+      },
+      "createdAt": "2026-10-27T08:03:56.975Z",
+      "decidedAt": "2026-10-27T08:06:47.411Z"
+    },
+    {
+      "id": "pr-mvqhl19i-uojznl",
+      "status": "pending",
+      "note": "",
+      "snapshotFile": "publish-requests/pr-mvqhl19i-uojznl.json",
+      "stats": {
+        "nodes": 354,
+        "edges": 849
+      },
+      "createdAt": "2026-10-27T09:31:58.018Z"
+    }
+  ],
+  "auditLog": [
+    {
+      "at": "2026-10-27T08:03:56.975Z",
+      "action": "publish_requested",
+      "requestId": "pr-mvqefudm-rsu40r",
+      "stats": {
+        "nodes": 354,
+        "edges": 849
+      },
+      "note": ""
+    },
+    {
+      "at": "2026-10-27T08:06:47.371Z",
+      "action": "publish",
+      "version": "org-graph-v6",
+      "note": "（审批通过后发布）",
+      "stats": {
+        "nodes": 354,
+        "edges": 849
+      },
+      "contentDigest": "sha256:fa8e62935f9c3243e57c99382928b423ebf976063eff47cafe7b450139c0b9a2"
+    },
+    {
+      "at": "2026-10-27T08:06:47.411Z",
+      "action": "publish_approved",
+      "requestId": "pr-mvqefudm-rsu40r",
+      "version": "org-graph-v6"
+    },
+    {
+      "at": "2026-10-27T09:31:58.018Z",
+      "action": "publish_requested",
+      "requestId": "pr-mvqhl19i-uojznl",
+      "stats": {
+        "nodes": 354,
+        "edges": 849
+      },
+      "note": ""
     }
   ]
 }

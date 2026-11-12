@@ -1,0 +1,2586 @@
+{
+  "document_id": "personal-credit-risk-doc",
+  "document_version": "1.0.0",
+  "asset_id": "personal-credit-risk",
+  "template_ref": {
+    "template_id": "personal-credit-risk",
+    "template_version": "2.0.0"
+  },
+  "nodes": [
+    {
+      "id": "b:B01",
+      "type": "BORROWER",
+      "properties": {
+        "name": "王志强",
+        "customerCode": "GR2026-0001",
+        "ageRange": "30-35",
+        "occupation": "个体经营",
+        "incomeRange": "8-12",
+        "creditQueryCount": 9,
+        "overdueCount12m": 2,
+        "activeLoanOrgs": 3,
+        "province": "深圳",
+        "tags": [
+          "团伙成员",
+          "空壳单位"
+        ]
+      },
+      "x": 2031,
+      "y": 1233
+    },
+    {
+      "id": "b:B02",
+      "type": "BORROWER",
+      "properties": {
+        "name": "李海涛",
+        "customerCode": "GR2026-0002",
+        "ageRange": "25-30",
+        "occupation": "个体经营",
+        "incomeRange": "6-8",
+        "creditQueryCount": 8,
+        "overdueCount12m": 1,
+        "activeLoanOrgs": 3,
+        "province": "深圳",
+        "tags": [
+          "团伙成员",
+          "空壳单位"
+        ]
+      },
+      "x": 1909,
+      "y": 1371
+    },
+    {
+      "id": "b:B03",
+      "type": "BORROWER",
+      "properties": {
+        "name": "张永刚",
+        "customerCode": "GR2026-0003",
+        "ageRange": "35-40",
+        "occupation": "个体经营",
+        "incomeRange": "6-8",
+        "creditQueryCount": 11,
+        "overdueCount12m": 2,
+        "activeLoanOrgs": 4,
+        "province": "深圳",
+        "tags": [
+          "团伙成员",
+          "历史黑名单"
+        ]
+      },
+      "x": 1967,
+      "y": 1546
+    },
+    {
+      "id": "b:B04",
+      "type": "BORROWER",
+      "properties": {
+        "name": "赵建军",
+        "customerCode": "GR2026-0004",
+        "ageRange": "40-45",
+        "occupation": "企业中层管理",
+        "incomeRange": "20-30",
+        "creditQueryCount": 5,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 2,
+        "province": "苏州",
+        "tags": [
+          "互保成员"
+        ]
+      },
+      "x": 1351,
+      "y": 1265
+    },
+    {
+      "id": "b:B05",
+      "type": "BORROWER",
+      "properties": {
+        "name": "钱国栋",
+        "customerCode": "GR2026-0005",
+        "ageRange": "35-40",
+        "occupation": "家族企业总经理",
+        "incomeRange": "30-50",
+        "creditQueryCount": 4,
+        "overdueCount12m": 1,
+        "activeLoanOrgs": 2,
+        "province": "苏州",
+        "tags": [
+          "互保成员",
+          "家族企业"
+        ]
+      },
+      "x": 1171,
+      "y": 1306
+    },
+    {
+      "id": "b:B06",
+      "type": "BORROWER",
+      "properties": {
+        "name": "孙立新",
+        "customerCode": "GR2026-0006",
+        "ageRange": "45-50",
+        "occupation": "个体经营",
+        "incomeRange": "10-15",
+        "creditQueryCount": 3,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 1,
+        "province": "苏州",
+        "tags": [
+          "互保成员",
+          "失联"
+        ]
+      },
+      "x": 1100,
+      "y": 995
+    },
+    {
+      "id": "b:B07",
+      "type": "BORROWER",
+      "properties": {
+        "name": "周文杰",
+        "customerCode": "GR2026-0007",
+        "ageRange": "30-35",
+        "occupation": "互联网从业者",
+        "incomeRange": "25-35",
+        "creditQueryCount": 11,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 4,
+        "province": "杭州",
+        "tags": [
+          "多头借贷",
+          "夫妻共债"
+        ]
+      },
+      "x": 1628,
+      "y": 1785
+    },
+    {
+      "id": "b:B08",
+      "type": "BORROWER",
+      "properties": {
+        "name": "陈雅琳",
+        "customerCode": "GR2026-0008",
+        "ageRange": "30-35",
+        "occupation": "护士长",
+        "incomeRange": "15-20",
+        "creditQueryCount": 1,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 1,
+        "province": "苏州",
+        "tags": []
+      },
+      "x": 264,
+      "y": 2018
+    },
+    {
+      "id": "b:B09",
+      "type": "BORROWER",
+      "properties": {
+        "name": "吴倩",
+        "customerCode": "GR2026-0009",
+        "ageRange": "25-30",
+        "occupation": "教师",
+        "incomeRange": "10-15",
+        "creditQueryCount": 2,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 1,
+        "province": "成都",
+        "tags": []
+      },
+      "x": 979,
+      "y": 60
+    },
+    {
+      "id": "b:B10",
+      "type": "BORROWER",
+      "properties": {
+        "name": "何晓燕",
+        "customerCode": "GR2026-0010",
+        "ageRange": "30-35",
+        "occupation": "行政主管",
+        "incomeRange": "10-15",
+        "creditQueryCount": 8,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 2,
+        "province": "杭州",
+        "tags": [
+          "夫妻共债"
+        ]
+      },
+      "x": 1787,
+      "y": 1877
+    },
+    {
+      "id": "rp:R01",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "杨慧敏",
+        "relation": "陈雅琳配偶(共同还款人)",
+        "phoneMasked": "135****2266"
+      },
+      "x": 354,
+      "y": 1858
+    },
+    {
+      "id": "rp:R02",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "钱德海",
+        "relation": "钱国栋父亲(家族企业法人)",
+        "phoneMasked": "137****0912"
+      },
+      "x": 1117,
+      "y": 1482
+    },
+    {
+      "id": "rp:R03",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "周淑兰",
+        "relation": "钱国栋母亲",
+        "phoneMasked": "136****4478"
+      },
+      "x": 867,
+      "y": 1212
+    },
+    {
+      "id": "rp:R05",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "钱国娟",
+        "relation": "钱国栋妹妹(家族企业股东)",
+        "phoneMasked": "139****6653"
+      },
+      "x": 992,
+      "y": 1347
+    },
+    {
+      "id": "rp:R06",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "刘芳",
+        "relation": "孙立新紧急联系人",
+        "phoneMasked": "188****3354"
+      },
+      "x": 1291,
+      "y": 958
+    },
+    {
+      "id": "rp:R07",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "孙嘉怡",
+        "relation": "孙立新女儿",
+        "phoneMasked": "159****8120"
+      },
+      "x": 1166,
+      "y": 823
+    },
+    {
+      "id": "g:G01",
+      "type": "GUARANTOR",
+      "properties": {
+        "name": "郑伟东",
+        "guarantorType": "职业担保",
+        "customerCode": "GR2025-0777"
+      },
+      "x": 358,
+      "y": 2177
+    },
+    {
+      "id": "e:EMP01",
+      "type": "EMPLOYER",
+      "properties": {
+        "name": "深圳市宏通达商贸有限公司",
+        "industry": "批发零售",
+        "employeeScale": "10人以下",
+        "isShellRisk": true,
+        "province": "深圳"
+      },
+      "x": 2089,
+      "y": 1408
+    },
+    {
+      "id": "e:EMP02",
+      "type": "EMPLOYER",
+      "properties": {
+        "name": "苏州市第一人民医院",
+        "industry": "医疗卫生",
+        "employeeScale": "1000人以上",
+        "isShellRisk": false,
+        "province": "苏州"
+      },
+      "x": 448,
+      "y": 2016
+    },
+    {
+      "id": "e:EMP03",
+      "type": "EMPLOYER",
+      "properties": {
+        "name": "苏州金皓精密机械有限公司",
+        "industry": "制造",
+        "employeeScale": "50-100人",
+        "isShellRisk": false,
+        "province": "苏州"
+      },
+      "x": 1046,
+      "y": 1171
+    },
+    {
+      "id": "e:EMP04",
+      "type": "EMPLOYER",
+      "properties": {
+        "name": "杭州凡启网络科技有限公司",
+        "industry": "互联网",
+        "employeeScale": "500-1000人",
+        "isShellRisk": false,
+        "province": "杭州"
+      },
+      "x": 1469,
+      "y": 2062
+    },
+    {
+      "id": "e:EMP05",
+      "type": "EMPLOYER",
+      "properties": {
+        "name": "成都市锦江外国语学校",
+        "industry": "教育",
+        "employeeScale": "100-500人",
+        "isShellRisk": false,
+        "province": "成都"
+      },
+      "x": 891,
+      "y": 221
+    },
+    {
+      "id": "c:C01",
+      "type": "COMPANY",
+      "properties": {
+        "name": "苏州市钱氏精密机械配件厂",
+        "uscc": "91320**MA1**",
+        "industry": "机械配件制造",
+        "registeredCapitalWan": 200,
+        "foundedYear": 2009,
+        "employeeScale": "20-50人",
+        "operatingStatus": "正常(行业下行)",
+        "isFamilyBusiness": true,
+        "province": "苏州"
+      },
+      "x": 938,
+      "y": 1523
+    },
+    {
+      "id": "c:C02",
+      "type": "COMPANY",
+      "properties": {
+        "name": "杭州云程科技有限公司",
+        "uscc": "91330**MA9**",
+        "industry": "软件服务",
+        "registeredCapitalWan": 100,
+        "foundedYear": 2018,
+        "employeeScale": "20人以下",
+        "operatingStatus": "正常",
+        "isFamilyBusiness": false,
+        "province": "杭州"
+      },
+      "x": 260,
+      "y": 1700
+    },
+    {
+      "id": "a:A01",
+      "type": "ASSET",
+      "properties": {
+        "name": "苏州市工业园区某小区房产",
+        "assetType": "房产",
+        "valueWan": 280,
+        "mortgageStatus": "按揭抵押中(一押)",
+        "location": "苏州工业园区"
+      },
+      "x": 170,
+      "y": 1860
+    },
+    {
+      "id": "a:A02",
+      "type": "ASSET",
+      "properties": {
+        "name": "苏州市吴中区自建厂房",
+        "assetType": "房产",
+        "valueWan": 320,
+        "mortgageStatus": "二押(经营贷)",
+        "location": "苏州吴中区"
+      },
+      "x": 1242,
+      "y": 1617
+    },
+    {
+      "id": "a:A03",
+      "type": "ASSET",
+      "properties": {
+        "name": "杭州牌照小型轿车",
+        "assetType": "车辆",
+        "valueWan": 22,
+        "mortgageStatus": "无",
+        "location": "杭州"
+      },
+      "x": 1628,
+      "y": 2153
+    },
+    {
+      "id": "a:A04",
+      "type": "ASSET",
+      "properties": {
+        "name": "苏州牌照小型轿车(已保全)",
+        "assetType": "车辆",
+        "valueWan": 15,
+        "mortgageStatus": "司法保全",
+        "location": "苏州"
+      },
+      "x": 975,
+      "y": 860
+    },
+    {
+      "id": "l:L01",
+      "type": "LOAN",
+      "properties": {
+        "name": "中银消费-信用贷-2026-0301",
+        "loanType": "信用贷",
+        "lender": "某消费金融公司",
+        "amountWan": 8,
+        "balanceWan": 7.4,
+        "startDate": "2026-03-01",
+        "termMonths": 24,
+        "ratePercent": 23.9,
+        "status": "逾期"
+      },
+      "x": 1972,
+      "y": 1059
+    },
+    {
+      "id": "l:L02",
+      "type": "LOAN",
+      "properties": {
+        "name": "招联金融-信用贷-2026-0315",
+        "loanType": "信用贷",
+        "lender": "某股份行A",
+        "amountWan": 6,
+        "balanceWan": 5.8,
+        "startDate": "2026-03-15",
+        "termMonths": 12,
+        "ratePercent": 18,
+        "status": "逾期"
+      },
+      "x": 1850,
+      "y": 1197
+    },
+    {
+      "id": "l:L03",
+      "type": "LOAN",
+      "properties": {
+        "name": "某网络小贷-信用贷-2026-0402",
+        "loanType": "信用贷",
+        "lender": "某网络小贷",
+        "amountWan": 5,
+        "balanceWan": 4.9,
+        "startDate": "2026-04-02",
+        "termMonths": 12,
+        "ratePercent": 24,
+        "status": "逾期"
+      },
+      "x": 1627,
+      "y": 1601
+    },
+    {
+      "id": "l:L04",
+      "type": "LOAN",
+      "properties": {
+        "name": "某国有行-个人经营贷-2025-1101",
+        "loanType": "经营贷",
+        "lender": "某国有行",
+        "amountWan": 80,
+        "balanceWan": 76,
+        "startDate": "2025-11-01",
+        "termMonths": 36,
+        "ratePercent": 4.2,
+        "status": "逾期"
+      },
+      "x": 1296,
+      "y": 1441
+    },
+    {
+      "id": "l:L05",
+      "type": "LOAN",
+      "properties": {
+        "name": "某国有行-个人经营贷-2026-0210",
+        "loanType": "经营贷",
+        "lender": "某国有行",
+        "amountWan": 60,
+        "balanceWan": 58,
+        "startDate": "2026-02-10",
+        "termMonths": 36,
+        "ratePercent": 4.35,
+        "status": "正常"
+      },
+      "x": 1416,
+      "y": 1093
+    },
+    {
+      "id": "l:L06",
+      "type": "LOAN",
+      "properties": {
+        "name": "某国有行-个人经营贷-2025-0908",
+        "loanType": "经营贷",
+        "lender": "某国有行",
+        "amountWan": 40,
+        "balanceWan": 39,
+        "startDate": "2025-09-08",
+        "termMonths": 24,
+        "ratePercent": 4.5,
+        "status": "逾期"
+      },
+      "x": 1041,
+      "y": 688
+    },
+    {
+      "id": "l:L07",
+      "type": "LOAN",
+      "properties": {
+        "name": "中银消费-信用贷-2026-0512",
+        "loanType": "信用贷",
+        "lender": "某消费金融公司",
+        "amountWan": 10,
+        "balanceWan": 9.7,
+        "startDate": "2026-05-12",
+        "termMonths": 18,
+        "ratePercent": 20.5,
+        "status": "正常"
+      },
+      "x": 1468,
+      "y": 1694
+    },
+    {
+      "id": "l:L08",
+      "type": "LOAN",
+      "properties": {
+        "name": "某股份行B-信用贷-2026-0410",
+        "loanType": "信用贷",
+        "lender": "某股份行B",
+        "amountWan": 15,
+        "balanceWan": 14.6,
+        "startDate": "2026-04-10",
+        "termMonths": 24,
+        "ratePercent": 16.5,
+        "status": "正常"
+      },
+      "x": 1468,
+      "y": 1878
+    },
+    {
+      "id": "l:L09",
+      "type": "LOAN",
+      "properties": {
+        "name": "某城商行-消费贷-2026-0501",
+        "loanType": "消费贷",
+        "lender": "某城商行",
+        "amountWan": 12,
+        "balanceWan": 11.8,
+        "startDate": "2026-05-01",
+        "termMonths": 24,
+        "ratePercent": 12.8,
+        "status": "正常"
+      },
+      "x": 1307,
+      "y": 1789
+    },
+    {
+      "id": "l:L10",
+      "type": "LOAN",
+      "properties": {
+        "name": "某互联网平台-信用贷-2026-0620",
+        "loanType": "信用贷",
+        "lender": "某互联网平台",
+        "amountWan": 8,
+        "balanceWan": 8,
+        "startDate": "2026-06-20",
+        "termMonths": 12,
+        "ratePercent": 21,
+        "status": "正常"
+      },
+      "x": 1628,
+      "y": 1969
+    },
+    {
+      "id": "l:L11",
+      "type": "LOAN",
+      "properties": {
+        "name": "某国有行-住房按揭-2023-0801",
+        "loanType": "房贷",
+        "lender": "某国有行",
+        "amountWan": 180,
+        "balanceWan": 165,
+        "startDate": "2023-08-01",
+        "termMonths": 360,
+        "ratePercent": 4.1,
+        "status": "正常"
+      },
+      "x": 80,
+      "y": 2021
+    },
+    {
+      "id": "l:L12",
+      "type": "LOAN",
+      "properties": {
+        "name": "某股份行-消费贷-2026-0520",
+        "loanType": "消费贷",
+        "lender": "某股份行B",
+        "amountWan": 10,
+        "balanceWan": 9.5,
+        "startDate": "2026-05-20",
+        "termMonths": 24,
+        "ratePercent": 14.5,
+        "status": "正常"
+      },
+      "x": 1946,
+      "y": 1785
+    },
+    {
+      "id": "l:L13",
+      "type": "LOAN",
+      "properties": {
+        "name": "某城商行-信用贷-2026-0611",
+        "loanType": "信用贷",
+        "lender": "某城商行",
+        "amountWan": 6,
+        "balanceWan": 5.9,
+        "startDate": "2026-06-11",
+        "termMonths": 12,
+        "ratePercent": 15.8,
+        "status": "正常"
+      },
+      "x": 1947,
+      "y": 1969
+    },
+    {
+      "id": "o:O01",
+      "type": "OVERDUE_EVENT",
+      "properties": {
+        "name": "M1逾期-202606",
+        "level": "M1",
+        "occurredAt": "2026-06-15",
+        "amountWan": 0.6,
+        "cured": false
+      },
+      "x": 2153,
+      "y": 1096
+    },
+    {
+      "id": "o:O02",
+      "type": "OVERDUE_EVENT",
+      "properties": {
+        "name": "M2逾期-202607",
+        "level": "M2",
+        "occurredAt": "2026-07-20",
+        "amountWan": 2.1,
+        "cured": false
+      },
+      "x": 1670,
+      "y": 1160
+    },
+    {
+      "id": "o:O03",
+      "type": "OVERDUE_EVENT",
+      "properties": {
+        "name": "M1逾期-202606(已结清)",
+        "level": "M1",
+        "occurredAt": "2026-06-05",
+        "amountWan": 0.5,
+        "cured": true
+      },
+      "x": 1468,
+      "y": 1510
+    },
+    {
+      "id": "o:O04",
+      "type": "OVERDUE_EVENT",
+      "properties": {
+        "name": "M2逾期-202608",
+        "level": "M2",
+        "occurredAt": "2026-08-01",
+        "amountWan": 3.2,
+        "cured": false
+      },
+      "x": 1521,
+      "y": 1334
+    },
+    {
+      "id": "rt:RT01",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "疑似团伙欺诈",
+        "category": "欺诈",
+        "severity": "高",
+        "evidence": "王志强/李海涛/张永刚共用手机号 139****7788 与同一设备指纹，同任职于疑似空壳单位",
+        "discoveredAt": "2026-08-10"
+      },
+      "x": 1728,
+      "y": 1335
+    },
+    {
+      "id": "rt:RT02",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "多头借贷",
+        "category": "信用",
+        "severity": "中",
+        "evidence": "在贷机构数 ≥4 且近 6 月征信查询 11 次",
+        "discoveredAt": "2026-08-12"
+      },
+      "x": 1787,
+      "y": 2061
+    },
+    {
+      "id": "rt:RT03",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "担保环风险",
+        "category": "关联",
+        "severity": "高",
+        "evidence": "钱国栋→孙立新→赵建军→钱国栋 三人互保闭环，环内经营贷已逾期将触发连锁代偿",
+        "discoveredAt": "2026-08-15"
+      },
+      "x": 1226,
+      "y": 1130
+    },
+    {
+      "id": "rt:RT04",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "失联",
+        "category": "行为",
+        "severity": "高",
+        "evidence": "预留手机号停机，紧急联系人及女儿均无法触达，车辆已申请保全",
+        "discoveredAt": "2026-08-18"
+      },
+      "x": 921,
+      "y": 1036
+    },
+    {
+      "id": "rt:RT05",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "历史黑名单",
+        "category": "信用",
+        "severity": "高",
+        "evidence": "2024 年在外部共享黑名单（同业欺诈库）命中",
+        "discoveredAt": "2024-11-30"
+      },
+      "x": 1787,
+      "y": 1509
+    },
+    {
+      "id": "rt:RT06",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "夫妻共债(月供收入比超标)",
+        "category": "信用",
+        "severity": "中",
+        "evidence": "周文杰+何晓燕夫妻合计在贷 6 笔 61 万，合计月供/合并收入比 58%（阈值 50%）",
+        "discoveredAt": "2026-08-20"
+      },
+      "x": 1787,
+      "y": 1693
+    },
+    {
+      "id": "rp:R08",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "吴明远",
+        "relation": "吴倩父亲",
+        "phoneMasked": "133****6677"
+      },
+      "x": 700,
+      "y": 350
+    },
+    {
+      "id": "l:L14",
+      "type": "LOAN",
+      "properties": {
+        "name": "某城商行-消费贷-2025-1001",
+        "loanType": "消费贷",
+        "lender": "某城商行",
+        "amountWan": 8,
+        "balanceWan": 6.2,
+        "startDate": "2025-10-01",
+        "termMonths": 24,
+        "ratePercent": 8.5,
+        "status": "正常"
+      },
+      "x": 980,
+      "y": 150
+    },
+    {
+      "id": "a:A05",
+      "type": "ASSET",
+      "properties": {
+        "name": "成都市武侯区住宅",
+        "assetType": "房产",
+        "valueWan": 150,
+        "mortgageStatus": "按揭抵押中(一押)",
+        "location": "成都武侯区"
+      },
+      "x": 700,
+      "y": 100
+    },
+    {
+      "id": "b:B11",
+      "type": "BORROWER",
+      "properties": {
+        "name": "林建华",
+        "customerCode": "GR2026-0011",
+        "ageRange": "30-35",
+        "occupation": "个体经营",
+        "incomeRange": "8-12",
+        "creditQueryCount": 7,
+        "overdueCount12m": 1,
+        "activeLoanOrgs": 4,
+        "province": "深圳",
+        "tags": [
+          "团伙成员",
+          "空头担保"
+        ]
+      },
+      "x": 2250,
+      "y": 1550
+    },
+    {
+      "id": "b:B12",
+      "type": "BORROWER",
+      "properties": {
+        "name": "黄志豪",
+        "customerCode": "GR2026-0012",
+        "ageRange": "35-40",
+        "occupation": "个体经营",
+        "incomeRange": "10-15",
+        "creditQueryCount": 5,
+        "overdueCount12m": 1,
+        "activeLoanOrgs": 2,
+        "province": "苏州",
+        "tags": [
+          "担保链蔓延"
+        ]
+      },
+      "x": 1550,
+      "y": 950
+    },
+    {
+      "id": "b:B13",
+      "type": "BORROWER",
+      "properties": {
+        "name": "陈嘉伟",
+        "customerCode": "GR2026-0013",
+        "ageRange": "25-30",
+        "occupation": "家族企业管理",
+        "incomeRange": "15-20",
+        "creditQueryCount": 3,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 1,
+        "province": "苏州",
+        "tags": [
+          "家族企业"
+        ]
+      },
+      "x": 750,
+      "y": 1650
+    },
+    {
+      "id": "b:B14",
+      "type": "BORROWER",
+      "properties": {
+        "name": "刘美玲",
+        "customerCode": "GR2026-0014",
+        "ageRange": "25-30",
+        "occupation": "自由职业",
+        "incomeRange": "3-5",
+        "creditQueryCount": 6,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 2,
+        "province": "深圳",
+        "tags": [
+          "疑似虚假注册"
+        ]
+      },
+      "x": 2350,
+      "y": 1750
+    },
+    {
+      "id": "b:B15",
+      "type": "BORROWER",
+      "properties": {
+        "name": "杨思远",
+        "customerCode": "GR2026-0015",
+        "ageRange": "30-35",
+        "occupation": "互联网产品经理",
+        "incomeRange": "20-30",
+        "creditQueryCount": 13,
+        "overdueCount12m": 0,
+        "activeLoanOrgs": 5,
+        "province": "杭州",
+        "tags": [
+          "跨省多头",
+          "夫妻共债"
+        ]
+      },
+      "x": 1850,
+      "y": 2300
+    },
+    {
+      "id": "b:B16",
+      "type": "BORROWER",
+      "properties": {
+        "name": "郭文斌",
+        "customerCode": "GR2026-0016",
+        "ageRange": "35-40",
+        "occupation": "个体经营",
+        "incomeRange": "8-12",
+        "creditQueryCount": 6,
+        "overdueCount12m": 1,
+        "activeLoanOrgs": 3,
+        "province": "深圳",
+        "tags": [
+          "身份冒用",
+          "担保链蔓延"
+        ]
+      },
+      "x": 2200,
+      "y": 1200
+    },
+    {
+      "id": "rp:R09",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "周晓峰",
+        "relation": "周文杰弟弟",
+        "phoneMasked": "136****8892"
+      },
+      "x": 1750,
+      "y": 2050
+    },
+    {
+      "id": "rp:R10",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "林雅芳",
+        "relation": "林建华配偶(共同还款人)",
+        "phoneMasked": "138****5512"
+      },
+      "x": 2150,
+      "y": 1700
+    },
+    {
+      "id": "rp:R11",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "赵晓敏",
+        "relation": "陈嘉伟配偶",
+        "phoneMasked": "135****3378"
+      },
+      "x": 620,
+      "y": 1750
+    },
+    {
+      "id": "rp:R12",
+      "type": "RELATED_PERSON",
+      "properties": {
+        "name": "钱秀英",
+        "relation": "郭文斌母亲(钱国栋姑姑)",
+        "phoneMasked": "137****2299"
+      },
+      "x": 1000,
+      "y": 1100
+    },
+    {
+      "id": "e:EMP06",
+      "type": "EMPLOYER",
+      "properties": {
+        "name": "深圳市鼎盛鑫贸易有限公司",
+        "industry": "批发零售",
+        "employeeScale": "10人以下",
+        "isShellRisk": true,
+        "province": "深圳"
+      },
+      "x": 2300,
+      "y": 1400
+    },
+    {
+      "id": "e:EMP07",
+      "type": "EMPLOYER",
+      "properties": {
+        "name": "杭州瑞达企业管理咨询有限公司",
+        "industry": "咨询服务",
+        "employeeScale": "50-100人",
+        "isShellRisk": false,
+        "province": "杭州"
+      },
+      "x": 1950,
+      "y": 2200
+    },
+    {
+      "id": "c:C03",
+      "type": "COMPANY",
+      "properties": {
+        "name": "苏州钱氏贸易有限公司",
+        "uscc": "91320**MA2**",
+        "industry": "贸易代理",
+        "registeredCapitalWan": 500,
+        "foundedYear": 2016,
+        "employeeScale": "20-50人",
+        "operatingStatus": "正常",
+        "isFamilyBusiness": true,
+        "province": "苏州"
+      },
+      "x": 800,
+      "y": 1400
+    },
+    {
+      "id": "c:C04",
+      "type": "COMPANY",
+      "properties": {
+        "name": "深圳鼎盛鑫投资咨询有限公司",
+        "uscc": "91440**MA3**",
+        "industry": "投资咨询",
+        "registeredCapitalWan": 50,
+        "foundedYear": 2024,
+        "employeeScale": "10人以下",
+        "operatingStatus": "存续(无实际经营)",
+        "isFamilyBusiness": false,
+        "province": "深圳"
+      },
+      "x": 2500,
+      "y": 1550
+    },
+    {
+      "id": "a:A06",
+      "type": "ASSET",
+      "properties": {
+        "name": "深圳市罗湖区写字楼",
+        "assetType": "商业房产",
+        "valueWan": 350,
+        "mortgageStatus": "二押(经营贷)",
+        "location": "深圳罗湖区"
+      },
+      "x": 2300,
+      "y": 1650
+    },
+    {
+      "id": "a:A07",
+      "type": "ASSET",
+      "properties": {
+        "name": "杭州市余杭区商铺",
+        "assetType": "商业房产",
+        "valueWan": 180,
+        "mortgageStatus": "按揭抵押中(一押)",
+        "location": "杭州余杭区"
+      },
+      "x": 1950,
+      "y": 2400
+    },
+    {
+      "id": "a:A08",
+      "type": "ASSET",
+      "properties": {
+        "name": "苏州工业园区车位",
+        "assetType": "车位",
+        "valueWan": 12,
+        "mortgageStatus": "无",
+        "location": "苏州工业园区"
+      },
+      "x": 620,
+      "y": 1550
+    },
+    {
+      "id": "a:A09",
+      "type": "ASSET",
+      "properties": {
+        "name": "深圳市福田区住宅",
+        "assetType": "房产",
+        "valueWan": 420,
+        "mortgageStatus": "按揭抵押中(一押)",
+        "location": "深圳福田区"
+      },
+      "x": 2400,
+      "y": 1850
+    },
+    {
+      "id": "a:A10",
+      "type": "ASSET",
+      "properties": {
+        "name": "成都市锦江区公寓",
+        "assetType": "房产",
+        "valueWan": 90,
+        "mortgageStatus": "无",
+        "location": "成都锦江区"
+      },
+      "x": 2200,
+      "y": 1000
+    },
+    {
+      "id": "l:L15",
+      "type": "LOAN",
+      "properties": {
+        "name": "某消费金融-信用贷-2026-0415",
+        "loanType": "信用贷",
+        "lender": "某消费金融公司",
+        "amountWan": 7,
+        "balanceWan": 6.5,
+        "startDate": "2026-04-15",
+        "termMonths": 12,
+        "ratePercent": 22,
+        "status": "逾期"
+      },
+      "x": 2200,
+      "y": 1450
+    },
+    {
+      "id": "l:L16",
+      "type": "LOAN",
+      "properties": {
+        "name": "某城商行-经营贷-2025-1201",
+        "loanType": "经营贷",
+        "lender": "某城商行",
+        "amountWan": 50,
+        "balanceWan": 48,
+        "startDate": "2025-12-01",
+        "termMonths": 24,
+        "ratePercent": 5.8,
+        "status": "逾期"
+      },
+      "x": 1500,
+      "y": 850
+    },
+    {
+      "id": "l:L17",
+      "type": "LOAN",
+      "properties": {
+        "name": "某股份行-消费贷-2026-0308",
+        "loanType": "消费贷",
+        "lender": "某股份行B",
+        "amountWan": 20,
+        "balanceWan": 19,
+        "startDate": "2026-03-08",
+        "termMonths": 36,
+        "ratePercent": 8.2,
+        "status": "正常"
+      },
+      "x": 700,
+      "y": 1550
+    },
+    {
+      "id": "l:L18",
+      "type": "LOAN",
+      "properties": {
+        "name": "某网络小贷-信用贷-2026-0510",
+        "loanType": "信用贷",
+        "lender": "某网络小贷",
+        "amountWan": 4,
+        "balanceWan": 3.8,
+        "startDate": "2026-05-10",
+        "termMonths": 12,
+        "ratePercent": 24,
+        "status": "正常"
+      },
+      "x": 2450,
+      "y": 1800
+    },
+    {
+      "id": "l:L19",
+      "type": "LOAN",
+      "properties": {
+        "name": "某互联网平台-信用贷-2026-0401",
+        "loanType": "信用贷",
+        "lender": "某互联网平台",
+        "amountWan": 12,
+        "balanceWan": 11.5,
+        "startDate": "2026-04-01",
+        "termMonths": 24,
+        "ratePercent": 18.5,
+        "status": "正常"
+      },
+      "x": 1800,
+      "y": 2350
+    },
+    {
+      "id": "l:L20",
+      "type": "LOAN",
+      "properties": {
+        "name": "某城商行-经营贷-2025-1015",
+        "loanType": "经营贷",
+        "lender": "某城商行",
+        "amountWan": 35,
+        "balanceWan": 33,
+        "startDate": "2025-10-15",
+        "termMonths": 24,
+        "ratePercent": 5.5,
+        "status": "逾期"
+      },
+      "x": 2250,
+      "y": 1100
+    },
+    {
+      "id": "l:L21",
+      "type": "LOAN",
+      "properties": {
+        "name": "某股份行-抵押贷-2026-0120",
+        "loanType": "抵押贷",
+        "lender": "某股份行A",
+        "amountWan": 80,
+        "balanceWan": 76,
+        "startDate": "2026-01-20",
+        "termMonths": 36,
+        "ratePercent": 7.2,
+        "status": "正常"
+      },
+      "x": 2150,
+      "y": 1500
+    },
+    {
+      "id": "l:L22",
+      "type": "LOAN",
+      "properties": {
+        "name": "某城商行-消费贷-2026-0605",
+        "loanType": "消费贷",
+        "lender": "某城商行",
+        "amountWan": 15,
+        "balanceWan": 14.5,
+        "startDate": "2026-06-05",
+        "termMonths": 24,
+        "ratePercent": 11.5,
+        "status": "正常"
+      },
+      "x": 2000,
+      "y": 2350
+    },
+    {
+      "id": "o:O05",
+      "type": "OVERDUE_EVENT",
+      "properties": {
+        "name": "M1逾期-202607",
+        "level": "M1",
+        "occurredAt": "2026-07-18",
+        "amountWan": 0.8,
+        "cured": false
+      },
+      "x": 2350,
+      "y": 1450
+    },
+    {
+      "id": "o:O06",
+      "type": "OVERDUE_EVENT",
+      "properties": {
+        "name": "M2逾期-202608",
+        "level": "M2",
+        "occurredAt": "2026-08-05",
+        "amountWan": 2.5,
+        "cured": false
+      },
+      "x": 1600,
+      "y": 800
+    },
+    {
+      "id": "o:O07",
+      "type": "OVERDUE_EVENT",
+      "properties": {
+        "name": "M1逾期-202608",
+        "level": "M1",
+        "occurredAt": "2026-08-12",
+        "amountWan": 1.2,
+        "cured": false
+      },
+      "x": 2350,
+      "y": 1150
+    },
+    {
+      "id": "rt:RT07",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "疑似虚假注册",
+        "category": "欺诈",
+        "severity": "高",
+        "evidence": "刘美玲注册个体户无实际经营场所，与林建华共用办公地址，社保缴纳单位与任职单位不一致",
+        "discoveredAt": "2026-08-22"
+      },
+      "x": 2550,
+      "y": 1750
+    },
+    {
+      "id": "rt:RT08",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "跨省多头借贷",
+        "category": "信用",
+        "severity": "高",
+        "evidence": "杨思远在杭州/上海/南京/苏州/成都5地7家机构在贷，近6月征信查询13次，总收入覆盖月供比不足1.2",
+        "discoveredAt": "2026-08-25"
+      },
+      "x": 1900,
+      "y": 2500
+    },
+    {
+      "id": "rt:RT09",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "担保链蔓延",
+        "category": "关联",
+        "severity": "高",
+        "evidence": "黄志豪→赵建军→钱国栋→黄志豪形成新增担保环，与原有互保环(B04/B05/B06)叠加形成更大担保网络",
+        "discoveredAt": "2026-08-28"
+      },
+      "x": 1450,
+      "y": 750
+    },
+    {
+      "id": "rt:RT10",
+      "type": "RISK_TAG",
+      "properties": {
+        "name": "身份冒用",
+        "category": "欺诈",
+        "severity": "高",
+        "evidence": "郭文斌与张永刚(B03)共用设备指纹和IP地址，但申请时使用不同身份信息，疑似同一人操控多账户",
+        "discoveredAt": "2026-08-30"
+      },
+      "x": 2300,
+      "y": 1050
+    }
+  ],
+  "edges": [
+    {
+      "id": "x:001",
+      "type": "HAS_LOAN",
+      "source": "b:B01",
+      "target": "l:L01",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:002",
+      "type": "HAS_LOAN",
+      "source": "b:B02",
+      "target": "l:L02",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:003",
+      "type": "HAS_LOAN",
+      "source": "b:B03",
+      "target": "l:L03",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:004",
+      "type": "HAS_OVERDUE",
+      "source": "l:L01",
+      "target": "o:O01",
+      "properties": {
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:005",
+      "type": "HAS_OVERDUE",
+      "source": "l:L02",
+      "target": "o:O02",
+      "properties": {
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:006",
+      "type": "HAS_OVERDUE",
+      "source": "l:L03",
+      "target": "o:O03",
+      "properties": {
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:007",
+      "type": "WORKS_AT",
+      "source": "b:B01",
+      "target": "e:EMP01",
+      "properties": {
+        "title": "销售",
+        "monthlySalaryWan": 0.8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:008",
+      "type": "WORKS_AT",
+      "source": "b:B02",
+      "target": "e:EMP01",
+      "properties": {
+        "title": "文员",
+        "monthlySalaryWan": 0.6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:009",
+      "type": "WORKS_AT",
+      "source": "b:B03",
+      "target": "e:EMP01",
+      "properties": {
+        "title": "司机",
+        "monthlySalaryWan": 0.6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:010",
+      "type": "SHARED_CONTACT",
+      "source": "b:B01",
+      "target": "b:B02",
+      "properties": {
+        "sharedType": "手机号+设备",
+        "sharedValue": "139****7788 / 设备指纹DF-88**",
+        "weight": 9,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:011",
+      "type": "SHARED_CONTACT",
+      "source": "b:B02",
+      "target": "b:B03",
+      "properties": {
+        "sharedType": "手机号+设备",
+        "sharedValue": "139****7788 / 设备指纹DF-88**",
+        "weight": 9,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:012",
+      "type": "SHARED_CONTACT",
+      "source": "b:B01",
+      "target": "b:B03",
+      "properties": {
+        "sharedType": "收货地址",
+        "sharedValue": "深圳市罗湖区**大厦 8**",
+        "weight": 7,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:013",
+      "type": "LABELED",
+      "source": "b:B01",
+      "target": "rt:RT01",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.92
+    },
+    {
+      "id": "x:014",
+      "type": "LABELED",
+      "source": "b:B02",
+      "target": "rt:RT01",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.88
+    },
+    {
+      "id": "x:015",
+      "type": "LABELED",
+      "source": "b:B03",
+      "target": "rt:RT01",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.9
+    },
+    {
+      "id": "x:016",
+      "type": "LABELED",
+      "source": "b:B03",
+      "target": "rt:RT05",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 1
+    },
+    {
+      "id": "x:020",
+      "type": "HAS_LOAN",
+      "source": "b:B05",
+      "target": "l:L04",
+      "properties": {
+        "role": "主借",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:021",
+      "type": "HAS_LOAN",
+      "source": "b:B04",
+      "target": "l:L05",
+      "properties": {
+        "role": "主借",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:022",
+      "type": "HAS_LOAN",
+      "source": "b:B06",
+      "target": "l:L06",
+      "properties": {
+        "role": "主借",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:023",
+      "type": "GUARANTEES",
+      "source": "b:B05",
+      "target": "b:B06",
+      "properties": {
+        "amountWan": 40,
+        "startDate": "2025-09-08",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:024",
+      "type": "GUARANTEES",
+      "source": "b:B06",
+      "target": "b:B04",
+      "properties": {
+        "amountWan": 50,
+        "startDate": "2025-11-01",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:025",
+      "type": "GUARANTEES",
+      "source": "b:B04",
+      "target": "b:B05",
+      "properties": {
+        "amountWan": 60,
+        "startDate": "2026-02-10",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:026",
+      "type": "HAS_OVERDUE",
+      "source": "l:L04",
+      "target": "o:O04",
+      "properties": {
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:027",
+      "type": "WORKS_AT",
+      "source": "b:B04",
+      "target": "e:EMP03",
+      "properties": {
+        "title": "销售总监",
+        "monthlySalaryWan": 2,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:029",
+      "type": "LABELED",
+      "source": "b:B04",
+      "target": "rt:RT03",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.85
+    },
+    {
+      "id": "x:030",
+      "type": "LABELED",
+      "source": "b:B05",
+      "target": "rt:RT03",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.85
+    },
+    {
+      "id": "x:031",
+      "type": "LABELED",
+      "source": "b:B06",
+      "target": "rt:RT03",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.85
+    },
+    {
+      "id": "x:032",
+      "type": "LABELED",
+      "source": "b:B06",
+      "target": "rt:RT04",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.95
+    },
+    {
+      "id": "x:033",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R02",
+      "target": "b:B05",
+      "properties": {
+        "relationDetail": "父亲",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:034",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R03",
+      "target": "b:B05",
+      "properties": {
+        "relationDetail": "母亲",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:035",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R05",
+      "target": "b:B05",
+      "properties": {
+        "relationDetail": "妹妹",
+        "weight": 7,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:036",
+      "type": "IS_LEGAL_REP_OF",
+      "source": "rp:R02",
+      "target": "c:C01",
+      "properties": {
+        "since": 2009,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:037",
+      "type": "SHAREHOLDER_OF",
+      "source": "rp:R02",
+      "target": "c:C01",
+      "properties": {
+        "sharePercent": 60,
+        "since": 2009,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:038",
+      "type": "SHAREHOLDER_OF",
+      "source": "rp:R05",
+      "target": "c:C01",
+      "properties": {
+        "sharePercent": 30,
+        "since": 2015,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:039",
+      "type": "WORKS_AT",
+      "source": "b:B05",
+      "target": "c:C01",
+      "properties": {
+        "title": "总经理",
+        "monthlySalaryWan": 3,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:040",
+      "type": "GUARANTEES",
+      "source": "rp:R02",
+      "target": "b:B05",
+      "properties": {
+        "amountWan": 80,
+        "startDate": "2025-11-01",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:041",
+      "type": "OWNS_ASSET",
+      "source": "rp:R02",
+      "target": "a:A02",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:042",
+      "type": "SECURED_BY",
+      "source": "l:L04",
+      "target": "a:A02",
+      "properties": {
+        "lienRank": 2,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:043",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R06",
+      "target": "b:B06",
+      "properties": {
+        "relationDetail": "紧急联系人",
+        "weight": 3,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:044",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R07",
+      "target": "b:B06",
+      "properties": {
+        "relationDetail": "女儿",
+        "weight": 7,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:045",
+      "type": "OWNS_ASSET",
+      "source": "b:B06",
+      "target": "a:A04",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:050",
+      "type": "HAS_LOAN",
+      "source": "b:B07",
+      "target": "l:L07",
+      "properties": {
+        "role": "主借",
+        "weight": 5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:051",
+      "type": "HAS_LOAN",
+      "source": "b:B07",
+      "target": "l:L08",
+      "properties": {
+        "role": "主借",
+        "weight": 5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:052",
+      "type": "HAS_LOAN",
+      "source": "b:B07",
+      "target": "l:L09",
+      "properties": {
+        "role": "主借",
+        "weight": 5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:053",
+      "type": "HAS_LOAN",
+      "source": "b:B07",
+      "target": "l:L10",
+      "properties": {
+        "role": "主借",
+        "weight": 5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:054",
+      "type": "WORKS_AT",
+      "source": "b:B07",
+      "target": "e:EMP04",
+      "properties": {
+        "title": "高级工程师",
+        "monthlySalaryWan": 2.5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:055",
+      "type": "LABELED",
+      "source": "b:B07",
+      "target": "rt:RT02",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.9
+    },
+    {
+      "id": "x:056",
+      "type": "IS_RELATIVE_OF",
+      "source": "b:B10",
+      "target": "b:B07",
+      "properties": {
+        "relationDetail": "配偶",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:057",
+      "type": "HAS_LOAN",
+      "source": "b:B10",
+      "target": "l:L12",
+      "properties": {
+        "role": "主借",
+        "weight": 5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:058",
+      "type": "HAS_LOAN",
+      "source": "b:B10",
+      "target": "l:L13",
+      "properties": {
+        "role": "主借",
+        "weight": 5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:059",
+      "type": "LABELED",
+      "source": "b:B07",
+      "target": "rt:RT06",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.87
+    },
+    {
+      "id": "x:060",
+      "type": "LABELED",
+      "source": "b:B10",
+      "target": "rt:RT06",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.87
+    },
+    {
+      "id": "x:061",
+      "type": "OWNS_ASSET",
+      "source": "b:B07",
+      "target": "a:A03",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:070",
+      "type": "HAS_LOAN",
+      "source": "b:B08",
+      "target": "l:L11",
+      "properties": {
+        "role": "主借",
+        "weight": 9,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:071",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R01",
+      "target": "b:B08",
+      "properties": {
+        "relationDetail": "配偶(共同还款人)",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:072",
+      "type": "WORKS_AT",
+      "source": "b:B08",
+      "target": "e:EMP02",
+      "properties": {
+        "title": "护士长",
+        "monthlySalaryWan": 1.4,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:073",
+      "type": "GUARANTEES",
+      "source": "g:G01",
+      "target": "b:B08",
+      "properties": {
+        "amountWan": 180,
+        "startDate": "2023-08-01",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:074",
+      "type": "OWNS_ASSET",
+      "source": "b:B08",
+      "target": "a:A01",
+      "properties": {
+        "ownershipShare": 50,
+        "isCommonProperty": true,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:075",
+      "type": "OWNS_ASSET",
+      "source": "rp:R01",
+      "target": "a:A01",
+      "properties": {
+        "ownershipShare": 50,
+        "isCommonProperty": true,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:076",
+      "type": "SECURED_BY",
+      "source": "l:L11",
+      "target": "a:A01",
+      "properties": {
+        "lienRank": 1,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:077",
+      "type": "SHAREHOLDER_OF",
+      "source": "rp:R01",
+      "target": "c:C02",
+      "properties": {
+        "sharePercent": 20,
+        "since": 2019,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:078",
+      "type": "WORKS_AT",
+      "source": "b:B09",
+      "target": "e:EMP05",
+      "properties": {
+        "title": "英语教师",
+        "monthlySalaryWan": 1,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:079",
+      "type": "HAS_LOAN",
+      "source": "b:B09",
+      "target": "l:L14",
+      "properties": {
+        "role": "主借",
+        "weight": 4,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:080",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R08",
+      "target": "b:B09",
+      "properties": {
+        "relationDetail": "父亲",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:081",
+      "type": "OWNS_ASSET",
+      "source": "rp:R08",
+      "target": "a:A05",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:082",
+      "type": "SECURED_BY",
+      "source": "l:L14",
+      "target": "a:A05",
+      "properties": {
+        "lienRank": 1,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:083",
+      "type": "WORKS_AT",
+      "source": "b:B10",
+      "target": "e:EMP04",
+      "properties": {
+        "title": "行政主管",
+        "monthlySalaryWan": 1.2,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:084",
+      "type": "SHARED_CONTACT",
+      "source": "b:B11",
+      "target": "b:B01",
+      "properties": {
+        "sharedType": "手机号",
+        "sharedValue": "135****6688",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:085",
+      "type": "WORKS_AT",
+      "source": "b:B11",
+      "target": "e:EMP06",
+      "properties": {
+        "title": "业务员",
+        "monthlySalaryWan": 0.5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:086",
+      "type": "HAS_LOAN",
+      "source": "b:B11",
+      "target": "l:L15",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:087",
+      "type": "HAS_LOAN",
+      "source": "b:B11",
+      "target": "l:L21",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:088",
+      "type": "HAS_OVERDUE",
+      "source": "l:L15",
+      "target": "o:O05",
+      "properties": {
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:089",
+      "type": "LABELED",
+      "source": "b:B11",
+      "target": "rt:RT01",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.85
+    },
+    {
+      "id": "x:090",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R10",
+      "target": "b:B11",
+      "properties": {
+        "relationDetail": "配偶",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:091",
+      "type": "OWNS_ASSET",
+      "source": "b:B11",
+      "target": "a:A06",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:092",
+      "type": "SECURED_BY",
+      "source": "l:L21",
+      "target": "a:A06",
+      "properties": {
+        "lienRank": 2,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:093",
+      "type": "HAS_LOAN",
+      "source": "b:B12",
+      "target": "l:L16",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:094",
+      "type": "HAS_OVERDUE",
+      "source": "l:L16",
+      "target": "o:O06",
+      "properties": {
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:095",
+      "type": "GUARANTEES",
+      "source": "b:B12",
+      "target": "b:B04",
+      "properties": {
+        "amountWan": 30,
+        "startDate": "2025-10-15",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:096",
+      "type": "GUARANTEES",
+      "source": "b:B04",
+      "target": "b:B12",
+      "properties": {
+        "amountWan": 30,
+        "startDate": "2025-12-20",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:097",
+      "type": "LABELED",
+      "source": "b:B12",
+      "target": "rt:RT09",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.9
+    },
+    {
+      "id": "x:098",
+      "type": "WORKS_AT",
+      "source": "b:B12",
+      "target": "e:EMP03",
+      "properties": {
+        "title": "经理",
+        "monthlySalaryWan": 1,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:099",
+      "type": "GUARANTEES",
+      "source": "b:B05",
+      "target": "b:B12",
+      "properties": {
+        "amountWan": 25,
+        "startDate": "2026-01-05",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:100",
+      "type": "HAS_LOAN",
+      "source": "b:B13",
+      "target": "l:L17",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:101",
+      "type": "WORKS_AT",
+      "source": "b:B13",
+      "target": "c:C03",
+      "properties": {
+        "title": "副总经理",
+        "monthlySalaryWan": 1.5,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:102",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R11",
+      "target": "b:B13",
+      "properties": {
+        "relationDetail": "配偶",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:103",
+      "type": "SHAREHOLDER_OF",
+      "source": "rp:R02",
+      "target": "c:C03",
+      "properties": {
+        "sharePercent": 35,
+        "since": 2018,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:104",
+      "type": "SHAREHOLDER_OF",
+      "source": "rp:R05",
+      "target": "c:C03",
+      "properties": {
+        "sharePercent": 15,
+        "since": 2020,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:105",
+      "type": "OWNS_ASSET",
+      "source": "b:B13",
+      "target": "a:A08",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:106",
+      "type": "LABELED",
+      "source": "b:B13",
+      "target": "rt:RT03",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.8
+    },
+    {
+      "id": "x:107",
+      "type": "HAS_LOAN",
+      "source": "b:B14",
+      "target": "l:L18",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:108",
+      "type": "WORKS_AT",
+      "source": "b:B14",
+      "target": "e:EMP06",
+      "properties": {
+        "title": "法人",
+        "monthlySalaryWan": 0,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:109",
+      "type": "SHAREHOLDER_OF",
+      "source": "b:B14",
+      "target": "c:C04",
+      "properties": {
+        "sharePercent": 100,
+        "since": 2024,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:110",
+      "type": "LABELED",
+      "source": "b:B14",
+      "target": "rt:RT07",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.88
+    },
+    {
+      "id": "x:111",
+      "type": "SHARED_CONTACT",
+      "source": "b:B14",
+      "target": "b:B11",
+      "properties": {
+        "sharedType": "办公地址",
+        "sharedValue": "深圳市罗湖区**大厦12**",
+        "weight": 7,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:112",
+      "type": "OWNS_ASSET",
+      "source": "b:B14",
+      "target": "a:A09",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:113",
+      "type": "HAS_LOAN",
+      "source": "b:B15",
+      "target": "l:L19",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:114",
+      "type": "HAS_LOAN",
+      "source": "b:B15",
+      "target": "l:L22",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:115",
+      "type": "WORKS_AT",
+      "source": "b:B15",
+      "target": "e:EMP07",
+      "properties": {
+        "title": "顾问",
+        "monthlySalaryWan": 1.2,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:116",
+      "type": "LABELED",
+      "source": "b:B15",
+      "target": "rt:RT08",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.95
+    },
+    {
+      "id": "x:117",
+      "type": "LABELED",
+      "source": "b:B15",
+      "target": "rt:RT06",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.82
+    },
+    {
+      "id": "x:118",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R09",
+      "target": "b:B07",
+      "properties": {
+        "relationDetail": "弟弟",
+        "weight": 7,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:119",
+      "type": "OWNS_ASSET",
+      "source": "b:B15",
+      "target": "a:A07",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:120",
+      "type": "SHARED_CONTACT",
+      "source": "b:B15",
+      "target": "b:B07",
+      "properties": {
+        "sharedType": "户籍地址",
+        "sharedValue": "杭州市西湖区**小区",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:121",
+      "type": "HAS_LOAN",
+      "source": "b:B16",
+      "target": "l:L20",
+      "properties": {
+        "role": "主借",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:122",
+      "type": "HAS_OVERDUE",
+      "source": "l:L20",
+      "target": "o:O07",
+      "properties": {
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:123",
+      "type": "SHARED_CONTACT",
+      "source": "b:B16",
+      "target": "b:B03",
+      "properties": {
+        "sharedType": "设备指纹+IP",
+        "sharedValue": "设备指纹DF-88** / IP:183.**.**.42",
+        "weight": 9,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:124",
+      "type": "GUARANTEES",
+      "source": "b:B16",
+      "target": "b:B06",
+      "properties": {
+        "amountWan": 20,
+        "startDate": "2025-08-15",
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:125",
+      "type": "LABELED",
+      "source": "b:B16",
+      "target": "rt:RT10",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.92
+    },
+    {
+      "id": "x:126",
+      "type": "LABELED",
+      "source": "b:B16",
+      "target": "rt:RT09",
+      "properties": {
+        "origin": "mock"
+      },
+      "confidence": 0.75
+    },
+    {
+      "id": "x:127",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R12",
+      "target": "b:B16",
+      "properties": {
+        "relationDetail": "母亲",
+        "weight": 8,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:128",
+      "type": "IS_RELATIVE_OF",
+      "source": "rp:R12",
+      "target": "b:B05",
+      "properties": {
+        "relationDetail": "姑姑",
+        "weight": 6,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:129",
+      "type": "WORKS_AT",
+      "source": "b:B16",
+      "target": "e:EMP06",
+      "properties": {
+        "title": "监事",
+        "monthlySalaryWan": 0,
+        "origin": "mock"
+      }
+    },
+    {
+      "id": "x:130",
+      "type": "OWNS_ASSET",
+      "source": "b:B16",
+      "target": "a:A10",
+      "properties": {
+        "ownershipShare": 100,
+        "isCommonProperty": false,
+        "origin": "mock"
+      }
+    }
+  ],
+  "metadata": {
+    "title": "个贷风控人员图谱 v5+（mock）",
+    "description": "借款人为中心的综合建模：身份/家族/企业任职持股/资产负债/借贷逾期/担保网络/团伙关联/夫妻共债/团伙扩散/担保链蔓延/虚假注册/跨省多头/身份冒用",
+    "updated_at": "2026-10-13T06:01:31.380Z",
+    "published_at": "2026-10-12T10:00:00.000Z",
+    "publish_note": "v5+：规模扩充至 88 节点/114 边，新增 6 类风险场景（B11团伙扩散/B12担保链蔓延/B13家族企业二代/B14虚假注册/B15跨省多头/B16身份冒用），锻炼 detect_fraud_rings/find_guarantee_cycles/trace_family_business/detect_multi_head/propagate_risk 全部图算法工具",
+    "name": "个贷风控人员图谱模板 - 2026-10-12",
+    "status": "draft"
+  }
+}

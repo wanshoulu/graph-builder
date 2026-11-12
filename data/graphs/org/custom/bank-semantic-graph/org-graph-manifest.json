@@ -1,0 +1,52 @@
+{
+  "asset_id": "bank-semantic-graph",
+  "active_version": "org-graph-v1",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "bank-semantic-graph-v1",
+      "document_version": "1.1.0",
+      "template_id": "bank-semantic-graph",
+      "published_at": "2026-09-16T18:00:00+08:00",
+      "note": "v1.2 多路召回增强：Product/Account/CreditCard/Loan/Regulation补充语义字段 + 新增10节点 + 21条新边",
+      "stats": {
+        "nodes": 87,
+        "edges": 196
+      }
+    }
+  ],
+  "auditLog": [
+    {
+      "at": "2026-09-16T00:00:00+08:00",
+      "action": "publish",
+      "version": "org-graph-v1",
+      "note": "银行业务语义图谱 v1.0",
+      "stats": {
+        "nodes": 77,
+        "edges": 130
+      },
+      "contentDigest": "sha256:66c00daa8c4b18907d68995a66680a37414d61f6477f8b781b892442ab9b8122"
+    },
+    {
+      "at": "2026-09-16T12:00:00+08:00",
+      "action": "optimize",
+      "version": "org-graph-v1",
+      "note": "结构优化：补充3种空边类型实例(APPLIES_TO/COMPATIBLE_WITH/CONTRADICTS) + 丰富SIMILAR_TO + 产品tags扩充(理财/基金/存款/定期/收益/风险)",
+      "stats": {
+        "nodes": 77,
+        "edges": 175
+      }
+    },
+    {
+      "at": "2026-09-16T18:00:00+08:00",
+      "action": "enhance",
+      "version": "org-graph-v1",
+      "note": "多路召回增强：Product/Account/CreditCard/Loan/Regulation补充语义字段 + 新增3现金流Concept/2现金流Regulation/5风险偏好Concept + 21条新边(12连接+9风险偏好REFERS_TO)",
+      "stats": {
+        "nodes": 87,
+        "edges": 196
+      }
+    }
+  ]
+}

@@ -28,6 +28,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const https = require('node:https');
 const http = require('node:http');
+const { execSync } = require('node:child_process');
+const { execFileSync } = require('node:child_process');
 const crypto = require('node:crypto');
 const { authenticate } = require('../middleware/auth');
 const { getLLMRoute, callLLMJson } = require('../tools/llm-client');
@@ -42,14 +44,23 @@ const { createTemplateDrivenValidator } = require('../tools/template-driven-grap
 const { createV4IntentValidator } = require('../tools/v4-graph-validator');
 const { buildDocumentFromTabular } = require('../tools/tabular-graph-mapper');
 const intakeGraphBridge = require('../tools/intake-graph-bridge');
+const knowledgeIntake = require('./knowledge-intake');
 const { deterministicAudit, buildAuditPrompt, parseAuditResponse, AUDIT_LIMITS, needsPartitionedAudit, runPartitionedAudit } = require('../tools/graph-audit');
 const { getImporter } = require('../tools/graph-importers');
 const { buildQualityReport, collectFillGaps, buildFillPrompt, parseFillResponse, applyFills, resolveDuplicateNodes } = require('../tools/graph-quality-tools');
 const { runEvalDatasetAction, EvalDatasetError } = require('../tools/eval-dataset-tools');
 const { capabilities: draftTrialCapabilities, localRecall: draftTrialLocalRecall, runDraftIntentTrial } = require('../services/intent-draft-trial');
+const { convertV1ToV4, intentTreeToGraphDocument } = require('../services/ai-native-bank/intent-graph-v1-to-v4');
+const { builderDocumentToV41, computeV41Digest, parseScenesProp } = require('../services/ai-native-bank/intent-graph-v41-bridge');
 
 const STORAGE_DIR = path.join(__dirname, '..', 'data', 'graphs', 'org');
-const TEMPLATE_PATH = path.join(__dirname, '..', 'data', 'graph-builder-templates', 'org-people.json');
+// 运行时消费的 V4 图谱路径（V4GraphAdapter 默认消费容器路径
+// /app/data/ai-native-bank/intent-graph/graph.ccb.intents.v2.1.0.json，
+// 本地开发环境对应 data/ai-native-bank/intent-graph/graph.ccb.intents.v2.1.0.json）。
+// P0-10：打通 org-graph 工具链产出的 V4 草稿 → 运行时消费路径的同步链路。
+const RUNTIME_V4_PATH = path.join(__dirname, '..', 'data', 'ai-native-bank', 'intent-graph', 'graph.ccb.intents.v2.1.0.json');
+const RUNTIME_V4_DIR = path.dirname(RUNTIME_V4_PATH);
+const TEMPLATE_PATH = path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.org-people.v1.json');
 const MANIFEST_PATH = path.join(STORAGE_DIR, 'org-graph-manifest.json');
 const DRAFT_PATH = path.join(STORAGE_DIR, 'drafts', 'org-graph-draft.json');
 
@@ -213,16 +224,28 @@ const ICBC_HR_RELATION_TYPES = {
 
 // ── 资产表（默认 org-people，原行为零变化）──
 // generateRules：模板无法表达的业务规则，注入 LLM 生成 prompt（通用智能体泛化的领域知识挂载点）
+
+// 意图试问（trial）资产白名单：内置 intent-graph 或任何 templateId=intent-graph 的注册资产。
+// trial 引擎消费通用 INTENT 节点字段（name/intent_type/utterance_view/scope_in/scope_out），
+// 所有基于权威 intent-graph 模板发布的资产文档都满足该契约。
+function isIntentTrialAsset(assetId) {
+  if (assetId === 'intent-graph') return true;
+  const record = loadRegistry().assets.find(function (r) { return r.assetId === assetId; });
+  if (!record) return false;
+  // registry 记录的 templateFile 指向权威模板即视为意图图谱类
+  return /template\.intent\.v2\.json$/.test(String(record.templateFile || ''));
+}
+
 const ASSETS = {
   // 意图图谱（schema 对齐意图建模 v2.1 intent-graph-v2-schema；内置工行转账汇款/理财示例）
   'intent-graph': {
     storageDir: path.join(STORAGE_DIR, 'intent'),
     manifestPath: path.join(STORAGE_DIR, 'intent', 'org-graph-manifest.json'),
     draftPath: path.join(STORAGE_DIR, 'intent', 'drafts', 'org-graph-draft.json'),
-    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'intent-graph.json'),
+    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.intent.v2.json'),
     entityTypes: INTENT_ENTITY_TYPES,
     relationTypes: INTENT_RELATION_TYPES,
-    validateDocument: createTemplateDrivenValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'intent-graph.json')),
+    validateDocument: createTemplateDrivenValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.intent.v2.json')),
     generateRules: [
       '叶子意图的 intent_type 必须取 ASK/QUERY/DO/CHANGE/CANCEL/HELP/TRANSFER/REPAY 之一，语义边界：ASK=知识咨询、QUERY=状态查询、DO=业务执行、CHANGE=变更修改、CANCEL=取消业务、HELP=求助引导、TRANSFER=转账、REPAY=还款',
       '每个叶子意图必须通过 has_leaf_intent 边挂在某个聚合意图下（无挂载点的意图不要建）',
@@ -239,10 +262,10 @@ const ASSETS = {
     storageDir: path.join(STORAGE_DIR, 'intent-v4'),
     manifestPath: path.join(STORAGE_DIR, 'intent-v4', 'org-graph-manifest.json'),
     draftPath: path.join(STORAGE_DIR, 'intent-v4', 'drafts', 'org-graph-draft.json'),
-    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'intent-graph-v4.json'),
+    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.intent.v4.json'),
     entityTypes: INTENT_V4_ENTITY_TYPES,
     relationTypes: INTENT_V4_RELATION_TYPES,
-    validateDocument: createV4IntentValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'intent-graph-v4.json')),
+    validateDocument: createV4IntentValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.intent.v4.json')),
     generateRules: [
       '节点分四层：ROOT 唯一根（node_role=root）；DOMAIN 一级业务条线（domain）；CATEGORY 功能分组可多级（category）；LEAF 最小业务功能（leaf）。node_role 必须与节点类型一致',
       '子节点 id 必须以「父节点id.」为前缀（如 ccb → ccb.wealth → ccb.wealth.fund → ccb.wealth.fund.subscription），通过 has_child 边（父→子）连接，每个节点只能有一个父，全图必须是一棵树',
@@ -272,7 +295,7 @@ const ASSETS = {
     storageDir: path.join(STORAGE_DIR, 'customer'),
     manifestPath: path.join(STORAGE_DIR, 'customer', 'org-graph-manifest.json'),
     draftPath: path.join(STORAGE_DIR, 'customer', 'drafts', 'org-graph-draft.json'),
-    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'customer-ecosystem.json'),
+    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.customer-ecosystem.v1.json'),
     entityTypes: CUSTOMER_ENTITY_TYPES,
     relationTypes: CUSTOMER_RELATION_TYPES,
     validateDocument: validateCustomerEcosystemDocument,
@@ -287,10 +310,10 @@ const ASSETS = {
     storageDir: path.join(STORAGE_DIR, 'generic'),
     manifestPath: path.join(STORAGE_DIR, 'generic', 'org-graph-manifest.json'),
     draftPath: path.join(STORAGE_DIR, 'generic', 'drafts', 'org-graph-draft.json'),
-    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'generic-knowledge.json'),
+    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.generic-knowledge.v1.json'),
     entityTypes: GEN_ENTITY_TYPES,
     relationTypes: GEN_RELATION_TYPES,
-    validateDocument: createTemplateDrivenValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'generic-knowledge.json')),
+    validateDocument: createTemplateDrivenValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.generic-knowledge.v1.json')),
     generateRules: [
       '同名实体合并为一个节点，描述聚合到 definition 或 description 字段',
       '没有明确证据的边不要编造',
@@ -301,10 +324,10 @@ const ASSETS = {
     storageDir: path.join(STORAGE_DIR, 'finance'),
     manifestPath: path.join(STORAGE_DIR, 'finance', 'org-graph-manifest.json'),
     draftPath: path.join(STORAGE_DIR, 'finance', 'drafts', 'org-graph-draft.json'),
-    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'finance-knowledge.json'),
+    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.finance-knowledge.v1.json'),
     entityTypes: FIN_ENTITY_TYPES,
     relationTypes: FIN_RELATION_TYPES,
-    validateDocument: createTemplateDrivenValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'finance-knowledge.json')),
+    validateDocument: createTemplateDrivenValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.finance-knowledge.v1.json')),
     generateRules: [
       '每个 FIN_PRODUCT 节点必须有 PROVIDES 边指向发行机构（无证据时不要建该产品节点）',
       'REGULATED_BY 目标必须是 FIN_CONCEPT（监管/政策概念）',
@@ -316,10 +339,10 @@ const ASSETS = {
     storageDir: path.join(STORAGE_DIR, 'icbc-hr'),
     manifestPath: path.join(STORAGE_DIR, 'icbc-hr', 'org-graph-manifest.json'),
     draftPath: path.join(STORAGE_DIR, 'icbc-hr', 'drafts', 'org-graph-draft.json'),
-    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'icbc-hr.json'),
+    templatePath: path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.icbc-hr.v1.json'),
     entityTypes: ICBC_HR_ENTITY_TYPES,
     relationTypes: ICBC_HR_RELATION_TYPES,
-    validateDocument: createTemplateDrivenValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'icbc-hr.json')),
+    validateDocument: createTemplateDrivenValidator(path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.icbc-hr.v1.json')),
     generateRules: [
       '员工 VERTEX_ID = PERSON_ID（员工编码），机构 VERTEX_ID = concat("ORG", STRU_ID)',
       'WORK_STATE 为 026010(离职)/026011(死亡)/026012(长期病休) 的人员不建节点',
@@ -386,17 +409,16 @@ function deriveEntityTypes(templatePath) {
   try {
     const template = JSON.parse(fs.readFileSync(templatePath, 'utf8'));
     (template.node_types || []).forEach(function (t) {
-      // 与内置资产的富 schema 对齐：desc 携带字段清单（含必填标记），examples 取枚举选项
-      const fields = (t.fields || []).map(function (f) {
+      // 保留 desc/examples 供向后兼容；新增 fields 数组传递结构化字段定义（key/label/type/required/options）
+      const fieldDescs = (t.fields || []).map(function (f) {
         return (f.label || f.key) + (f.required ? '（必填）' : '');
       }).join('、');
-      const enumValues = [];
-      (t.fields || []).forEach(function (f) {
-        if (Array.isArray(f.options)) enumValues.push.apply(enumValues, f.options.filter(Boolean).map(String));
-      });
       derived[t.type] = {
-        desc: (t.label || t.type) + (fields ? '；字段：' + fields : ''),
-        examples: enumValues.slice(0, 8).join('、'),
+        desc: (t.label || t.type) + (fieldDescs ? '；字段：' + fieldDescs : ''),
+        examples: '',
+        fields: (t.fields || []).map(function (f) {
+          return { key: f.key, label: f.label || f.key, type: f.type, required: !!f.required, options: f.options || [] };
+        }),
       };
     });
   } catch (error) { /* 坏模板在校验/加载处报错，这里静默空表 */ }
@@ -410,7 +432,15 @@ function deriveRelationTypes(templatePath) {
     (template.edge_types || []).forEach(function (e) {
       const src = (e.source_types || []).join('/') || '?';
       const tgt = (e.target_types || []).join('/') || '?';
-      derived[e.type] = { desc: (e.label || e.type) + '（' + src + ' → ' + tgt + '）', example: '' };
+      derived[e.type] = {
+        desc: (e.label || e.type) + '（' + src + ' → ' + tgt + '）',
+        example: '',
+        source_types: e.source_types || [],
+        target_types: e.target_types || [],
+        fields: (e.fields || []).map(function (f) {
+          return { key: f.key, label: f.label || f.key, type: f.type, required: !!f.required, options: f.options || [] };
+        }),
+      };
     });
   } catch (error) { /* 同上 */ }
   return derived;
@@ -422,6 +452,13 @@ function resolveAsset(assetId) {
   const record = loadRegistry().assets.find(function (r) { return r.assetId === assetId; });
   if (record) return buildRegistryAsset(record);
   fail('ORG_GRAPH_ASSET_NOT_FOUND', '图谱资产不存在：' + assetId, 404);
+}
+
+// 从资产配置反查 assetId（内置资产按 storageDir 匹配，注册资产取 registry.assetId）
+function assetIdOf(a) {
+  if (a.registry && a.registry.assetId) return a.registry.assetId;
+  for (var k in ASSETS) { if (ASSETS[k].storageDir === a.storageDir) return k; }
+  return path.basename(a.storageDir) || 'unknown';
 }
 
 // 管理端点用：不存在即失败（不兜底 org-people）
@@ -475,6 +512,7 @@ function listAssets() {
       result.push({
         assetId: assetId,
         name: (meta && meta.name) || template.name || assetId,
+        name_en: template.name_en || '',
         description: (meta && meta.description) || '',
         builtin: isBuiltin,
         createdAt: isBuiltin ? undefined : a.registry.createdAt,
@@ -597,8 +635,15 @@ function buildGeneratePrompt(asset, template, description, context) {
     var fields = t.fields || [];
     var required = fields.filter(function (f) { return f.required; }).map(function (f) { return f.key; });
     var optional = fields.filter(function (f) { return !f.required; }).map(function (f) { return f.key; });
+    var enumHints = fields.filter(function (f) { return f.type === 'enum' && Array.isArray(f.options) && f.options.length; })
+      .map(function (f) { return f.key + '∈[' + f.options.join('|') + ']'; });
+    // string 字段防数组：路径/菜单类字段 LLM 惯性给数组，明确提示单字符串
+    var stringHints = fields.filter(function (f) { return f.type === 'string' && /path|menu|navigation/.test(f.key); })
+      .map(function (f) { return f.key + ' 为单个字符串（用 > 分隔层级），不是数组'; });
     lines.push('- 节点类型 ' + t.type + '（' + (t.label || '') + '）：properties 必填 [' + required.join(', ') + ']' +
       (optional.length ? '；可选 [' + optional.join(', ') + ']' : '') +
+      (enumHints.length ? '；枚举约束 ' + enumHints.join(', ') : '') +
+      (stringHints.length ? '；字符串字段（禁止数组）' + stringHints.join('；') : '') +
       '。示例 ' + JSON.stringify({ id: '示例id', type: t.type, properties: fields.reduce(function (acc, f) {
         if (f.default !== undefined) acc[f.key] = f.default;
         else if (f.key === 'name') acc[f.key] = '示例名称';
@@ -606,10 +651,27 @@ function buildGeneratePrompt(asset, template, description, context) {
       }, {}) }));
   });
   (template.edge_types || []).forEach(function (e) {
-    lines.push('- 边类型 ' + e.type + '（' + (e.label || '') + '）：' + (e.source_types || []).join('/') + ' → ' + (e.target_types || []).join('/') +
-      (e.fields && e.fields.length ? '；properties: ' + e.fields.map(function (f) { return f.key + '(' + f.type + ')'; }).join(', ') : ''));
+    var fieldDesc = '';
+    if (e.fields && e.fields.length) {
+      fieldDesc = '；properties: ' + e.fields.map(function (f) {
+        var desc = f.key + '(' + f.type + ')';
+        if (f.type === 'enum' && Array.isArray(f.options) && f.options.length) {
+          desc += '，枚举值必须取 [' + f.options.join('|') + '] 之一';
+        }
+        return desc;
+      }).join(', ');
+    }
+    lines.push('- 边类型 ' + e.type + '（' + (e.label || '') + '）：' + (e.source_types || []).join('/') + ' → ' + (e.target_types || []).join('/') + fieldDesc);
   });
   lines.push('- 节点 id 唯一字符串，边 id 唯一；边端点必须符合上述类型约束');
+  // 条件必填规则：模板 metadata.conditional_requirements 声明"当 X=Y 时必须提供 Z"，LLM 不知情就会产出过不了校验的节点
+  var condRules = ((template.metadata || {}).conditional_requirements) || [];
+  condRules.forEach(function (rule) {
+    var need = [];
+    if (Array.isArray(rule.all_of) && rule.all_of.length) need.push('必须配置 ' + rule.all_of.join(' + '));
+    if (Array.isArray(rule.any_of) && rule.any_of.length) need.push('至少配置 ' + rule.any_of.join(' 或 ') + ' 之一');
+    if (need.length) lines.push('- 条件规则：' + rule.node_type + ' 节点当 ' + rule.when_field + '="' + rule.when_value + '" 时，' + need.join('；'));
+  });
   (asset.generateRules || []).forEach(function (r) { lines.push('- 业务规则：' + r); });
   lines.push('');
   lines.push('用户描述：');
@@ -714,6 +776,30 @@ function generateOrgDocument(description, asset, llmCall, context, opts) {
     doc.nodes = Array.isArray(doc.nodes) ? doc.nodes : [];
     doc.edges = Array.isArray(doc.edges) ? doc.edges : [];
     doc.metadata = doc.metadata && typeof doc.metadata === 'object' ? doc.metadata : {};
+    // 确定性回填：按模板 metadata.conditional_requirements 补齐 LLM 漏配的 any_of 字段
+    // （如 execution_mode=read-execute 需 capabilities/query_ref/api_or_workflow_id 之一）。
+    // 占位值带 <auto> 前缀标记，审核编辑时一眼可辨，不是伪造业务证据。
+    var condReqs = ((template.metadata || {}).conditional_requirements) || [];
+    var filled = [];
+    condReqs.forEach(function (rule) {
+      if (!Array.isArray(rule.any_of) || !rule.any_of.length) return;
+      doc.nodes.forEach(function (node) {
+        if (!node || node.type !== rule.node_type) return;
+        var props = node.properties = node.properties || {};
+        if (props[rule.when_field] !== rule.when_value) return;
+        if (rule.any_of.some(function (key) { return props[key]; })) return;
+        // 选 any_of 第一个字段做占位：capabilities → 数组占位引用；其余 → 字符串占位
+        var key0 = rule.any_of[0];
+        var nodeIdPart = String(node.id || 'node').replace(/[^A-Za-z0-9._-]/g, '');
+        props[key0] = key0 === 'capabilities'
+          ? ['<auto>' + nodeIdPart + '.' + (props.tb_action_code || 'query')]
+          : '<auto>' + nodeIdPart + '.' + key0;
+        filled.push(node.id + ':' + key0);
+      });
+    });
+    if (filled.length) {
+      doc.metadata.auto_filled = { at: new Date().toISOString(), fields: filled };
+    }
     return doc;
   });
 }
@@ -724,6 +810,15 @@ const PARSE_DOCUMENT_MAX_CHARS = 190000;
 // 表格映射用的行数据随 sheets 返回的上限（材料库 from-tabular 确定性建图）
 const TABULAR_SHEET_MAX_ROWS = 2000;
 const TABULAR_CELL_MAX_CHARS = 500;
+
+// 文本通道清洗：strip HTML tags / remove control characters / collapse newlines / trim
+function cleanTextContent(text) {
+  return String(text || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 async function parseDocumentToText(fileName, body) {
   const ext = path.extname(fileName || '').toLowerCase().replace('.', '');
@@ -949,13 +1044,19 @@ function upsertExtractCheckpoint(a, digest, entry) {
   const dir = extractCacheDir(a);
   ensureDir(dir);
   const file = path.join(dir, digest + '.json');
-  let checkpoint = { digest: digest, total: entry.total, docs: {}, updatedAt: '' };
+  let checkpoint = { digest: digest, total: entry.total, docs: {}, gleaned: {}, updatedAt: '' };
   try {
     const prev = JSON.parse(fs.readFileSync(file, 'utf8'));
     if (prev && prev.docs) checkpoint = prev;
+    if (!checkpoint.gleaned) checkpoint.gleaned = {};
   } catch (error) { /* 首次写入 */ }
   checkpoint.total = entry.total;
-  checkpoint.docs[entry.docId] = { entities: entry.entities, relations: entry.relations };
+  // gleaning 结果单独落 gleaned：续跑时首抽与二次扫描各自断点，不整段重烧
+  if (entry.kind === 'glean') {
+    checkpoint.gleaned[entry.docId] = { entities: entry.entities, relations: entry.relations };
+  } else {
+    checkpoint.docs[entry.docId] = { entities: entry.entities, relations: entry.relations };
+  }
   checkpoint.updatedAt = new Date().toISOString();
   fs.writeFileSync(file, JSON.stringify(checkpoint), 'utf8');
   return checkpoint;
@@ -975,8 +1076,8 @@ function pruneExtractCache(a) {
   return pruned;
 }
 
-function setExtractProgress(jobId, completed, total) {
-  extractJobProgress.set(jobId, { completed: completed, total: total, updatedAt: Date.now() });
+function setExtractProgress(jobId, completed, total, phase, extra) {
+  extractJobProgress.set(jobId, Object.assign({ completed: completed, total: total, phase: phase || 'extracting', updatedAt: Date.now() }, extra || {}));
 }
 
 function getExtractProgress(jobId) {
@@ -988,7 +1089,8 @@ function getExtractProgress(jobId) {
 
 /**
  * 长文分块：段落边界切块（块长 ≤maxLen 字符）+ 前一块尾部 ~overlap 字符重叠 + 块数上限 maxBlocks。
- * GraphExtractor 内部对单文档按 2500 字符截断，块长超 2500 会静默丢内容，故默认 2400。
+ * 块长不得超过 GraphExtractor 单块读取上限（_buildExtractionPrompt，现 4000）：超限部分会被静默截断；默认 2400 留安全余量。
+ * 改进：表格/列表作为原子单元不拆分；超长段落在句子边界处切割，避免半句割裂。
  */
 function chunkContent(content, maxLen, overlap, maxBlocks) {
   maxLen = maxLen || 2400;
@@ -1002,13 +1104,72 @@ function chunkContent(content, maxLen, overlap, maxBlocks) {
     if (current.trim()) blocks.push(current.trim());
     current = '';
   };
+
+  // 超长段落/表格硬切：优先在句子边界处切割（。.！？；），避免半句割裂；无标点时回退硬切+overlap
   var pushHard = function (paragraph) {
-    // 超长段落硬切（每片恰好 ≤maxLen，末尾片更短）
-    for (var i = 0; i < paragraph.length && blocks.length < maxBlocks; i += maxLen - overlap) {
-      blocks.push(paragraph.slice(i, i + maxLen));
+    var remaining = paragraph;
+    while (remaining.length > maxLen && blocks.length < maxBlocks) {
+      var minCut = Math.floor(maxLen * 0.5);
+      var bestCut = -1;
+      var foundBoundary = false;
+      // 在 [maxLen*0.5, maxLen] 范围内找最近的句子边界
+      for (var j = maxLen; j >= minCut; j--) {
+        var ch = remaining[j];
+        if (ch === '。' || ch === '.' || ch === '！' || ch === '？' || ch === '；' || ch === ';' || ch === '\n') {
+          bestCut = j + 1;
+          foundBoundary = true;
+          break;
+        }
+      }
+      // 降级：找逗号/顿号/空格
+      if (bestCut < 0) {
+        for (var j2 = maxLen; j2 >= minCut; j2--) {
+          var ch2 = remaining[j2];
+          if (ch2 === '，' || ch2 === ',' || ch2 === ' ' || ch2 === '、') { bestCut = j2 + 1; foundBoundary = true; break; }
+        }
+      }
+      if (bestCut < 0) bestCut = maxLen;
+      blocks.push(remaining.slice(0, bestCut));
+      // 句子边界切割时从边界处继续（自然分界无需重叠）；硬切时回退 overlap 步长保持上下文衔接
+      var step = foundBoundary ? bestCut : Math.max(1, bestCut - overlap);
+      remaining = remaining.slice(step);
     }
+    if (remaining.trim() && blocks.length < maxBlocks) blocks.push(remaining.trim());
   };
-  var paragraphs = text.split(/\n\s*\n/).filter(function (p) { return p.trim(); });
+
+  // 段落分割：保护表格（| 开头）和列表（-/*/•/数字. 开头）作为原子单元
+  var lines = text.split('\n');
+  var paragraphs = [];
+  var buffer = '';
+  var inTable = false;
+  var inList = false;
+  var flushBuf = function () { if (buffer.trim()) paragraphs.push(buffer.trim()); buffer = ''; };
+  lines.forEach(function (line) {
+    var t = line.trim();
+    var isTable = t.charAt(0) === '|';
+    var isList = /^[-*•]|\d+[.)）]/.test(t);
+    if (isTable) {
+      if (!inTable && buffer.trim()) flushBuf();
+      inTable = true; inList = false;
+      buffer = buffer ? buffer + '\n' + line : line;
+      return;
+    }
+    if (isList) {
+      if (!inList && buffer.trim()) flushBuf();
+      inList = true; inTable = false;
+      buffer = buffer ? buffer + '\n' + line : line;
+      return;
+    }
+    if (!t) {
+      flushBuf();
+      inTable = false; inList = false;
+      return;
+    }
+    if (inTable || inList) { flushBuf(); inTable = false; inList = false; }
+    buffer = buffer ? buffer + '\n' + line : line;
+  });
+  flushBuf();
+
   if (!paragraphs.length) { pushHard(text); return blocks; }
   paragraphs.forEach(function (p) {
     if (blocks.length >= maxBlocks) return;
@@ -1033,12 +1194,21 @@ function chunkContent(content, maxLen, overlap, maxBlocks) {
 
 // ── 存储读写（全部按资产 a 参数化）──
 function loadManifest(a) {
-  try { return JSON.parse(fs.readFileSync(a.manifestPath, 'utf8')); }
-  catch (error) {
-    // 兜底 asset_id 从模板取（org-people 保持 'org-graph' 零变化；新资产用模板 template_id）
-    let assetId = a === ASSETS['org-people'] ? 'org-graph' : 'customer-ecosystem';
-    try { assetId = loadTemplate(a).template_id; } catch (e) { /* 模板也缺失时保留兜底 */ }
-    return { asset_id: assetId, active_version: null, versions: [] };
+  let raw;
+  try { raw = fs.readFileSync(a.manifestPath, 'utf8'); } catch (error) {
+    if (error && error.code === 'ENOENT') {
+      // 首次使用：返回空骨架是合法语义
+      let assetId = a === ASSETS['org-people'] ? 'org-graph' : 'customer-ecosystem';
+      try { assetId = loadTemplate(a).template_id; } catch (e) { /* 模板也缺失时保留兜底 */ }
+      return { asset_id: assetId, active_version: null, versions: [] };
+    }
+    fail('ORG_GRAPH_MANIFEST_UNREADABLE', 'manifest 读取失败（' + (error && error.code || error) + '）：' + a.manifestPath, 500);
+  }
+  try { return JSON.parse(raw); } catch (error) {
+    // 损坏时绝不能按空 manifest 继续——后续 saveManifest 会把真实版本列表整体覆盖掉。先备份现场再显式报错
+    const backup = a.manifestPath + '.corrupt-' + Date.now();
+    try { fs.copyFileSync(a.manifestPath, backup); console.error('[org-graph] manifest 损坏，已备份到 ' + backup); } catch (e) { /* 备份失败不阻塞报错 */ }
+    fail('ORG_GRAPH_MANIFEST_CORRUPT', 'manifest JSON 损坏（已备份为 ' + path.basename(backup) + '，请人工恢复后再操作）：' + error.message, 500);
   }
 }
 
@@ -1053,7 +1223,10 @@ function withFileLock(assetId, fn) {
 
 function saveManifest(manifest, a) {
   ensureDir(a.storageDir);
-  fs.writeFileSync(a.manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+  // 原子写：先落临时文件再替换，防进程中断/并发写把 manifest 切成半截 JSON
+  const tmp = a.manifestPath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(manifest, null, 2), 'utf8');
+  fs.renameSync(tmp, a.manifestPath);
 }
 
 // 操作审计：追加式写入 manifest.auditLog（上限 500 条），图谱管理页治理视图读取
@@ -1148,8 +1321,51 @@ function saveDraft(document, a, opts) {
       }
     }
   }
-  document.metadata = Object.assign({}, document.metadata, { updated_at: new Date().toISOString() });
+  // 文档级命名：无 name 时自动生成默认名（资产名 + 日期），确保草稿始终有可识别名称
+  if (!document.metadata) document.metadata = {};
+  if (!document.metadata.name) {
+    var assetName = (a.registry && a.registry.name) || path.basename(a.storageDir) || '图谱';
+    var dateStr = new Date().toISOString().slice(0, 10);
+    document.metadata.name = assetName + ' - ' + dateStr;
+  }
+  document.metadata.status = 'draft';
+  document.metadata.updated_at = new Date().toISOString();
   fs.writeFileSync(a.draftPath, JSON.stringify(document, null, 2), 'utf8');
+  // 自动生成符合 schema 的 Excel 并落盘到资产目录（知识导入/自动建图/辅助建图可加载使用）
+  try {
+    var excelResult = intakeGraphBridge.graphToIntakeExcel(document);
+    var excelPath = path.join(path.dirname(a.draftPath), 'draft-excel.xlsx');
+    fs.writeFileSync(excelPath, excelResult.buffer);
+    // 自动同步到知识导入：草稿 Excel 解析为知识导入批次，省去手动上传
+    syncToIntake(excelPath, a, document);
+  } catch (excelErr) { /* Excel 生成失败不阻塞草稿保存 */ }
+}
+
+// 草稿 Excel → 知识导入批次自动同步（去重：同资产只保留一个批次，覆盖更新）
+function syncToIntake(excelPath, a, document) {
+  var parsed = knowledgeIntake.parseWorkbook(excelPath);
+  var outcome = knowledgeIntake.validateSheets(parsed.raw);
+  var hasValid = outcome.sheets.functions.length || outcome.sheets.intents.length || outcome.sheets.utterances.length;
+  if (!hasValid) return; // 没有可导入的行，跳过
+  var graphAssetId = assetIdOf(a);
+  var syncId = 'graph-sync-' + graphAssetId;
+  // 去重：找已有同资产同步批次，有则覆盖更新（保留 batchId），无则新建
+  var existing = knowledgeIntake.listBatches().find(function (b) { return b.srcBatchId === syncId; });
+  var batchId = existing
+    ? existing.batchId
+    : 'ki-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + crypto.randomBytes(4).toString('hex');
+  var batch = {
+    batchId: batchId,
+    fileName: (document.metadata && document.metadata.name ? document.metadata.name : graphAssetId) + '.xlsx',
+    importedBy: 'graph-sync',
+    importedAt: new Date().toISOString(),
+    templateSheets: { functions: knowledgeIntake.FUNC_SHEET, intents: knowledgeIntake.INTENT_SHEET, utterances: knowledgeIntake.UTTER_SHEET },
+    rejected: outcome.rejected,
+    warnings: outcome.warnings,
+    rows: outcome.sheets,
+    srcBatchId: syncId,
+  };
+  knowledgeIntake.saveBatch(batch);
 }
 
 function nextVersionNumber(manifest) {
@@ -1190,6 +1406,12 @@ function assetGraphId(a, version) {
 }
 
 // 发布：两关校验 → 不可变版本文件 + manifest active 更新（按资产 a 隔离）
+// 发布审批开关：默认启用（治理底线——发布须经审批才生效）；显式 REQUIRE_PUBLISH_APPROVAL=false 可关闭。
+// /import 的 autoPublish 是调用方显式 opt-in 的旁路，不经此开关。
+function publishApprovalEnabled() {
+  return String(process.env.REQUIRE_PUBLISH_APPROVAL ?? 'true') !== 'false';
+}
+
 function publishDocument(document, note, a) {
   const template = loadTemplate(a);
   const assetCheck = a.validateDocument(document);
@@ -1205,7 +1427,7 @@ function publishDocument(document, note, a) {
   const number = nextVersionNumber(manifest);
   const version = 'org-graph-v' + number;
   const publishedAt = new Date().toISOString();
-  document.metadata = Object.assign({}, document.metadata, { published_at: publishedAt, publish_note: note || '' });
+  document.metadata = Object.assign({}, document.metadata, { published_at: publishedAt, publish_note: note || '', status: 'published' });
   const contentDigest = graphDocumentDigest(document);
   const stats = { nodes: document.nodes.length, edges: document.edges.length };
   ensureDir(a.storageDir);
@@ -1218,6 +1440,7 @@ function publishDocument(document, note, a) {
     template_id: document.template_ref ? document.template_ref.template_id : 'org-people',
     published_at: publishedAt,
     note: note || '',
+    name: (document.metadata && document.metadata.name) || '',
     stats: stats,
   });
   appendAudit(manifest, 'publish', { version: version, note: note || '', stats: stats, contentDigest: contentDigest });
@@ -1379,22 +1602,25 @@ async function handleAuditStream(req, res) {
     try {
       const parsed = parseAuditResponse(await callLLM(buildAuditPrompt(doc, template, deterministic, assetRules)));
       const semantic = parsed || [];
-      sse({ type: 'findings', deterministic: [], semantic, batch: 1 });
-      sse({ type: 'merged', deterministic: [], semantic });
+      sse({ type: 'findings', deterministic, semantic, batch: 1 });
+      sse({ type: 'merged', deterministic, semantic });
       if (!parsed) sse({ type: 'warning', message: 'AI 语义输出解析失败，本次结果不含语义发现' });
       sse({ type: 'done', summary: { nodes: doc.nodes.length, edges: edges.length, deterministic: deterministic.length, semantic: semantic.length, batches: 1, coverage: 'full' } });
     } catch (e) {
       sse({ type: 'warning', message: 'LLM 不可用：' + ((e && e.message) || e) });
-      sse({ type: 'merged', deterministic: [], semantic: [] });
+      sse({ type: 'merged', deterministic, semantic: [] });
       sse({ type: 'done', summary: { nodes: doc.nodes.length, edges: edges.length, deterministic: deterministic.length, semantic: 0, batches: 1, coverage: 'full' } });
     }
     return res.end();
   }
+  // 大图：先计算确定性检查结果，发送一次 findings 事件，再分批语义审查
+  const deterministic = deterministicAudit(doc, template);
+  if (deterministic.length) sse({ type: 'findings', deterministic, semantic: [], batch: 0 });
   const result = await runPartitionedAudit(doc, template, assetRules, callLLM, {
     onProgress: (current, total, step) => sse({ type: 'progress', current, total, step }),
     onBatch: (r) => { if (r.ok && r.findings.length) sse({ type: 'findings', deterministic: [], semantic: r.findings, batch: r.batchNo }); },
   });
-  sse({ type: 'merged', deterministic: [], semantic: result.semantic });
+  sse({ type: 'merged', deterministic: result.deterministic || [], semantic: result.semantic });
   if (result.llm !== 'ok') {
     const detail = (result.stats.batchDetail.failedBatches || []).map((b) => '第' + b.batch + '批(' + b.error + ')').join('、');
     sse({ type: 'warning', message: '部分批次审查失败' + (detail ? '：' + detail : '（' + result.llm + '）') + '，结果仅含成功批次' });
@@ -1452,7 +1678,8 @@ function handleOrgGraphRequest(req, res) {
     }
     if (req.method === 'POST' && pathname === '/api/org-graph/trial') {
       const body = await bodyPromise;
-      if ((body.asset || queryAsset) !== 'intent-graph') fail('ORG_GRAPH_TRIAL_ASSET', '意图试问仅支持意图图谱', 400);
+      const trialAsset = body.asset || queryAsset;
+      if (!isIntentTrialAsset(trialAsset)) fail('ORG_GRAPH_TRIAL_ASSET', '意图试问仅支持意图图谱类资产（templateId=intent-graph）', 400);
       if (!body.document || !Array.isArray(body.document.nodes) || !Array.isArray(body.document.edges)) {
         fail('ORG_GRAPH_TRIAL_DOCUMENT', '请提供当前画布的意图图谱草稿', 400);
       }
@@ -1490,7 +1717,7 @@ function handleOrgGraphRequest(req, res) {
     // ── 方案 A：将用户试问表达加入意图节点的 utterance_view ──
     if (req.method === 'POST' && pathname === '/api/org-graph/trial/add-utterance') {
       const body = await bodyPromise;
-      if ((body.asset || queryAsset) !== 'intent-graph') fail('ORG_GRAPH_TRIAL_ASSET', '意图试问仅支持意图图谱', 400);
+      if (!isIntentTrialAsset(body.asset || queryAsset)) fail('ORG_GRAPH_TRIAL_ASSET', '意图试问仅支持意图图谱类资产（templateId=intent-graph）', 400);
       if (!body.document || !Array.isArray(body.document.nodes)) fail('ORG_GRAPH_TRIAL_DOCUMENT', '请提供当前画布的意图图谱草稿', 400);
       const nodeId = String(body.nodeId || '');
       const utterance = String(body.utterance || '').trim();
@@ -1510,7 +1737,7 @@ function handleOrgGraphRequest(req, res) {
     // ── 方案 B：AI 辅助修正——分析召回问题并建议修改方案 ──
     if (req.method === 'POST' && pathname === '/api/org-graph/trial/suggest-fix') {
       const body = await bodyPromise;
-      if ((body.asset || queryAsset) !== 'intent-graph') fail('ORG_GRAPH_TRIAL_ASSET', '意图试问仅支持意图图谱', 400);
+      if (!isIntentTrialAsset(body.asset || queryAsset)) fail('ORG_GRAPH_TRIAL_ASSET', '意图试问仅支持意图图谱类资产（templateId=intent-graph）', 400);
       if (!body.document || !Array.isArray(body.document.nodes)) fail('ORG_GRAPH_TRIAL_DOCUMENT', '请提供当前画布的意图图谱草稿', 400);
       const query = String(body.query || '').trim();
       if (!query) fail('ORG_GRAPH_TRIAL_QUERY', '缺少用户问题', 400);
@@ -1582,6 +1809,8 @@ ${targetInfo}
         nodes: draft.nodes.length,
         edges: draft.edges.length,
         updated_at: draft.metadata && draft.metadata.updated_at,
+        name: (draft.metadata && draft.metadata.name) || '',
+        status: (draft.metadata && draft.metadata.status) || 'draft',
       } : null;
       // 无草稿无发布版本 → 用模板 starter_graph 构造虚拟草稿状态，让前端触发 /load 回退
       if (!draftStatus && !manifest.active_version) {
@@ -1672,16 +1901,295 @@ ${targetInfo}
       return { valid: assetCheck.valid && tmpl.valid, asset: assetCheck, template: tmpl };
     }
 
+    // POST /api/org-graph/convert-v1-to-v4 —— v1 扁平图谱转 v4 intentTree 树结构
+    // 打通 v1→v4 转换链路（此前是手动脚本，无 API 端点自动触发）
+    // 入参: { document?: v1Graph, save_to_draft?: boolean }
+    //   document 缺省时从 intent-graph 草稿加载
+    //   save_to_draft 默认 true（P0-10：打通数据流，避免前端漏传参导致 V4 草稿不落盘）；
+    //     传 false 时仅返回 v4 结果不落盘
+    if (req.method === 'POST' && pathname === '/api/org-graph/convert-v1-to-v4') {
+      const body = await bodyPromise;
+      var v1Source = body.document;
+      if (!v1Source) {
+        // 缺省从 intent-graph 草稿加载
+        const v1Asset = resolveAsset('intent-graph');
+        v1Source = loadDraft(v1Asset);
+        if (!v1Source) fail('ORG_GRAPH_V1_DRAFT_NOT_FOUND', '未提供 document 且 intent-graph 草稿不存在', 404);
+      }
+      const v4Result = convertV1ToV4(v1Source);
+      // 草稿统一 GraphDocument 形态（nodes+edges）：saveDraft/校验器/工作台都只认这个形态；
+      // 发布时由 builderDocumentToV41 桥接回 intentTree 运行面
+      const v4DraftDoc = intentTreeToGraphDocument(v4Result);
+      var convertSaved = null;
+      // P0-10：默认落盘（save_to_draft !== false），打通 v1→v4→运行时 数据流
+      if (body.save_to_draft !== false) {
+        const v4Asset = resolveAsset('intent-graph-v4');
+        try {
+          saveDraft(v4DraftDoc, v4Asset, { force: true });
+          convertSaved = { asset: 'intent-graph-v4', path: v4Asset.draftPath };
+        } catch(e) { convertSaved = { error: e.message }; }
+      }
+      // 转换即校验：带着 V4 校验报告出门，契约缺口（知识场景缺 answerRefs 等）当场暴露
+      const convertValidation = resolveAsset('intent-graph-v4').validateDocument(v4DraftDoc);
+      return {
+        success: true,
+        v4: v4Result,
+        saved: convertSaved,
+        validation: {
+          valid: !!(convertValidation && convertValidation.valid),
+          errors: (convertValidation && convertValidation.errors || []).length,
+          warnings: (convertValidation && convertValidation.warnings || []).length,
+          error_sample: (convertValidation && convertValidation.errors || []).slice(0, 5).map(function(e) { return e.code + ': ' + e.message; }),
+        },
+        summary: {
+          nodes: (v4Result.intentTree || []).length,
+          leaves: (v4Result.intentTree || []).filter(function(n) { return n.node_role === 'leaf'; }).length,
+          scenes: (v4Result.intentTree || []).reduce(function(n, node) { return n + ((node.scenes || []).length); }, 0),
+        },
+      };
+    }
+
+    // POST /api/org-graph/publish-v4-to-runtime —— P0-10：把 V4 草稿发布到运行时消费路径
+    // 打通 org-graph 工具链产出的 V4 草稿 → V4GraphAdapter 运行时消费路径的同步链路。
+    // 此前两条管线完全隔离：org-graph V4 草稿在 data/graphs/org/intent-v4/drafts/，
+    // 运行时读 data/ai-native-bank/intent-graph/graph.ccb.intents.v2.1.0.json，
+    // 无任何同步机制。本端点补齐这一断点。
+    // 入参: { source?: 'draft' | object, backup?: boolean }
+    //   source 缺省时从 intent-graph-v4 草稿加载；传 object 时直接用该对象作为 V4 图谱
+    //   backup 默认 true：写入前备份现有运行时文件到 .bak-publish-{ts}.json
+    if (req.method === 'POST' && pathname === '/api/org-graph/publish-v4-to-runtime') {
+      const body = await bodyPromise;
+      var v4Doc = body.source;
+      if (!v4Doc || v4Doc === 'draft') {
+        // 缺省从 intent-graph-v4 草稿加载
+        const v4Asset = resolveAsset('intent-graph-v4');
+        v4Doc = loadDraft(v4Asset);
+        if (!v4Doc) fail('ORG_GRAPH_V4_DRAFT_NOT_FOUND', '未提供 source 且 intent-graph-v4 草稿不存在', 404);
+      }
+      // 校验 V4 文档格式：必须含 intentTree（V4GraphAdapter 加载时检测此键）
+      var v4SourceDoc = v4Doc;
+      if (!v4Doc.intentTree || !Array.isArray(v4Doc.intentTree)) {
+        // auto-build 产出的 V4.1 构建文档（nodes+edges 形态）在发布时自动桥接为 intentTree——
+        // 这是自动建图图直达银行运行时的关键一步；桥接规则与前端 lib/intentGraphV4.ts 同源
+        if (Array.isArray(v4Doc.nodes) && v4Doc.nodes.length > 0) {
+          v4Doc = builderDocumentToV41(v4Doc);
+        } else {
+          fail('ORG_GRAPH_V4_FORMAT_INVALID', 'V4 文档格式无效：缺少 intentTree 数组，且不是可桥接的 V4.1 构建文档（无 nodes）（V4GraphAdapter 无法消费）', 400);
+        }
+      }
+      // 发布门控：写运行时文件前先过 V4 校验器（schema + V4.1 契约规则 §11），
+      // 银行运行面消费不了的图谱（知识场景缺 answerRefs、任务场景缺能力绑定等）拦在门外
+      var v4CheckDoc = Array.isArray(v4SourceDoc.nodes) ? v4SourceDoc : intentTreeToGraphDocument(v4Doc);
+      var v4Check = resolveAsset('intent-graph-v4').validateDocument(v4CheckDoc);
+      if (!v4Check || !v4Check.valid) {
+        var v4ErrList = (v4Check && v4Check.errors) || [];
+        fail('ORG_GRAPH_V4_VALIDATION_FAILED', 'V4 校验未通过（' + v4ErrList.length + ' 个错误），已拦截发布到运行时。前 10 个：'
+          + v4ErrList.slice(0, 10).map(function(e) { return '[' + e.code + '] ' + e.message; }).join('；'), 400);
+      }
+      var backupInfo = null;
+      var doBackup = body.backup !== false;
+      // 确保运行时目录存在
+      if (!fs.existsSync(RUNTIME_V4_DIR)) {
+        try { fs.mkdirSync(RUNTIME_V4_DIR, { recursive: true }); } catch(e) { fail('RUNTIME_V4_DIR_CREATE_FAILED', '运行时目录创建失败: ' + e.message, 500); }
+      }
+      // 备份现有运行时文件
+      if (doBackup && fs.existsSync(RUNTIME_V4_PATH)) {
+        try {
+          var ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+          var backupPath = RUNTIME_V4_PATH.replace(/\.json$/, '.bak-publish-' + ts + '.json');
+          fs.copyFileSync(RUNTIME_V4_PATH, backupPath);
+          backupInfo = { path: backupPath, size: fs.statSync(backupPath).size };
+        } catch(e) { backupInfo = { error: e.message }; }
+      }
+      // 补全 publishedAt 等运行时元数据
+      if (!v4Doc.schemaVersion) v4Doc.schemaVersion = '4.1';
+      if (!v4Doc.graphId) v4Doc.graphId = process.env.AI_BANK_GRAPH_ID || 'ccb-mobile-bank-intents';
+      if (!v4Doc.bank) v4Doc.bank = process.env.AI_BANK_BANK_ID || 'CCB';
+      if (!v4Doc.appSurface) v4Doc.appSurface = process.env.AI_BANK_APP_SURFACE || 'mock-mobile-bank';
+      v4Doc.publishedAt = new Date().toISOString();
+      v4Doc.publishedFrom = 'org-graph-toolchain';
+      // digest 按 V4.1 规范规则（intentTree+relations+resourceRegistries 规范化 sha256）统一重算：
+      // 转换器落盘的 intentTree 草稿走 graphDigest 规则，此处归一到运行面口径
+      v4Doc.digest = computeV41Digest(v4Doc);
+      // 写入运行时路径
+      try {
+        fs.writeFileSync(RUNTIME_V4_PATH, JSON.stringify(v4Doc, null, 2), 'utf8');
+      } catch(e) { fail('RUNTIME_V4_WRITE_FAILED', '写入运行时路径失败: ' + e.message, 500); }
+      var leafCount = (v4Doc.intentTree || []).filter(function(n) { return n.node_role === 'leaf'; }).length;
+      var sceneCount = (v4Doc.intentTree || []).reduce(function(acc, n) { return acc + ((n.scenes || []).length); }, 0);
+
+      // TuGraph 导入：当 intent_graph_source=tugraph 时，同时将图谱写入图数据库
+      var tugraphResult = null;
+      var graphSource = process.env.AI_BANK_INTENT_GRAPH_SOURCE || process.env.INTENT_GRAPH_SOURCE || '';
+      if (graphSource === 'tugraph') {
+        var importScript = path.join(__dirname, '..', 'services', 'ai-native-bank', 'agent-runtime', 'scripts', 'import_v4_to_tugraph.py');
+          try {
+            var pythonBin = process.env.AI_BANK_PYTHON_BIN || 'python';
+            var importOutput = execFileSync(pythonBin, [
+              importScript,
+              '--input', RUNTIME_V4_PATH,
+            ], {
+              encoding: 'utf8',
+              timeout: parseInt(process.env.AI_BANK_TUGRAPH_IMPORT_TIMEOUT_MS || '120000', 10),
+              env: process.env,
+              cwd: path.join(__dirname, '..', 'services', 'ai-native-bank', 'agent-runtime'),
+            });
+          tugraphResult = { success: true, output: importOutput.slice(-500) };
+        } catch(e) {
+          tugraphResult = { success: false, error: e.message, stdout: e.stdout ? e.stdout.slice(-300) : '' };
+        }
+      }
+
+      return {
+        success: true,
+        published: {
+          path: RUNTIME_V4_PATH,
+          schemaVersion: v4Doc.schemaVersion,
+          graphId: v4Doc.graphId,
+          publishedAt: v4Doc.publishedAt,
+          tree_nodes: (v4Doc.intentTree || []).length,
+          leaves: leafCount,
+          scenes: sceneCount,
+        },
+        tugraph: tugraphResult,
+        validation: {
+          warnings: (v4Check && v4Check.warnings || []).length,
+          warning_sample: (v4Check && v4Check.warnings || []).slice(0, 5).map(function(w) { return w.code + ': ' + w.message; }),
+        },
+        backup: backupInfo,
+      };
+    }
+
+    // GET /api/org-graph/pipeline-status —— P0-10：工具链状态总览（统一数据总线）
+    // 报告全链路各节点的状态：V1 草稿 / V4 草稿 / 运行时消费文件 / autobuild jobs
+    // 以及数据流断点诊断（哪些节点未同步、哪些路径不匹配）
+    if (req.method === 'GET' && pathname === '/api/org-graph/pipeline-status') {
+      var v1Asset = resolveAsset('intent-graph');
+      var v4Asset = resolveAsset('intent-graph-v4');
+      var v1Draft = loadDraft(v1Asset);
+      var v4Draft = loadDraft(v4Asset);
+      // 运行时消费文件状态
+      var runtimeExists = fs.existsSync(RUNTIME_V4_PATH);
+      var runtimeStat = runtimeExists ? fs.statSync(RUNTIME_V4_PATH) : null;
+      var runtimeDoc = null;
+      if (runtimeExists) {
+        try { runtimeDoc = JSON.parse(fs.readFileSync(RUNTIME_V4_PATH, 'utf8')); } catch(e) { runtimeDoc = { parse_error: e.message }; }
+      }
+      // autobuild jobs 状态
+      var autobuildJobsDir = path.join(STORAGE_DIR, '..', 'autobuild-jobs');
+      var autobuildJobs = [];
+      if (fs.existsSync(autobuildJobsDir)) {
+        try {
+          var jobFiles = fs.readdirSync(autobuildJobsDir).filter(function(f) { return f.endsWith('.json'); }).sort().reverse().slice(0, 5);
+          jobFiles.forEach(function(f) {
+            try {
+              var job = JSON.parse(fs.readFileSync(path.join(autobuildJobsDir, f), 'utf8'));
+              autobuildJobs.push({ job_id: job.job_id, status: job.status, stage: job.stage, updated_at: job.updated_at });
+            } catch(e) { /* 跳过损坏的 job 文件 */ }
+          });
+        } catch(e) { /* 跳过 */ }
+      }
+      // 数据流断点诊断
+      var issues = [];
+      if (!v1Draft) issues.push({ level: 'error', node: 'v1_draft', message: 'V1 草稿不存在（intake 未产出或未保存）' });
+      if (!v4Draft) issues.push({ level: 'error', node: 'v4_draft', message: 'V4 草稿不存在（v1→v4 转换器未运行或未落盘）' });
+      if (v4Draft && (!v4Draft.intentTree || !Array.isArray(v4Draft.intentTree))) {
+        issues.push({ level: 'warning', node: 'v4_draft', message: 'V4 草稿为 V4.1 构建形态（nodes+edges，缺 intentTree）；发布到运行时会自动桥接转换为 intentTree' });
+      }
+      if (!runtimeExists) issues.push({ level: 'error', node: 'runtime', message: '运行时消费文件不存在（publish-v4-to-runtime 未执行）' });
+      // V4 草稿与运行时文件是否同步（节点数粗粒度对比；草稿兼容 intentTree / GraphDocument 双形态）
+      if (v4Draft && runtimeDoc && runtimeDoc.intentTree) {
+        var draftTreeNodes = Array.isArray(v4Draft.intentTree) ? v4Draft.intentTree.length : (Array.isArray(v4Draft.nodes) ? v4Draft.nodes.length : 0);
+        var runtimeNodes = runtimeDoc.intentTree.length;
+        if (draftTreeNodes && draftTreeNodes !== runtimeNodes) {
+          issues.push({ level: 'warn', node: 'sync', message: 'V4 草稿节点数(' + draftTreeNodes + ')与运行时文件节点数(' + runtimeNodes + ')不一致，需重新 publish' });
+        }
+      }
+      return {
+        v1_draft: v1Draft ? {
+          path: v1Asset.draftPath,
+          nodes: (v1Draft.nodes || []).length,
+          edges: (v1Draft.edges || []).length,
+          updated_at: v1Draft.metadata && v1Draft.metadata.updated_at,
+          source: v1Draft.metadata && v1Draft.metadata.source,
+        } : null,
+        v4_draft: v4Draft ? (function() {
+          var stats;
+          if (Array.isArray(v4Draft.intentTree)) {
+            stats = {
+              form: 'intent-tree',
+              tree_nodes: v4Draft.intentTree.length,
+              leaves: v4Draft.intentTree.filter(function(n) { return n.node_role === 'leaf'; }).length,
+              scenes: v4Draft.intentTree.reduce(function(acc, n) { return acc + ((n.scenes || []).length); }, 0),
+            };
+          } else {
+            // GraphDocument 构建形态（统一草稿形态）：leaf 按 node_role 数，场景从 properties.scenes JSON 串解析
+            var draftNodes = Array.isArray(v4Draft.nodes) ? v4Draft.nodes : [];
+            var draftLeaves = draftNodes.filter(function(n) { return n.properties && n.properties.node_role === 'leaf'; });
+            stats = {
+              form: 'graph-document',
+              tree_nodes: draftNodes.length,
+              leaves: draftLeaves.length,
+              scenes: draftLeaves.reduce(function(acc, n) {
+                var s = parseScenesProp(n.properties.scenes);
+                return acc + (s ? s.length : 0);
+              }, 0),
+            };
+          }
+          stats.path = v4Asset.draftPath;
+          stats.schemaVersion = v4Draft.schemaVersion;
+          stats.updated_at = v4Draft.metadata && v4Draft.metadata.updated_at;
+          return stats;
+        })() : null,
+        runtime: {
+          path: RUNTIME_V4_PATH,
+          exists: runtimeExists,
+          schemaVersion: runtimeDoc && runtimeDoc.schemaVersion,
+          graphId: runtimeDoc && runtimeDoc.graphId,
+          tree_nodes: runtimeDoc && runtimeDoc.intentTree ? runtimeDoc.intentTree.length : 0,
+          leaves: runtimeDoc && runtimeDoc.intentTree ? runtimeDoc.intentTree.filter(function(n) { return n.node_role === 'leaf'; }).length : 0,
+          scenes: runtimeDoc && runtimeDoc.intentTree ? runtimeDoc.intentTree.reduce(function(acc, n) { return acc + ((n.scenes || []).length); }, 0) : 0,
+          publishedAt: runtimeDoc && runtimeDoc.publishedAt,
+          publishedFrom: runtimeDoc && runtimeDoc.publishedFrom,
+          modified_at: runtimeStat && runtimeStat.mtime,
+        },
+        autobuild_jobs: autobuildJobs,
+        issues: issues,
+        flow: 'intake → V1草稿 → v1→v4转换器 → V4草稿 → publish-v4-to-runtime → V4GraphAdapter运行时',
+      };
+    }
+
     if (req.method === 'POST' && pathname === '/api/org-graph/publish') {
       const body = await bodyPromise;
       if (!body.document) fail('ORG_GRAPH_DOCUMENT_REQUIRED', '缺少 document 字段', 400);
       const asset = body.asset || queryAsset;
       const a = resolveAsset(asset);
-      if (String(process.env.REQUIRE_PUBLISH_APPROVAL || '') === 'true') {
+      if (publishApprovalEnabled()) {
         // 审批模式：把调用方手里的 document 固化为快照转审批，而不是抛 400 死路
         return withFileLock(asset, function () { return createPublishRequestFromDocument(body.document, body.note, a, asset); });
       }
       return withFileLock(asset, function() { return publishDocument(body.document, body.note, a); });
+    }
+
+    if (req.method === 'POST' && pathname === '/api/org-graph/generate') {
+      // AI 建图建议（agent @generate_graph 技能的回调端点）：模板感知 prompt → LLM → 骨架补齐。
+      // generateOrgDocument/buildGeneratePrompt 一直在本文件，此前缺 dispatch 导致 agent 技能 404
+      // （agent 报"服务暂时不可用"；平台仓 ai-harbor 同样缺线，2026-09-29 部署反馈排查）
+      const body = await bodyPromise;
+      const asset = body.asset || queryAsset;
+      const a = resolveAsset(asset);
+      const route = getLLMRoute();
+      if (!route) fail('ORG_GRAPH_LLM_UNAVAILABLE', '未配置 LLM API Key', 503);
+      const description = String(body.description || '').trim();
+      if (!description) fail('ORG_GRAPH_GENERATE_DESC_REQUIRED', '缺少 description 字段（建图需求描述）', 400);
+      const doc = await generateOrgDocument(description, a, undefined, body.context || {}, { maxTokens: body.maxTokens || 8000 });
+      doc.metadata = Object.assign({ generated_at: new Date().toISOString(), source: 'ai-agent' }, doc.metadata);
+      // 生成即校验：产物带着校验报告出门，schema 违规不再全靠下游人工撞见（发布侧用同一对校验器）
+      const assetCheck = a.validateDocument(doc);
+      const tmplCheck = validateGraph(loadTemplate(a), doc);
+      const valid = !!(assetCheck && assetCheck.valid) && !!(tmplCheck && tmplCheck.valid);
+      sendJson(res, 200, { success: valid, document: doc, validation: { asset: assetCheck, template: tmplCheck, valid: valid } });
+      return;
     }
 
     if (req.method === 'POST' && pathname === '/api/org-graph/extract') {
@@ -1693,9 +2201,9 @@ ${targetInfo}
       const route = getLLMRoute();
       if (!route) fail('ORG_GRAPH_LLM_UNAVAILABLE', '未配置 LLM API Key', 503);
       const extractor = new GraphExtractor({ llmRoute: route, entityTypes: a.entityTypes, relationTypes: a.relationTypes });
-      // 长文分块（块长 2400 + 200 重叠）；maxChunks 可放大上限（默认 10 块，封顶 80 块 ≈ 19.2 万字符）
+      // 长文分块（块长 4000 + 400 重叠，减少 LLM 调用次数 + 增强跨块上下文衔接）；maxChunks 可放大上限
       const maxChunks = Math.min(Math.max(Number(body.maxChunks) || 10, 10), 80);
-      const chunks = chunkContent(content, 2400, 200, maxChunks);
+      const chunks = chunkContent(content, 4000, 400, maxChunks);
       const fileName = String(body.fileName || '组织文档');
       const docs = chunks.map(function (chunk, index) {
         return { id: fileName + '#chunk' + (index + 1), title: fileName + ' 第' + (index + 1) + '段', content: chunk };
@@ -1708,15 +2216,28 @@ ${targetInfo}
       const jobId = String(body.jobId || '');
       const total = chunks.length;
       let doneCount = fromCache;
+      let gleanTotalSeen = 0;
       if (jobId) setExtractProgress(jobId, doneCount, total);
 
       const result = await extractor.extractFromDocsResumable(docs, {
         gleaning: body.gleaning !== false,
+        concurrency: 5,
         completed: checkpoint ? checkpoint.docs : {},
+        gleaned: checkpoint && checkpoint.gleaned ? checkpoint.gleaned : {},
         onDocDone: function (docId, entities, relations) {
           upsertExtractCheckpoint(a, digest, { total: total, docId: docId, entities: entities, relations: relations });
           doneCount += 1;
-          if (jobId) setExtractProgress(jobId, doneCount, total);
+          if (jobId) setExtractProgress(jobId, doneCount, total, 'extracting');
+        },
+        onGleanStart: function (gleanTotal) {
+          gleanTotalSeen = gleanTotal;
+          if (jobId) setExtractProgress(jobId, doneCount, total, 'gleaning', { gleanTotal: gleanTotal });
+        },
+        onGleanDone: function (docId, entities, relations) {
+          upsertExtractCheckpoint(a, digest, { total: total, docId: docId, entities: entities, relations: relations, kind: 'glean' });
+          doneCount += 1;
+          // gleanTotal 随每帧重发：setExtractProgress 是整对象覆盖，漏带会把已存分母抹掉
+          if (jobId) setExtractProgress(jobId, doneCount, total, 'gleaning', gleanTotalSeen ? { gleanTotal: gleanTotalSeen } : undefined);
         },
       });
 
@@ -1737,7 +2258,7 @@ ${targetInfo}
       const jobId = String(url.searchParams.get('jobId') || '');
       const p = getExtractProgress(jobId);
       if (!p) fail('ORG_GRAPH_PROGRESS_NOT_FOUND', '抽取任务不存在或已过期', 404);
-      return { jobId: jobId, completed: p.completed, total: p.total };
+      return { jobId: jobId, completed: p.completed, total: p.total, phase: p.phase || 'extracting', gleanTotal: p.gleanTotal };
     }
 
     if (req.method === 'POST' && pathname === '/api/org-graph/resolve-entities') {
@@ -1757,6 +2278,10 @@ ${targetInfo}
       const fileName = String(body.fileName || '');
       if (!fileName) fail('ORG_GRAPH_PARSE_NAME_REQUIRED', '缺少 fileName 字段', 400);
       if (!body.base64 && !String(body.content || '').trim()) fail('ORG_GRAPH_PARSE_CONTENT_REQUIRED', '缺少 base64 或 content 字段', 400);
+      // 文本通道清洗：strip HTML tags / remove control characters / collapse newlines / trim
+      if (!body.base64 && body.content) {
+        body.content = cleanTextContent(body.content);
+      }
       return await parseDocumentToText(fileName, body);
     }
 
@@ -2007,6 +2532,34 @@ ${targetInfo}
       var excelBuffer = Buffer.from(base64Data, 'base64');
       var graphResult = intakeGraphBridge.intakeExcelToGraph(excelBuffer);
       return graphResult;
+    }
+
+    // 下载资产的草稿 Excel（saveDraft 时自动生成，知识导入/自动建图/辅助建图可加载使用）
+    if (req.method === 'GET' && pathname === '/api/org-graph/draft-excel') {
+      var draftAssetId = url.searchParams.get('asset') || '';
+      if (!draftAssetId) fail('ORG_GRAPH_ASSET_REQUIRED', '缺少 asset 参数', 400);
+      var draftResolved = resolveAsset(draftAssetId);
+      var draftExcelPath = path.join(path.dirname(draftResolved.draftPath), 'draft-excel.xlsx');
+      var draftBuffer;
+      if (fs.existsSync(draftExcelPath)) {
+        draftBuffer = fs.readFileSync(draftExcelPath);
+      } else {
+        // Excel 不存在时从当前草稿即时生成
+        var draftDoc = loadDraft(draftResolved);
+        if (!draftDoc || !Array.isArray(draftDoc.nodes) || draftDoc.nodes.length === 0) {
+          fail('ORG_GRAPH_NO_DRAFT', '该资产暂无草稿，无法生成 Excel', 404);
+        }
+        var onTheFly = intakeGraphBridge.graphToIntakeExcel(draftDoc);
+        draftBuffer = onTheFly.buffer;
+      }
+      var draftExcelFileName = draftAssetId + '-draft-excel.xlsx';
+      res.writeHead(200, {
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': "attachment; filename*=UTF-8''" + encodeURIComponent(draftExcelFileName),
+        'Content-Length': draftBuffer.length,
+      });
+      res.end(draftBuffer);
+      return;
     }
 
     // ── 资产管理端点（图谱管理页）：/api/org-graph/assets/:id[/active|/draft|/versions/:v] ──
@@ -2280,7 +2833,7 @@ ${targetInfo}
       return { assetId: auditOp[1], auditLog: (manifest.auditLog || []).slice().reverse() };
     }
 
-    // 发布审批（P2 治理，可选开关 REQUIRE_PUBLISH_APPROVAL=true 时启用）：
+    // 发布审批（P2 治理，默认启用；REQUIRE_PUBLISH_APPROVAL=false 显式关闭）：
     // 提交发布请求（固化草稿快照）→ 管理员 approve（发布该快照）/ reject
     const requestOp = pathname.match(/^\/api\/org-graph\/assets\/([a-z0-9-]+)\/publish-requests(?:\/([a-z0-9-]+)(?:\/(approve|reject))?)?$/);
     if (requestOp && req.method === 'GET' && !requestOp[2]) {
@@ -2289,8 +2842,8 @@ ${targetInfo}
       return { assetId: requestOp[1], requests: (manifest.publishRequests || []).slice().reverse() };
     }
     if (requestOp && req.method === 'POST' && !requestOp[2]) {
-      if (String(process.env.REQUIRE_PUBLISH_APPROVAL || '') !== 'true') {
-        fail('ORG_GRAPH_APPROVAL_DISABLED', '审批流未启用（REQUIRE_PUBLISH_APPROVAL!=true），发布走 /publish 即可', 400);
+      if (!publishApprovalEnabled()) {
+        fail('ORG_GRAPH_APPROVAL_DISABLED', '审批流未启用（REQUIRE_PUBLISH_APPROVAL=false），发布走 /publish 即可', 400);
       }
       const body = await bodyPromise;
       return withFileLock(requestOp[1], function () {
@@ -2301,8 +2854,8 @@ ${targetInfo}
       });
     }
     if (requestOp && req.method === 'POST' && requestOp[2] && (requestOp[3] === 'approve' || requestOp[3] === 'reject')) {
-      if (String(process.env.REQUIRE_PUBLISH_APPROVAL || '') !== 'true') {
-        fail('ORG_GRAPH_APPROVAL_DISABLED', '审批流未启用（REQUIRE_PUBLISH_APPROVAL!=true），发布走 /publish 即可', 400);
+      if (!publishApprovalEnabled()) {
+        fail('ORG_GRAPH_APPROVAL_DISABLED', '审批流未启用（REQUIRE_PUBLISH_APPROVAL=false），发布走 /publish 即可', 400);
       }
       // 全程持 per-asset 锁：approve 会触发 publishDocument 内部再一次读改写 manifest，
       // 锁外用旧副本 save 会把刚追加的版本记录覆盖掉
@@ -2336,6 +2889,62 @@ ${targetInfo}
 
     if (req.method === 'GET' && pathname === '/api/org-graph/assets') {
       return listAssets();
+    }
+
+    // ── Wiki 内容读取：打通 Wiki 模块与图谱模块的数据流 ──
+    // 读取指定 Wiki 库的 SCHEMA.md + 页面 .md 文件，供 graph-builder-agent 做语义中间层转换
+    if (req.method === 'GET' && /^\/api\/org-graph\/wiki-content\/[^/]+$/.test(pathname)) {
+      const wikiId = pathname.split('/').pop();
+      const wikiRoot = path.join(__dirname, '..', 'wiki');
+      const wikiDir = path.join(wikiRoot, wikiId);
+      if (!fs.existsSync(wikiDir) || !fs.statSync(wikiDir).isDirectory()) {
+        fail('ORG_GRAPH_WIKI_NOT_FOUND', 'Wiki 库不存在：' + wikiId, 404);
+      }
+
+      function collectPages(dir, base) {
+        const results = [];
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          if (entry.name.startsWith('.') || entry.name === '_meta' || entry.name === 'log.md') continue;
+          const fullPath = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            results.push(...collectPages(fullPath, base));
+          } else if (entry.name.endsWith('.md')) {
+            const relPath = path.relative(base, fullPath).replace(/\\/g, '/');
+            const content = fs.readFileSync(fullPath, 'utf-8');
+            // 提取标题（第一个 # 行）
+            const titleMatch = content.match(/^#\s+(.+)$/m);
+            const title = titleMatch ? titleMatch[1].trim() : entry.name.replace(/\.md$/, '');
+            results.push({ path: relPath, title, content });
+          }
+        }
+        return results;
+      }
+
+      // 读取 SCHEMA.md
+      const schemaPath = path.join(wikiDir, 'SCHEMA.md');
+      const schema = fs.existsSync(schemaPath) ? fs.readFileSync(schemaPath, 'utf-8') : '';
+
+      // 收集页面
+      const pages = collectPages(wikiDir, wikiDir);
+
+      // 提取 [[wikilink]] 交叉引用
+      const crossRefs = [];
+      for (const page of pages) {
+        const linkRegex = /\[\[([^\]]+)\]\]/g;
+        let match;
+        while ((match = linkRegex.exec(page.content)) !== null) {
+          const target = match[1].trim();
+          crossRefs.push({ from: page.title, to: target });
+        }
+      }
+
+      return {
+        wikiId: wikiId,
+        schema: schema,
+        pages: pages,
+        crossRefs: crossRefs,
+        stats: { totalPages: pages.length, totalCrossRefs: crossRefs.length }
+      };
     }
 
     fail('ORG_GRAPH_ROUTE_NOT_FOUND', '组织图谱路由不存在', 404);
@@ -2388,4 +2997,7 @@ module.exports = {
   pruneExtractCache: pruneExtractCache,
   getExtractProgress: getExtractProgress,
   setExtractProgress: setExtractProgress,
+  loadManifest: loadManifest,
+  saveManifest: saveManifest,
+  publishApprovalEnabled: publishApprovalEnabled,
 };

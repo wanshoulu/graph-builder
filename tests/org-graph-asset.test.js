@@ -17,7 +17,7 @@ test('resolveAsset 默认分支 = org-people 原路径（零行为变化）', ()
   assert.equal(def.storageDir, ORG_STORAGE);
   assert.equal(def.manifestPath, path.join(ORG_STORAGE, 'org-graph-manifest.json'));
   assert.equal(def.draftPath, path.join(ORG_STORAGE, 'drafts', 'org-graph-draft.json'));
-  assert.equal(def.templatePath, path.join(__dirname, '..', 'data', 'graph-builder-templates', 'org-people.json'));
+  assert.equal(def.templatePath, path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.org-people.v1.json'));
   assert.equal(typeof def.validateDocument, 'function');
   assert.throws(
     () => resolveAsset('no-such-asset'),
@@ -30,7 +30,7 @@ test('customer-ecosystem 独立存储目录 + 专属模板/校验器/schema', ()
   assert.equal(cust.storageDir, path.join(ORG_STORAGE, 'customer'));
   assert.equal(cust.manifestPath, path.join(ORG_STORAGE, 'customer', 'org-graph-manifest.json'));
   assert.equal(cust.draftPath, path.join(ORG_STORAGE, 'customer', 'drafts', 'org-graph-draft.json'));
-  assert.equal(cust.templatePath, path.join(__dirname, '..', 'data', 'graph-builder-templates', 'customer-ecosystem.json'));
+  assert.equal(cust.templatePath, path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.customer-ecosystem.v1.json'));
   assert.notEqual(cust.storageDir, resolveAsset('org-people').storageDir, '两资产存储隔离');
   assert.notEqual(cust.validateDocument, resolveAsset('org-people').validateDocument, '两资产校验器不同');
   // 抽取 schema：员工域与客户域实体类型互斥

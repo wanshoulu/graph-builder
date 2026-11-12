@@ -1,0 +1,19 @@
+{
+  "asset_id": "finance-knowledge",
+  "active_version": "org-graph-v1",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "graph-generated",
+      "document_version": "1.0.0",
+      "template_id": "finance-knowledge",
+      "published_at": "2026-09-01T14:54:52.650Z",
+      "note": "阶段1 live 验证",
+      "stats": {
+        "nodes": 4,
+        "edges": 3
+      }
+    }
+  ]
+}

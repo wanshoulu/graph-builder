@@ -1,6 +1,6 @@
 # graph-builder — 模板驱动的知识图谱构建工具链 + RSI 意图进化实验台
 
-![graph-builder 独立部署门户：六条建图入口、RSI 意图进化、模板生态与工具导航](docs/screenshots/portal-v2.png)
+![graph-builder 统一工作台（OntoMind 图谱构建 SPA）：知识导入 / 自动建图 / 辅助建图 / 图谱评测 / RSI 进化 / 图谱管理](docs/screenshots/spa-workbench.png)
 
 ## 项目简介
 
@@ -261,9 +261,9 @@ git clone https://github.com/wanshoulu/graph-builder.git
 cd graph-builder && npm install && npm start
 ```
 
-打开 <http://127.0.0.1:3013/> —— 根路径 302 到 `/tools/index.html`。改端口用 `PORT=4013 npm start`；需要 AI 辅助时 `cp .env.example .env` 填 `DEEPSEEK_KEY` 等（不填也能跑，见[常见问题](#常见问题)）。
+打开 <http://127.0.0.1:3013/> —— 根路径 302 到统一工作台 `/auto-build`（辅助导航在 `/tools/index.html`）。改端口用 `PORT=4013 npm start`；需要 AI 辅助时 `cp .env.example .env` 填 `DEEPSEEK_KEY` 等（不填也能跑，见[常见问题](#常见问题)）。
 
-![图谱构建工作台：载入草稿后 354 节点 / 849 边，可走校验 → 质检 → 保存 → 发布](docs/screenshots/workbench-v2.png)
+![AI 辅助建图（/builder）：载入草稿后 354 节点 / 849 边，支持逐节点 AI 审核与校验](docs/screenshots/spa-builder.png)
 
 ### 打开 RSI 意图进化
 
@@ -377,7 +377,7 @@ graph-builder/
 | 页面 | 路径 | 作用 | 后端依赖 |
 |------|------|------|---------|
 | 门户 | `/tools/index.html` | 名词表、六条入口、RSI 章节、模板生态、工具导航、服务自检 | `/api/health` |
-| **RSI V2 工作台** | `/intent-rsi` | React SPA：任务管理、自动进化（SSE）、候选对比、四关门禁、资产谱系、成绩轨迹 | `/api/intent-rsi/*`（V2 `agent` 模式另需 :18132 Python Agent） |
+| **统一工作台（主入口）** | `/auto-build`（根路径直达） | OntoMind 图谱构建 SPA：知识导入 / 自动建图 / 辅助建图 / 图谱评测 / RSI 进化 / 图谱管理六个模块 | 全部 API 路由族 |
 | **RSI V1 实验台** | `/tools/intent-rsi-lab.html` | 单文件：状态、导入快照、基线、提案、评测、采纳、回滚的原始响应 | `/api/intent-rsi/*` |
 | **图谱构建工作台** | `/tools/workbench.html?autoload=1` | 载入草稿 → 三段校验 → 质量报告 → 保存 → 发布 → 历史回滚 | `/api/org-graph/*`、`/api/knowledge-intake/batches` |
 | 意图图谱编辑器 | `/tools/intent-graph-editor.html` | 专家手工建模、schema 校验、版本导出、组织图谱视图 | `/api/intent-graph/*`、`/api/intent-graph-autobuild/*` |
@@ -385,13 +385,9 @@ graph-builder/
 | 图谱评测 | `/tools/graph-eval.html` | 评测明细统计与对比 | 无（纯前端） |
 | 知识图谱展示 | `/tools/wiki-graph.html` | 按类型着色、层级过滤、节点详情 | `/api/graph/data`、`/api/org-graph/*` |
 
-![知识图谱展示页：18 节点 / 18 关系的本地演示图谱，vis-network 本地构建渲染](docs/screenshots/graph-view-v4.png)
-
-![图谱画布：业务域 / 动作 / 语义枢纽分栏，节点连线与统计面板](docs/screenshots/canvas-v1.png)
-
 ![意图图谱编辑器：模板开始、自动构建、加载已有版本与空白草稿四种入口](docs/screenshots/editor-v1.png)
 
-**独立化改造清单**：默认端口 `3013`；根路径 302 到 `/tools/index.html`；`/tools/`、`/docs/`、`/assets/`、`/data/graphs/` 静态映射并做路径穿越防护；SPA 非 API 路径兜底回 `web/dist/index.html`；`/ontomind/wiki/api/*` 归一化到 `/api/*`；`server.requestTimeout=30min` 支撑 SSE 长任务；`vis-network` / `G6` / `d3` 全部本地化；`/favicon.ico` 与 `/vite.svg` 返回 204。
+**独立化改造清单**：默认端口 `3013`；根路径 302 到统一工作台 `/auto-build`；`/tools/`、`/docs/`、`/assets/`、`/data/graphs/` 静态映射并做路径穿越防护；SPA 非 API 路径兜底回 `web/dist/index.html`；`/ontomind/wiki/api/*` 归一化到 `/api/*`；`server.requestTimeout=30min` 支撑 SSE 长任务；`vis-network` / `G6` / `d3` 全部本地化；`/favicon.ico` 与 `/vite.svg` 返回 204。
 
 ## 为什么这样剥离（设计决策与代价）
 
@@ -450,7 +446,7 @@ graph-builder/
 - [部署指南](docs/deployment.md) — 环境变量、Python Agent、Docker、Nginx 同源反代、生产清单
 - `docs/intent-rsi-*.md` — 9 份 RSI 设计/评审/审计报告（overview、joint-evolution、product-redesign、audit-2026-10-19 等）
 - [docs/diagrams/](docs/diagrams/) — 24 张架构图：工具链 5 张 + V4 规范 19 张
-- [docs/screenshots/](docs/screenshots/) — 7 张真实运行截图（2x PNG）：门户、工作台、图谱展示、画布、编辑器、RSI V2 工作台、RSI V1 实验台
+- [docs/screenshots/](docs/screenshots/) — 7 张真实运行截图（2x PNG，浅色主题）：统一工作台、AI 辅助建图、raw-API 工作台、门户、编辑器、RSI V2 工作台、RSI V1 实验台
 
 ## 版本
 

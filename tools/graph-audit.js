@@ -48,6 +48,19 @@ function deterministicAudit(document, template) {
   }
 
   // 2. 同类型同名节点（疑似重复；跨类型同名不算）
+  // same_as 边是"该重复已被人工治理"的声明（源表「相同功能」列/专家建模标注）：
+  // 组内存在 same_as 连接的节点对是合法多入口，不应再报 duplicate_nodes。
+  var sameAsPairs = {};
+  edges.forEach(function (e) {
+    if (e.type !== 'same_as') return;
+    var a = e.source || e.from, b = e.target || e.to;
+    if (!a || !b) return;
+    (sameAsPairs[a] = sameAsPairs[a] || []).push(b);
+    (sameAsPairs[b] = sameAsPairs[b] || []).push(a);
+  });
+  function pairGoverned(idA, idB) {
+    return (sameAsPairs[idA] || []).indexOf(idB) >= 0;
+  }
   var nameGroups = {};
   nodes.forEach(function (n) {
     var name = String((n.properties && (n.properties.name || n.properties.title)) || '').trim();
@@ -58,10 +71,15 @@ function deterministicAudit(document, template) {
   Object.keys(nameGroups).forEach(function (key) {
     var ids = nameGroups[key];
     if (ids.length > 1) {
+      // 治理豁免：组内存在任一 same_as 连接对 → 该组重复已声明，只统计未治理的真重复
+      var governed = ids.some(function (id, i) {
+        return ids.slice(i + 1).some(function (other) { return pairGoverned(id, other); });
+      });
+      if (governed) return;
       findings.push({
         severity: 'medium', category: 'duplicate_nodes', node_ids: ids, edge_ids: [],
         issue: '同类型同名节点疑似重复：' + key.split('||')[1] + '（' + ids.length + ' 个）',
-        suggestion: '语义相同则合并，不同则改名区分',
+        suggestion: '语义相同则合并或补 same_as 声明多入口，不同则改名区分',
       });
     }
   });
@@ -185,17 +203,149 @@ function deterministicAudit(document, template) {
     });
   }
 
-  // 9. utterance_view 条目不足（playbook 经验：建议>=12条覆盖词群家族）
-  var lowUtts = intentNodes.filter(function (n) {
+  // 8b. 近义描述检测：Jaccard 字符相似度 > 0.75 的描述对（非完全相同但高度相似，同样稀释向量空间）
+  function jaccardChars(a, b) {
+    if (!a || !b || a.length < 6 || b.length < 6) return 0;
+    var setA = {}, setB = {};
+    for (var i = 0; i < a.length - 1; i++) setA[a.substr(i, 2)] = (setA[a.substr(i, 2)] || 0) + 1;
+    for (var j = 0; j < b.length - 1; j++) setB[b.substr(j, 2)] = (setB[b.substr(j, 2)] || 0) + 1;
+    var inter = 0, union = 0;
+    var allKeys = {};
+    Object.keys(setA).forEach(function (k) { allKeys[k] = true; });
+    Object.keys(setB).forEach(function (k) { allKeys[k] = true; });
+    Object.keys(allKeys).forEach(function (k) {
+      inter += Math.min(setA[k] || 0, setB[k] || 0);
+      union += Math.max(setA[k] || 0, setB[k] || 0);
+    });
+    return union > 0 ? inter / union : 0;
+  }
+  var allDescs = intentNodes
+    .map(function (n) { return { id: n.id, desc: String((n.properties && n.properties.description) || '').trim() }; })
+    .filter(function (x) { return x.desc.length >= 8; });
+  var nearDupPairs = [];
+  for (var i = 0; i < allDescs.length; i++) {
+    for (var j = i + 1; j < allDescs.length; j++) {
+      if (allDescs[i].desc === allDescs[j].desc) continue; // 精确重复已在第8项报告
+      var sim = jaccardChars(allDescs[i].desc, allDescs[j].desc);
+      if (sim > 0.75) nearDupPairs.push({ a: allDescs[i], b: allDescs[j], sim: sim });
+    }
+  }
+  if (nearDupPairs.length) {
+    findings.push({
+      severity: 'medium', category: 'near_duplicate_description', node_ids: nearDupPairs.slice(0, 10).map(function (p) { return [p.a.id, p.b.id]; }).flat(), edge_ids: [],
+      issue: '近义描述高度相似（Jaccard>0.75，稀释向量空间）：' + nearDupPairs.length + ' 对描述，如「' + nearDupPairs[0].a.desc.slice(0, 20) + '...」≈「' + nearDupPairs[0].b.desc.slice(0, 20) + '...」(相似度' + nearDupPairs[0].sim.toFixed(2) + ')',
+      suggestion: '近义描述需补充功能边界（包含/不包含什么）以区分相邻意图',
+    });
+  }
+
+  // 9. utterance_view 条目不足 + 词群维度覆盖检查
+  //    维度定义：直接说法（查X/看X）、口语化变体（还有多少/剩多少）、场景化表达（工资到账没）、操作型表达（怎么查/在哪里看）
+  //    每个维度至少1条才认为覆盖充分；绝对数量 <6 仍报 medium
+  var UTT_DIMENSIONS = [
+    { key: 'direct', label: '直接说法', patterns: [/^(查|看|搜|找|要|想看|想查)/] },
+    { key: 'colloquial', label: '口语化变体', patterns: [/(多少|还剩|有没有|是不是|到底|真的)/] },
+    { key: 'scene', label: '场景化表达', patterns: [/(如果|万一|比如|像.*那样|的时候|之后|之前)/] },
+    { key: 'operation', label: '操作型表达', patterns: [/^(怎么|如何|在哪|哪里|哪能|怎样)/] },
+  ];
+  var lowUtts = [], lowDimUtts = [];
+  intentNodes.forEach(function (n) {
     var utts = (n.properties && n.properties.utterance_view) || [];
-    return Array.isArray(utts) && utts.length < 6;
+    if (!Array.isArray(utts)) return;
+    if (utts.length < 6) lowUtts.push(n);
+    // 维度覆盖检查：每个维度至少1条
+    var covered = {};
+    utts.forEach(function (u) {
+      var s = String(u).trim();
+      UTT_DIMENSIONS.forEach(function (dim) {
+        if (!covered[dim.key] && dim.patterns.some(function (p) { return p.test(s); })) {
+          covered[dim.key] = true;
+        }
+      });
+    });
+    var missing = UTT_DIMENSIONS.filter(function (dim) { return !covered[dim.key]; });
+    if (missing.length >= 2) lowDimUtts.push({ id: n.id, missing: missing });
   });
   if (lowUtts.length) {
     findings.push({
       severity: 'medium', category: 'insufficient_utterances',
       node_ids: lowUtts.map(function (n) { return n.id; }), edge_ids: [],
-      issue: 'utterance_view 条目不足（<6条，建议>=12条覆盖词群家族）：' + lowUtts.length + ' 个意图',
-      suggestion: '补充词群家族（不同词群表达）和操作家族（怎么开通/怎么办理/怎么申请）',
+      issue: 'utterance_view 条目不足（<6条）：' + lowUtts.length + ' 个意图',
+      suggestion: '补充说法至 ≥8 条，覆盖直接说法、口语化变体、场景化表达、操作型表达四个维度',
+    });
+  }
+  if (lowDimUtts.length) {
+    findings.push({
+      severity: 'medium', category: 'utterance_dimension_gap',
+      node_ids: lowDimUtts.slice(0, 20).map(function (x) { return x.id; }), edge_ids: [],
+      issue: '说法维度覆盖不足（≥2个维度缺失）：' + lowDimUtts.length + ' 个意图，缺维度如「' +
+        lowDimUtts.slice(0, 3).map(function (x) { return x.missing.map(function (m) { return m.label; }).join('+'); }).join('、') + '」',
+      suggestion: '每个维度至少1条：直接说法（查X/看X）、口语化变体（还有多少）、场景化表达（工资到账没）、操作型表达（怎么查/在哪看）',
+    });
+  }
+
+  // 9b. 句式单一检查：若某意图的说法首词集中度过高（同一首词占比 >=70%），召回覆盖面不足
+  var monoUtts = [];
+  intentNodes.forEach(function (n) {
+    var utts = (n.properties && n.properties.utterance_view) || [];
+    if (!Array.isArray(utts) || utts.length < 3) return;
+    var firstWords = {};
+    utts.forEach(function (u) {
+      var s = String(u).trim();
+      var fw = s.charAt(0);
+      firstWords[fw] = (firstWords[fw] || 0) + 1;
+    });
+    var maxRatio = 0, maxWord = '';
+    Object.keys(firstWords).forEach(function (k) {
+      if (firstWords[k] / utts.length > maxRatio) { maxRatio = firstWords[k] / utts.length; maxWord = k; }
+    });
+    if (maxRatio >= 0.7) monoUtts.push({ id: n.id, firstWord: maxWord, ratio: maxRatio, count: utts.length });
+  });
+  if (monoUtts.length) {
+    findings.push({
+      severity: 'medium', category: 'utterance_pattern_monotone', node_ids: monoUtts.slice(0, 20).map(function (x) { return x.id; }), edge_ids: [],
+      issue: '说法句式单一（同一首词占比≥70%）：' + monoUtts.length + ' 个意图，如「' + monoUtts[0].firstWord + '」开头占比' + (monoUtts[0].ratio * 100).toFixed(0) + '%',
+      suggestion: '补充不同首词开头的说法，避免全部以同一动词开头',
+    });
+  }
+
+  // 9c. 描述与说法语义一致性：提取描述核心动词族，检查说法是否包含相同动词族
+  var VERB_FAMILIES = [
+    { verbs: ['查询', '查', '看', '搜', '找', '查看'], label: '查询' },
+    { verbs: ['办理', '开', '开通', '申请', '签约', '注册'], label: '办理' },
+    { verbs: ['修改', '改', '变更', '更新', '调整'], label: '修改' },
+    { verbs: ['取消', '撤销', '解除', '关闭', '注销'], label: '取消' },
+    { verbs: ['转账', '转', '汇款', '汇'], label: '转账' },
+    { verbs: ['还款', '还', '还款', '还款'], label: '还款' },
+  ];
+  var descUttMismatch = [];
+  intentNodes.forEach(function (n) {
+    var desc = String((n.properties && n.properties.description) || '').trim();
+    var utts = (n.properties && n.properties.utterance_view) || [];
+    if (!desc || !Array.isArray(utts) || utts.length < 3) return;
+    // 找到描述中匹配的动词族
+    var descFamilies = VERB_FAMILIES.filter(function (f) {
+      return f.verbs.some(function (v) { return desc.indexOf(v) >= 0; });
+    });
+    if (descFamilies.length === 0) return;
+    // 检查说法是否包含任一描述动词族的关键词
+    var uttText = utts.join(' ');
+    var hasMatch = descFamilies.some(function (f) {
+      return f.verbs.some(function (v) { return uttText.indexOf(v) >= 0; });
+    });
+    if (!hasMatch) {
+      descUttMismatch.push({
+        id: n.id,
+        descVerb: descFamilies[0].label,
+        descPreview: desc.slice(0, 20),
+        uttSample: utts.slice(0, 3).join('、'),
+      });
+    }
+  });
+  if (descUttMismatch.length) {
+    findings.push({
+      severity: 'medium', category: 'description_utterance_mismatch', node_ids: descUttMismatch.slice(0, 20).map(function (x) { return x.id; }), edge_ids: [],
+      issue: '描述与说法语义不一致：' + descUttMismatch.length + ' 个意图的描述核心动词与说法不匹配，如描述为「' + descUttMismatch[0].descPreview + '...」（动词族：' + descUttMismatch[0].descVerb + '）但说法为「' + descUttMismatch[0].uttSample + '」',
+      suggestion: '检查描述的核心动词是否与说法的动词族一致，修正描述或补充匹配的说法',
     });
   }
 
@@ -380,8 +530,13 @@ function auditFocusLines() {
   lines.push('B. 语义质量类（基于「领域语义说明」的语义判断，列出具体节点对即可，不必对应规则条款）：');
   lines.push('  - duplicate_nodes：不同名但语义相同的节点（如 风险测评/风险评测）');
   lines.push('  - suspicious_edge：连接语义不相关两端的边（按边类型语义判断）');
-  lines.push('C. 语义充分性类（基于意图节点属性 intent_meta 判断，规则检查只看数量，你需判断质量和覆盖度）：');
+  lines.push('C. 语义充分性类（基于意图节点属性 intent_meta 判断，规则检查只看数量和维度覆盖，你需判断语义质量和内容充分度）：');
   lines.push('  - insufficient_utterances：意图典型说法质量不足（数量够但句式单一全是"查X""问X"；缺少口语化/场景化/变体表述；utt 字段列出的说法代表性不够）');
+  lines.push('  - utterance_dimension_gap：说法维度覆盖不足（确定性检查已识别≥2个维度缺失，你需判断缺失维度对召回率的实际影响）');
+  lines.push('  - utterance_pattern_monotone：说法句式单一（确定性检查已识别同一首词占比≥70%，你需判断是否影响召回覆盖面）');
+  lines.push('  - description_low_quality：描述质量不足——描述必须包含四要素：用户角色（谁用）+触发场景（什么时候用）+功能边界（包含/不包含什么）+产出结果（得到什么）。缺少任一要素应标记，尤其是功能边界缺失会导致相邻意图区分度不足');
+  lines.push('  - description_utterance_mismatch：描述与说法语义不一致（确定性检查已识别描述核心动词族与说法不匹配，你需确认是否为实质性语义偏差）');
+  lines.push('  - near_duplicate_description：近义描述高度相似（确定性检查已识别 Jaccard 相似度>0.75 的描述对，你需判断是否足以区分相邻意图）');
   lines.push('  - coverage_gap：明显缺少的用户目标/意图（根据领域语义说明和已有意图推断，图谱中应有的意图类型缺失）');
   lines.push('  - delivery_incomplete：交付链不完整（intent 配置了 fulfillment_kind=answer 但无 KNOWLEDGE_ANSWER 连接；fulfillment_kind=query 但 query_ref 缺失；有意图但无对应 BUSINESS_OBJECT 连接）');
   lines.push('  - semantic_overlap：不同 INTENT 节点语义高度重叠（表达同一用户目标但分别建了节点，应合并或明确边界区分）');
@@ -390,7 +545,7 @@ function auditFocusLines() {
   lines.push('输出严格 JSON 数组（不要 markdown 围栏），每项：');
   lines.push(JSON.stringify({
     severity: 'high|medium|low',
-    category: 'duplicate_nodes|missing_relation|type_mismatch|suspicious_edge|boundary_conflict|insufficient_utterances|coverage_gap|delivery_incomplete|semantic_overlap|other',
+    category: 'duplicate_nodes|missing_relation|type_mismatch|suspicious_edge|boundary_conflict|insufficient_utterances|utterance_dimension_gap|utterance_pattern_monotone|description_low_quality|description_utterance_mismatch|near_duplicate_description|coverage_gap|delivery_incomplete|semantic_overlap|other',
     node_ids: ['涉及的节点 id 数组，可空'],
     edge_ids: ['涉及的边 id 数组，可空'],
     issue: '一句话问题描述（规则违背类注明对应条款，语义质量类注明语义依据）',

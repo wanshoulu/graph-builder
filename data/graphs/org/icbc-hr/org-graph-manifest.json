@@ -1,0 +1,45 @@
+{
+  "asset_id": "icbc-hr",
+  "active_version": "org-graph-v3",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "org-graph-doc",
+      "document_version": "1.0.0",
+      "template_id": "icbc-hr",
+      "published_at": "2026-09-09T13:58:13.808Z",
+      "note": "test publish after fixes",
+      "stats": {
+        "nodes": 341,
+        "edges": 998
+      }
+    },
+    {
+      "version": "org-graph-v2",
+      "file": "org-graph-v2.json",
+      "document_id": "org-graph-doc",
+      "document_version": "1.0.0",
+      "template_id": "icbc-hr",
+      "published_at": "2026-09-09T14:35:33.583Z",
+      "note": "v2 基线版本（推理引擎优化前）",
+      "stats": {
+        "nodes": 341,
+        "edges": 998
+      }
+    },
+    {
+      "version": "org-graph-v3",
+      "file": "org-graph-v3.json",
+      "document_id": "org-graph-doc",
+      "document_version": "1.0.0",
+      "template_id": "icbc-hr",
+      "published_at": "2026-09-10T10:00:00.000Z",
+      "note": "v3 推理引擎优化版：支持意图识别+边属性遍历，解决一把手/职务/团队等问答",
+      "stats": {
+        "nodes": 341,
+        "edges": 998
+      }
+    }
+  ]
+}

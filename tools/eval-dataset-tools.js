@@ -100,7 +100,21 @@ function loadGraph(asset) {
   if (!entry) {
     throw new EvalDatasetError('EVAL_VERSION_NOT_FOUND', `active_version ${version} 不在 manifest versions 中`);
   }
-  const doc = JSON.parse(fs.readFileSync(path.join(path.dirname(manifestPath), entry.file), 'utf8'));
+  // 版本文件是 gitignore 的运行期产物：fresh clone 后 manifest（入库）指向的文件不存在，裸 ENOENT 会一路透到 agent
+  const versionPath = path.join(path.dirname(manifestPath), entry.file);
+  let doc;
+  try {
+    doc = JSON.parse(fs.readFileSync(versionPath, 'utf8'));
+  } catch (err) {
+    if (err && err.code === 'ENOENT') {
+      throw new EvalDatasetError(
+        'EVAL_VERSION_FILE_MISSING',
+        `active 版本文件缺失：manifest 指向 ${entry.file} 但文件不存在。fresh 部署请先在图谱管理发布一次，或恢复版本文件后再生成测试集`,
+        409,
+      );
+    }
+    throw err;
+  }
   if (!Array.isArray(doc.nodes) || !Array.isArray(doc.edges)) {
     throw new EvalDatasetError('EVAL_GRAPH_INVALID', '图文档缺少 nodes/edges 数组');
   }

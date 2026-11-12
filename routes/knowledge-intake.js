@@ -52,10 +52,10 @@ const UTTER_STATUSES = ['已审核', '候选', '驳回'];
 const DOMAINS = ['首页', '账户管理', '转账服务', '支付管理', '信用卡', '贷款服务', '财富管理', '网点服务', '权益服务', '民生服务', '生活服务', '金融助手', '客户专享', '企业服务'];
 const ACTIONS = ['ASK-询问', 'QUERY-查询', 'DO-执行', 'CHANGE-变更', 'CANCEL-取消', 'HELP-帮助', 'TRANSFER-转账', 'REPAY-还款'];
 const SOURCE_ACTIONS = ['QUERY-查询', 'CREATE-创建', 'UPDATE-更新', 'APPLY-申请', 'EXPLAIN-说明'];
-const EXECUTION_MODES = ['read-execute-读执行', 'confirm-required-确认后执行', 'knowledge-only-知识应答', 'multi_intent-多意图'];
+const EXECUTION_MODES = ['read-execute-读执行', 'confirm-required-确认后执行', 'knowledge-only-知识应答', 'multi_intent-多意图', 'navigation-only-仅导航', 'unavailable-不可用'];
 const RISK_LEVELS = ['L0-无风险', 'L1-低风险', 'L2-中风险', 'L3-高风险'];
-const READINESS_LEVELS = ['ready-就绪', 'planned-规划中'];
-const LIFECYCLES = ['active-活跃', 'inactive-非活跃', 'deprecated-已废弃'];
+const READINESS_LEVELS = ['ready-就绪', 'mock-only-模拟支持', 'planned-规划中'];
+const LIFECYCLES = ['active-活跃', 'inactive-非活跃', 'planned-规划中', 'deprecated-已废弃', 'retired-已下线'];
 const ORCHESTRATION_MODES = ['deterministic-确定式', 'agent-智能体'];
 const BOOLEAN_ENUMS = ['true-是', 'false-否'];
 const TASK_MODES = ['single-单意图', 'multi-多意图', 'batch-批量'];
@@ -63,7 +63,8 @@ const TASK_MODES = ['single-单意图', 'multi-多意图', 'batch-批量'];
 // Excel 业务口径 → 意图图谱 intent_type 枚举（ASK/QUERY/DO/CHANGE/CANCEL/HELP/TRANSFER/REPAY）
 const INTENT_TYPE_MAP = { 查询: 'QUERY', 办理: 'DO', 管理: 'CHANGE', 咨询: 'ASK', 投诉: 'HELP', 营销: 'ASK', 取消: 'CANCEL', 转账: 'TRANSFER', 还款: 'REPAY' };
 // 答案形态 → 意图图谱 fulfillment_kind 枚举（unconfigured/answer/query/menu/skill/workflow/agent）
-// 数据卡片=查询结果渲染故归 query；跳转办理=跳功能菜单/页面故归 menu；转人工=人工坐席接管，agent 为枚举中最近项
+// 数据卡片=查询结果渲染故归 query；跳转办理=跳功能菜单/页面故归 menu（模板枚举为 menu）；
+// 转人工=人工坐席接管，agent 为枚举中最近项
 const FULFILLMENT_KIND_MAP = { 话术答复: 'answer', 数据卡片: 'query', 跳转办理: 'menu', 转人工: 'agent' };
 
 // 从 VALUE-LABEL 格式中提取 VALUE 部分（如 'read-execute-读执行' → 'read-execute'）
@@ -73,7 +74,7 @@ function parseEnumValue(raw) {
   // 匹配已知的 V4.1 枚举前缀（字母/下划线/连字符词组），后面跟 '-' 和中文。
   // 枚举合法值见模板（如 execution_mode: read-execute / confirm-required / knowledge-only / multi_intent），
   // 前缀本身含 '-'，因此先用完整候选匹配，再退回单段匹配。
-  const known = ['read-execute', 'confirm-required', 'knowledge-only', 'multi_intent'];
+  const known = ['read-execute', 'confirm-required', 'knowledge-only', 'multi_intent', 'navigation-only', 'unavailable'];
   for (const cand of known) {
     if (s === cand || s.startsWith(cand + '-')) return cand;
   }
@@ -88,6 +89,8 @@ function deriveFulfillmentKind(execMode, answerForm) {
   if (v === 'read-execute') return 'query';
   if (v === 'confirm-required') return 'skill';
   if (v === 'multi_intent') return 'workflow';
+  if (v === 'navigation-only') return 'menu';
+  if (v === 'unavailable') return 'answer';
   return 'unconfigured';
 }
 // intent_type → action_code 映射（V4.1 ACTION_CODES）
@@ -103,6 +106,10 @@ const MAX_PATH_SEGMENTS = 4;
 const MAX_EXPAND_INTENTS = 5;
 const MAX_EXPAND_COUNT = 10;
 const MAX_CONFLICT_INTENTS = 10;
+const MAX_RECALL_CANDIDATES = 40;
+const MAX_RECALL_UTTERANCES_PER_INTENT = 10;
+const MAX_RECALL_CASES = 100;
+const MAX_RECALL_QUERY_LEN = 200;
 const EXPAND_TIMEOUT_MS = 120000;
 // 置信度分层路由（调研：Label Studio / Kili 的 confidence-based routing）：
 // ≥ AUTO_APPROVE 自动通过进候选入图池；< AUTO_REJECT 自动挂起；中间带留给人工
@@ -192,6 +199,28 @@ function batchPath(batchId) {
 
 function journalPath(batchId) {
   return path.join(INTAKE_DIR, assertBatchId(batchId), 'apply-journal.json');
+}
+
+function recallCasesPath(batchId) {
+  return path.join(INTAKE_DIR, assertBatchId(batchId), 'recall-cases.json');
+}
+
+function loadRecallCases(batchId) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(recallCasesPath(batchId), 'utf8'));
+    return Array.isArray(parsed.cases) ? parsed.cases : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveRecallCases(batchId, cases) {
+  const dir = path.join(INTAKE_DIR, assertBatchId(batchId));
+  ensureDir(dir);
+  const file = recallCasesPath(batchId);
+  const tmp = file + '.tmp-' + crypto.randomBytes(4).toString('hex');
+  fs.writeFileSync(tmp, JSON.stringify({ batchId, cases }, null, 2), 'utf8');
+  fs.renameSync(tmp, file);
 }
 
 function loadBatch(batchId) {
@@ -423,7 +452,7 @@ const NODE_REVIEW_FIELDS = {
   functions: [
     { key: 'name', label: '功能名称', hint: '需与功能全路径末段一致' },
     { key: 'path', label: '功能全路径', hint: '点分路径' },
-    { key: 'description', label: '业务描述', hint: '至少10字，按三段式写：面向谁+做什么+产出什么' },
+    { key: 'description', label: '业务描述', hint: '至少10字，按四要素写：用户角色（谁用）+触发场景（什么时候用）+功能边界（包含/不包含什么）+产出结果（得到什么）' },
     { key: 'domain', label: '业务域', hint: '该功能所属的业务大类', options: DOMAINS },
     { key: 'menuKey', label: '菜单键', hint: '系统定位菜单页面的标识，点分格式' },
     { key: 'clientClass', label: '客户分类', hint: '面向的客户类型', options: ['个人客户', '对公客户', '小微客户', '不区分'] },
@@ -442,10 +471,10 @@ const NODE_REVIEW_FIELDS = {
     { key: 'action', label: '动作类型', hint: '该意图的动作类型：询问ASK、查询QUERY、执行DO、变更CHANGE、取消CANCEL、帮助HELP、转账TRANSFER、还款REPAY', options: ACTIONS },
     { key: 'sourceAction', label: '来源动作', hint: '该意图的来源动作类型：查询选QUERY、创建选CREATE、更新选UPDATE、申请选APPLY、说明选EXPLAIN', options: SOURCE_ACTIONS },
     { key: 'intentType', label: '业务意图类型', hint: '业务侧的意图分类口径', options: ['查询', '办理', '管理', '咨询', '投诉', '营销', '取消', '转账', '还款'] },
-    { key: 'description', label: '业务描述', hint: '至少10字，按三段式写：面向谁+做什么+产出什么' },
+    { key: 'description', label: '业务描述', hint: '至少10字，按四要素写：用户角色（谁用）+触发场景（什么时候用）+功能边界（包含/不包含什么）+产出结果（得到什么）' },
     { key: 'goal', label: '用户目标', hint: '用户想达到的目的，一句话描述。留空时系统用业务描述代替' },
     // 召回素材
-    { key: 'aliases', label: '别名列表', hint: '用户可能说的各种说法，逗号分隔，至少3个。必须围绕当前意图的实际业务编写，覆盖正式名称、口语说法、场景化表达' },
+    { key: 'aliases', label: '别名列表', hint: '至少3个，建议8-16个。必须覆盖四个维度：直接说法（查X/看X）、口语化变体（还有多少）、场景化表达（工资到账没）、操作型表达（怎么查/在哪看）。逗号分隔' },
     { key: 'recallTerms', label: '召回关键词', hint: '单个关键词，逗号分隔。与别名互补，适合更短的表达。必须围绕当前意图的业务关键词' },
     { key: 'recallTermSets', label: '多词组合', hint: '多个词的组合，分号分隔组，组内逗号分隔词。当用户同时说出多个词时优先匹配。必须围绕当前意图的业务场景' },
     { key: 'negativeExamples', label: '排除说法', hint: '不应匹配到该意图的说法，逗号分隔。列出最易混淆但不应命中的查询。必须针对当前意图的易混淆场景' },
@@ -462,7 +491,12 @@ const NODE_REVIEW_FIELDS = {
     { key: 'riskLevel', label: '风险等级', hint: '涉及资金操作应选L2以上，纯查询通常L0或L1', options: RISK_LEVELS },
     { key: 'readiness', label: '就绪状态', hint: '控制该意图是否可执行：就绪=可执行，模拟=用假数据回复，规划中=暂不执行', options: READINESS_LEVELS },
     { key: 'requiredSlots', label: '必需参数', hint: '执行该意图必须收集的信息，逗号分隔' },
-    { key: 'capabilityBindings', label: '系统能力绑定', hint: '对接的系统功能标识，逗号分隔。填了才能实际调用系统执行' },
+    { key: 'answerRef', label: '知识答案引用', hint: '对接的知识答案标识' },
+    { key: 'queryRef', label: '查询能力引用', hint: '对接的查询/API标识' },
+    { key: 'menuRef', label: '功能菜单引用', hint: '对接的功能菜单标识' },
+    { key: 'skillRef', label: 'Skill引用', hint: '对接的Skill标识' },
+    { key: 'workflowRef', label: 'Workflow引用', hint: '对接的Workflow标识' },
+    { key: 'agentRef', label: 'Agent引用', hint: '对接的Agent标识' },
     { key: 'roles', label: '涉及角色', hint: '逗号分隔，如 持卡人,收款人' },
     { key: 'businessObjects', label: '涉及业务对象', hint: '该意图涉及的业务对象，逗号分隔' },
     { key: 'businessObjectId', label: '业务对象标识', hint: '与上面业务对象一一对应的编码，逗号分隔' },
@@ -515,7 +549,7 @@ const NODE_REVIEW_GROUPS = {
     recall: ['aliases', 'recallTerms', 'recallTermSets', 'negativeExamples', 'semanticPriority'],
     trigger: ['triggerScene'],
     boundary: ['scopeIn', 'scopeOut', 'confusableIntents', 'disambiguationHints'],
-    contract: ['executionMode', 'riskLevel', 'readiness', 'requiredSlots', 'capabilityBindings', 'roles', 'businessObjects', 'businessObjectId', 'keySlots', 'answerForm', 'heat'],
+    contract: ['executionMode', 'riskLevel', 'readiness', 'requiredSlots', 'answerRef', 'queryRef', 'menuRef', 'skillRef', 'workflowRef', 'agentRef', 'roles', 'businessObjects', 'businessObjectId', 'keySlots', 'answerForm', 'heat'],
     strategy: ['taskPolicyShapes', 'taskPolicyMode', 'taskPolicyMaxTasks', 'contextPolicyRetain', 'contextPolicySwitch', 'contextPolicyResumable', 'responsePolicy', 'orchestrationMode'],
     gov: ['status', 'lifecycle', 'semanticVersion', 'owner', 'sourceChannel', 'sourceMenuId', 'sourceActionId', 'code', 'note'],
   },
@@ -662,7 +696,7 @@ function applyAssistSuggestion(batch, item, reviewedBy, now) {
     (batch.rows.utterances || []).forEach((u) => {
       if (u.intentRef === payload.ref) {
         u.intentRef = newRef;
-        u.rowId = 'u-' + sha12(newRef + ' ' + u.kind + ' ' + u.text);
+        u.rowId = 'u-' + sha12(newRef + ' ' + u.kind + ' ' + u.text);
       }
     });
     return { applied: true, renamed: row.rowId };
@@ -675,7 +709,7 @@ function applyAssistSuggestion(batch, item, reviewedBy, now) {
     (batch.rows.utterances || []).forEach((u) => {
       if (u.intentRef === dupRef) {
         u.intentRef = primaryRef;
-        u.rowId = 'u-' + sha12(primaryRef + ' ' + u.kind + ' ' + u.text);
+        u.rowId = 'u-' + sha12(primaryRef + ' ' + u.kind + ' ' + u.text);
       }
     });
     dup.status = 'rejected';
@@ -764,11 +798,11 @@ function buildAcceptanceReport(batch) {
   // 完整性：必填字段缺失/描述过短/说法重复挂载
   const completenessIssues = [];
   functions.forEach((row) => {
-    if ((row.description || '').length < 20) completenessIssues.push({ level: 'warn', unit: row.path, message: '功能业务描述过短（三段式写全）' });
+    if ((row.description || '').length < 20) completenessIssues.push({ level: 'warn', unit: row.path, message: '功能业务描述过短（四要素写全：用户角色+触发场景+功能边界+产出结果）' });
     if (!row.department) completenessIssues.push({ level: 'info', unit: row.path, message: '责任部门为空' });
   });
   intents.forEach((row) => {
-    if ((row.description || '').length < 20) completenessIssues.push({ level: 'warn', unit: row.ref, message: '意图业务描述过短（三段式写全）' });
+    if ((row.description || '').length < 20) completenessIssues.push({ level: 'warn', unit: row.ref, message: '意图业务描述过短（四要素写全：用户角色+触发场景+功能边界+产出结果）' });
     if (!row.answerForm) completenessIssues.push({ level: 'error', unit: row.ref, message: '答案形态缺失' });
   });
   const textOwner = new Map();
@@ -783,7 +817,7 @@ function buildAcceptanceReport(batch) {
   // 跨意图别名去重：同一说法被多个意图认领时全部丢弃（歧义说法交给下游裁决层）
   const aliasOwner = new Map();
   intents.forEach((row) => {
-    const list = (row.aliases || '').split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+    const list = splitList(row.aliases);
     list.forEach((alias) => {
       if (aliasOwner.has(alias) && aliasOwner.get(alias) !== row.ref) {
         completenessIssues.push({ level: 'error', unit: row.ref, message: `别名「${alias}」同时出现在多个意图下（歧义，应删除或交给下游裁决）` });
@@ -814,7 +848,7 @@ function buildAcceptanceReport(batch) {
   intents.forEach((row) => {
     const intentType = (row.intentType || '').trim();
     if (intentType === '办理' || intentType === '管理') {
-      const list = (row.aliases || '').split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+      const list = splitList(row.aliases);
       const hasOp = list.some((alias) => OP_PATTERNS.some((pat) => alias.includes(pat)));
       if (!hasOp && list.length > 0) {
         completenessIssues.push({ level: 'warn', unit: row.ref, message: `${intentType}类意图缺少操作型说法（怎么开通/怎么办理/怎么申请等），别名全是查询态` });
@@ -824,7 +858,7 @@ function buildAcceptanceReport(batch) {
 
   // 别名长度约束：2-24 字，无连续 3 位以上数字
   intents.forEach((row) => {
-    const list = (row.aliases || '').split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+    const list = splitList(row.aliases);
     list.forEach((alias) => {
       if (alias.length < 2 || alias.length > 24) {
         completenessIssues.push({ level: 'info', unit: row.ref, message: `别名「${alias}」长度${alias.length}字，不在2-24字范围` });
@@ -877,9 +911,10 @@ function buildAcceptanceReport(batch) {
     if (['办理', '管理', '转账', '还款'].includes((row.intentType || '').trim()) && !row.requiredSlots) {
       v41Issues.push({ level: 'warn', unit: row.ref, message: '执行类意图未填写信息收集项（requiredSlots）' });
     }
-    // 检查 capabilityBindings：执行类意图应有能力绑定
-    if (['办理', '管理', '转账', '还款'].includes((row.intentType || '').trim()) && !row.capabilityBindings) {
-      v41Issues.push({ level: 'warn', unit: row.ref, message: '执行类意图未填写系统能力绑定（capabilityBindings）' });
+    // 检查系统能力引用：执行类意图应至少填写一个 ref
+      var execRefs = [row.answerRef, row.queryRef, row.menuRef, row.skillRef, row.workflowRef, row.agentRef].filter(Boolean);
+      if (['办理', '管理', '转账', '还款'].includes((row.intentType || '').trim()) && execRefs.length === 0) {
+        v41Issues.push({ level: 'warn', unit: row.ref, message: '执行类意图未填写系统能力引用（answerRef/queryRef/menuRef/skillRef/workflowRef/agentRef 至少一个）' });
     }
   });
   const v41Units = intents.length || 1;
@@ -895,7 +930,7 @@ function buildAcceptanceReport(batch) {
       utterances: utterances.filter((row) => row.status === 'approved'),
     };
     if (approvedRows.functions.length || approvedRows.intents.length || approvedRows.utterances.length) {
-      const templatePath = path.join(__dirname, '..', 'data', 'graph-builder-templates', 'intent-graph.json');
+      const templatePath = path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.intent.v2.json');
       const currentDoc = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'graphs', 'org', 'intent', 'drafts', 'org-graph-draft.json'), 'utf8'));
       const merged = applyToIntakeDocument(currentDoc, approvedRows, batch.batchId, new Date().toISOString());
       const { validateGraph: runTemplateValidation } = require('../tools/x6-graph-template-validator');
@@ -908,6 +943,47 @@ function buildAcceptanceReport(batch) {
         });
         if (result.errors.length > 5) v41Issues.push({ level: 'error', unit: '', message: '模板契约预检：还有 ' + (result.errors.length - 5) + ' 个校验错误，详见预览入图结果' });
       }
+      // V4 精度字段预检：intake 写入的 aliases/recallTerms/negativeExamples 需满足 V4GraphAdapter 打分要求
+      // （对齐 v4-graph-validator.js §11：aliases≥3 + 格式 error 阻断；negativeExamples≥2 / recallTerms≥2 / 重叠 warning）
+      // 范围限定：只检查本批次 approvedRows.intents 对应的节点，不检查草稿中已有的旧节点
+      // （旧节点可能是历史数据，无 V4 精度字段；本批次新增/修改的节点才需通过精度门槛）
+      var approvedIntentNames = {};
+      (approvedRows.intents || []).forEach(function(row) { if (row.name) approvedIntentNames[row.name] = true; });
+      var v4PrecErrors = [];
+      var v4PrecWarns = [];
+      (merged.document.nodes || []).forEach(function(node) {
+        if (node.type !== 'INTENT' || !node.properties) return;
+        // 只检查本批次提交的意图节点
+        if (!approvedIntentNames[node.properties.name]) return;
+        var p = node.properties;
+        var name = p.name || node.id || '';
+        var aliases = Array.isArray(p.aliases) ? p.aliases.filter(Boolean) : [];
+        var negatives = Array.isArray(p.negativeExamples) ? p.negativeExamples.filter(Boolean) : [];
+        var recallTerms = Array.isArray(p.recallTerms) ? p.recallTerms.filter(Boolean) : [];
+        // 第 5/6 条：aliases≥3 + 格式 → error 阻断（对齐 V4_ALIAS_TOO_FEW / V4_ALIAS_FORMAT）
+        if (aliases.length < 3) v4PrecErrors.push(name + ': aliases 不足 3 条（当前 ' + aliases.length + '，要求≥3，V4GraphAdapter 精确匹配+110/包含+75）');
+        aliases.forEach(function(a) {
+          var problems = [];
+          if (String(a).length < 2 || String(a).length > 24) problems.push('长度须 2~24 字');
+          if (/\d{3,}/.test(String(a))) problems.push('含连续3位以上数字');
+          if (problems.length > 0) v4PrecErrors.push(name + ': alias「' + a + '」' + problems.join('；') + '（校验第 6 条）');
+        });
+        // negativeExamples/recallTerms/重叠 → warning
+        if (negatives.length < 2) v4PrecWarns.push(name + ': negativeExamples 不足 2 条（每条-120 排除误召回）');
+        if (recallTerms.length < 2) v4PrecWarns.push(name + ': recallTerms 不足 2 条（每条+65）');
+        negatives.forEach(function(neg) {
+          if (aliases.indexOf(neg) >= 0 || recallTerms.indexOf(neg) >= 0) {
+            v4PrecWarns.push(name + ': negativeExample「' + neg + '」与 aliases/recallTerms 重叠');
+          }
+        });
+      });
+      v4PrecErrors.slice(0, 5).forEach(function(msg) {
+        v41Issues.push({ level: 'error', unit: '', message: 'V4精度预检：' + msg });
+      });
+      v4PrecWarns.slice(0, 5).forEach(function(msg) {
+        v41Issues.push({ level: 'warn', unit: '', message: 'V4精度预检：' + msg });
+      });
+      templateCheck.v4Precision = { errors: v4PrecErrors, warnings: v4PrecWarns, count: v4PrecErrors.length + v4PrecWarns.length };
     } else {
       templateCheck = { valid: null, errors: [], note: '暂无已确认条目，预检跳过' };
     }
@@ -1012,7 +1088,12 @@ const INTENT_COLUMNS = [
   { key: 'riskLevel', name: '风险等级', required: false },
   { key: 'readiness', name: '就绪状态', required: false },
   { key: 'requiredSlots', name: '必需槽位', required: false },
-  { key: 'capabilityBindings', name: '能力绑定', required: false },
+  { key: 'answerRef', name: '知识答案引用', required: false },
+    { key: 'queryRef', name: '查询能力引用', required: false },
+    { key: 'menuRef', name: '功能菜单引用', required: false },
+    { key: 'skillRef', name: 'Skill引用', required: false },
+    { key: 'workflowRef', name: 'Workflow引用', required: false },
+    { key: 'agentRef', name: 'Agent引用', required: false },
   { key: 'businessObjects', name: '涉及业务对象', required: false },
   { key: 'businessObjectId', name: '业务对象标识', required: false },
   { key: 'keySlots', name: '关键要素', required: false },
@@ -1026,6 +1107,37 @@ const INTENT_COLUMNS = [
   { key: 'contextPolicyResumable', name: '可恢复', required: false },
   { key: 'responsePolicy', name: '响应策略', required: false },
   { key: 'orchestrationMode', name: '编排模式', required: false },
+  // ── 补齐模板 INTENT 节点缺失字段（对齐 intent-graph-schema.js 67 字段）──
+  { key: 'parentIntentId', name: '父意图ID', required: false },
+  { key: 'isExecutableLeaf', name: '可执行叶子', required: false },
+  { key: 'isKnowledgeIntent', name: '知识意图', required: false },
+  { key: 'semanticView', name: '语义扩展词', required: false },
+  { key: 'actionCode', name: '动作编码', required: false },
+  { key: 'altNavigationPaths', name: '备用导航路径', required: false },
+  { key: 'slotContract', name: '槽位契约', required: false },
+  { key: 'clarificationPrompt', name: '意图澄清话术', required: false },
+  { key: 'missingSlotPrompt', name: '信息补全话术', required: false },
+  { key: 'confirmationPrompt', name: '执行确认话术', required: false },
+  { key: 'fallbackResponse', name: '不可用兜底话术', required: false },
+  { key: 'inputMappingJson', name: '输入参数映射', required: false },
+  { key: 'viewWeights', name: '视图权重', required: false },
+  { key: 'skillBinding', name: '技能绑定', required: false },
+  { key: 'stateConstraints', name: '状态约束', required: false },
+  { key: 'riskConstraints', name: '风险约束', required: false },
+  { key: 'executionPrecondition', name: '执行前置条件', required: false },
+  { key: 'knowledgeBinding', name: '知识绑定', required: false },
+  { key: 'answerType', name: '答案类型', required: false },
+  { key: 'answerPolicy', name: '答案策略', required: false },
+  { key: 'supportedShapes', name: '支持任务形状', required: false },
+  { key: 'orchestrationHint', name: '编排提示', required: false },
+  { key: 'contextPolicy', name: '上下文策略', required: false },
+  { key: 'graphExecutionMode', name: '图谱执行模式', required: false },
+  { key: 'requiresConfirmation', name: '需要确认', required: false },
+  { key: 'apiOrWorkflowId', name: 'API/工作流ID', required: false },
+  { key: 'capabilities', name: '能力引用', required: false },
+  { key: 'policies', name: '策略引用', required: false },
+  { key: 'scenes', name: '意图场景', required: false },
+  { key: 'observability', name: '可观测', required: false },
   { key: 'status', name: '状态', required: true },
   { key: 'lifecycle', name: '生命周期', required: false },
   { key: 'semanticVersion', name: '语义版本', required: false },
@@ -1058,6 +1170,7 @@ const FLAT_COLUMNS = [
   { key: 'fdomain', name: '功能业务域', required: false },
   { key: 'fmenuKey', name: '功能菜单键', required: false },
   { key: 'iname', name: '意图名称', required: false },
+  { key: 'code', name: '意图编码', required: false },
   { key: 'idomain', name: '意图业务域', required: false },
   { key: 'imenuKey', name: '意图菜单键', required: false },
   { key: 'iaction', name: '动作类型', required: false },
@@ -1084,7 +1197,12 @@ const FLAT_COLUMNS = [
   { key: 'riskLevel', name: '风险等级', required: false },
   { key: 'readiness', name: '就绪状态', required: false },
   { key: 'requiredSlots', name: '必需槽位', required: false },
-  { key: 'capabilityBindings', name: '能力绑定', required: false },
+  { key: 'answerRef', name: '知识答案引用', required: false },
+  { key: 'queryRef', name: '查询能力引用', required: false },
+  { key: 'menuRef', name: '功能菜单引用', required: false },
+  { key: 'skillRef', name: 'Skill引用', required: false },
+  { key: 'workflowRef', name: 'Workflow引用', required: false },
+  { key: 'agentRef', name: 'Agent引用', required: false },
   { key: 'businessObjectId', name: '业务对象标识', required: false },
   { key: 'taskPolicyShapes', name: '支持任务形态', required: false },
   { key: 'taskPolicyMode', name: '任务模式', required: false },
@@ -1094,6 +1212,37 @@ const FLAT_COLUMNS = [
   { key: 'contextPolicyResumable', name: '可恢复', required: false },
   { key: 'responsePolicy', name: '响应策略', required: false },
   { key: 'orchestrationMode', name: '编排模式', required: false },
+  // ── 补齐模板 INTENT 节点缺失字段（对齐 intent-graph-schema.js 67 字段）──
+  { key: 'parentIntentId', name: '父意图ID', required: false },
+  { key: 'isExecutableLeaf', name: '可执行叶子', required: false },
+  { key: 'isKnowledgeIntent', name: '知识意图', required: false },
+  { key: 'semanticView', name: '语义扩展词', required: false },
+  { key: 'actionCode', name: '动作编码', required: false },
+  { key: 'altNavigationPaths', name: '备用导航路径', required: false },
+  { key: 'slotContract', name: '槽位契约', required: false },
+  { key: 'clarificationPrompt', name: '意图澄清话术', required: false },
+  { key: 'missingSlotPrompt', name: '信息补全话术', required: false },
+  { key: 'confirmationPrompt', name: '执行确认话术', required: false },
+  { key: 'fallbackResponse', name: '不可用兜底话术', required: false },
+  { key: 'inputMappingJson', name: '输入参数映射', required: false },
+  { key: 'viewWeights', name: '视图权重', required: false },
+  { key: 'skillBinding', name: '技能绑定', required: false },
+  { key: 'stateConstraints', name: '状态约束', required: false },
+  { key: 'riskConstraints', name: '风险约束', required: false },
+  { key: 'executionPrecondition', name: '执行前置条件', required: false },
+  { key: 'knowledgeBinding', name: '知识绑定', required: false },
+  { key: 'answerType', name: '答案类型', required: false },
+  { key: 'answerPolicy', name: '答案策略', required: false },
+  { key: 'supportedShapes', name: '支持任务形状', required: false },
+  { key: 'orchestrationHint', name: '编排提示', required: false },
+  { key: 'contextPolicy', name: '上下文策略', required: false },
+  { key: 'graphExecutionMode', name: '图谱执行模式', required: false },
+  { key: 'requiresConfirmation', name: '需要确认', required: false },
+  { key: 'apiOrWorkflowId', name: 'API/工作流ID', required: false },
+  { key: 'capabilities', name: '能力引用', required: false },
+  { key: 'policies', name: '策略引用', required: false },
+  { key: 'scenes', name: '意图场景', required: false },
+  { key: 'observability', name: '可观测', required: false },
   { key: 'lifecycle', name: '生命周期', required: false },
   { key: 'semanticVersion', name: '语义版本', required: false },
   { key: 'owner', name: '负责团队', required: false },
@@ -1125,7 +1274,7 @@ function reviewMarkOf(row) {
 
 function flatToRaw(rows) {
   const FUNC_ATTRS = [['fname', 'name'], ['fdesc', 'description'], ['clientClass', 'clientClass'], ['securityLevel', 'securityLevel'], ['department', 'department'], ['fdomain', 'domain'], ['fmenuKey', 'menuKey'], ['fstatus', 'status']];
-  const INTENT_ATTRS = [['idomain', 'domain'], ['imenuKey', 'menuKey'], ['iaction', 'action'], ['isourceAction', 'sourceAction'], ['intentType', 'intentType'], ['idesc', 'description'], ['igoal', 'goal'], ['aliases', 'aliases'], ['recallTerms', 'recallTerms'], ['recallTermSets', 'recallTermSets'], ['negativeExamples', 'negativeExamples'], ['semanticPriority', 'semanticPriority'], ['triggerScene', 'triggerScene'], ['scopeIn', 'scopeIn'], ['scopeOut', 'scopeOut'], ['roles', 'roles'], ['iconfusable', 'confusableIntents'], ['disambiguationHints', 'disambiguationHints'], ['executionMode', 'executionMode'], ['riskLevel', 'riskLevel'], ['readiness', 'readiness'], ['requiredSlots', 'requiredSlots'], ['capabilityBindings', 'capabilityBindings'], ['businessObjects', 'businessObjects'], ['businessObjectId', 'businessObjectId'], ['keySlots', 'keySlots'], ['answerForm', 'answerForm'], ['heat', 'heat'], ['taskPolicyShapes', 'taskPolicyShapes'], ['taskPolicyMode', 'taskPolicyMode'], ['taskPolicyMaxTasks', 'taskPolicyMaxTasks'], ['contextPolicyRetain', 'contextPolicyRetain'], ['contextPolicySwitch', 'contextPolicySwitch'], ['contextPolicyResumable', 'contextPolicyResumable'], ['responsePolicy', 'responsePolicy'], ['orchestrationMode', 'orchestrationMode'], ['lifecycle', 'lifecycle'], ['semanticVersion', 'semanticVersion'], ['owner', 'owner'], ['sourceChannel', 'sourceChannel'], ['sourceMenuId', 'sourceMenuId'], ['sourceActionId', 'sourceActionId'], ['istatus', 'status']];
+  const INTENT_ATTRS = [['idomain', 'domain'], ['imenuKey', 'menuKey'], ['iaction', 'action'], ['isourceAction', 'sourceAction'], ['intentType', 'intentType'], ['idesc', 'description'], ['igoal', 'goal'], ['aliases', 'aliases'], ['recallTerms', 'recallTerms'], ['recallTermSets', 'recallTermSets'], ['negativeExamples', 'negativeExamples'], ['semanticPriority', 'semanticPriority'], ['triggerScene', 'triggerScene'], ['scopeIn', 'scopeIn'], ['scopeOut', 'scopeOut'], ['roles', 'roles'], ['iconfusable', 'confusableIntents'], ['disambiguationHints', 'disambiguationHints'], ['executionMode', 'executionMode'], ['riskLevel', 'riskLevel'], ['readiness', 'readiness'], ['requiredSlots', 'requiredSlots'], ['answerRef', 'answerRef'], ['queryRef', 'queryRef'], ['menuRef', 'menuRef'], ['skillRef', 'skillRef'], ['workflowRef', 'workflowRef'], ['agentRef', 'agentRef'], ['businessObjects', 'businessObjects'], ['businessObjectId', 'businessObjectId'], ['keySlots', 'keySlots'], ['answerForm', 'answerForm'], ['heat', 'heat'], ['taskPolicyShapes', 'taskPolicyShapes'], ['taskPolicyMode', 'taskPolicyMode'], ['taskPolicyMaxTasks', 'taskPolicyMaxTasks'], ['contextPolicyRetain', 'contextPolicyRetain'], ['contextPolicySwitch', 'contextPolicySwitch'], ['contextPolicyResumable', 'contextPolicyResumable'], ['responsePolicy', 'responsePolicy'], ['orchestrationMode', 'orchestrationMode'], ['lifecycle', 'lifecycle'], ['semanticVersion', 'semanticVersion'], ['owner', 'owner'], ['sourceChannel', 'sourceChannel'], ['sourceMenuId', 'sourceMenuId'], ['sourceActionId', 'sourceActionId'], ['istatus', 'status'], ['code', 'code']];
   const funcByPath = new Map();
   const funcOrder = [];
   const intentByRef = new Map();
@@ -1240,7 +1389,12 @@ function flatToRaw(rows) {
       riskLevel: it.riskLevel || '',
       readiness: it.readiness || '',
       requiredSlots: it.requiredSlots || '',
-      capabilityBindings: it.capabilityBindings || '',
+      answerRef: it.answerRef || '',
+      queryRef: it.queryRef || '',
+      menuRef: it.menuRef || '',
+      skillRef: it.skillRef || '',
+      workflowRef: it.workflowRef || '',
+      agentRef: it.agentRef || '',
       answerForm: it.answerForm || '',
       heat: it.heat || 'P2-低频',
       taskPolicyShapes: it.taskPolicyShapes || '',
@@ -1258,7 +1412,7 @@ function flatToRaw(rows) {
       sourceChannel: it.sourceChannel || '',
       sourceMenuId: it.sourceMenuId || '',
       sourceActionId: it.sourceActionId || '',
-      code: '',
+      code: it.code || '',
       note: '',
       ...(it._review ? { _review: it._review } : {}),
     };
@@ -1284,6 +1438,23 @@ function splitConfusable(value) {
   return String(value || '').split(/[;；]/).map((s) => s.trim()).filter(Boolean);
 }
 
+// 逗号/分号切分为数组（applyToIntakeDocument 内另有同名局部实现，语义一致）
+function splitList(value) {
+  return String(value || '').split(/[;；,，]/).map((s) => s.trim()).filter(Boolean);
+}
+
+function parseTermSets(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  return String(value).split(/[;；]/).map((s) =>
+    s.trim().split(/[+＋&]/).map((t) => t.trim()).filter(Boolean)
+  ).filter((s) => s.length > 0);
+}
+
 function collectRowErrors(kind, row, ctx) {
   const errors = [];
   const warnings = [];
@@ -1299,7 +1470,7 @@ function collectRowErrors(kind, row, ctx) {
     }
     if (!row.name) errors.push('功能名称为空');
     if (row.name && row.path && row.path.split('/').pop() !== row.name) errors.push('功能名称与路径末段不一致');
-    if ((row.description || '').length < 10) errors.push('业务描述过短（至少 10 字，按三段式写全）');
+    if ((row.description || '').length < 8) errors.push('业务描述过短（至少 8 字，按四要素写全：用户角色+触发场景+功能边界+产出结果）');
     if (!CLIENT_CLASSES.includes(row.clientClass)) errors.push('客户分类不在枚举内：' + row.clientClass);
     if (!SECURITY_LEVELS.includes(row.securityLevel)) errors.push('安全分级不在枚举内：' + row.securityLevel);
     if (!row.department) errors.push('责任部门为空');
@@ -1311,7 +1482,7 @@ function collectRowErrors(kind, row, ctx) {
     if (row.funcPath && !ctx.seenPaths.has(row.funcPath)) errors.push('功能路径未登记：' + row.funcPath);
     if (ctx.seenIntents.has(ref)) errors.push('同一功能路径下意图名称重复');
     if (!INTENT_TYPES.includes(row.intentType)) errors.push('意图类型不在枚举内：' + row.intentType);
-    if ((row.description || '').length < 10) errors.push('业务描述过短（至少 10 字，按三段式写全）');
+    if ((row.description || '').length < 8) errors.push('业务描述过短（至少 8 字，按四要素写全：用户角色+触发场景+功能边界+产出结果）');
     if (!ANSWER_FORMS.includes(row.answerForm)) errors.push('答案形态不在枚举内：' + row.answerForm);
     if (!HEAT_LEVELS.includes(row.heat)) errors.push('热度不在枚举内：' + row.heat);
     if (!INTENT_STATUSES.includes(row.status)) errors.push('状态不在枚举内：' + row.status);
@@ -1328,6 +1499,24 @@ function collectRowErrors(kind, row, ctx) {
     if (row.contextPolicyRetain && !BOOLEAN_ENUMS.includes(row.contextPolicyRetain)) errors.push('澄清保留上下文不在枚举内：' + row.contextPolicyRetain);
     if (row.contextPolicySwitch && !BOOLEAN_ENUMS.includes(row.contextPolicySwitch)) errors.push('允许意图切换不在枚举内：' + row.contextPolicySwitch);
     if (row.contextPolicyResumable && !BOOLEAN_ENUMS.includes(row.contextPolicyResumable)) errors.push('可恢复不在枚举内：' + row.contextPolicyResumable);
+    // V4 精度字段前置校验（对齐 v4-graph-validator.js §11：aliases≥3 + 格式 error 阻断；negativeExamples/recallTerms warning）
+    var rowAliases = splitList(row.aliases);
+    if (rowAliases.length < 3) errors.push('aliases 不足 3 条（当前 ' + rowAliases.length + '，要求≥3，V4GraphAdapter 精确匹配+110/包含+75）');
+    rowAliases.forEach(function(a) {
+      var problems = [];
+      if (String(a).length < 2 || String(a).length > 24) problems.push('长度须在 2~24 字之间');
+      if (/\d{3,}/.test(String(a))) problems.push('含连续3位以上数字');
+      if (problems.length > 0) errors.push('alias「' + a + '」' + problems.join('；') + '（校验第 6 条）');
+    });
+    var rowNegatives = splitList(row.negativeExamples);
+    var rowRecallTerms = splitList(row.recallTerms);
+    if (rowNegatives.length < 2) warnings.push({ message: 'negativeExamples 不足 2 条（每条-120 排除误召回，建议≥2）' });
+    if (rowRecallTerms.length < 2) warnings.push({ message: 'recallTerms 不足 2 条（每条+65，建议≥2）' });
+    rowNegatives.forEach(function(neg) {
+      if (rowAliases.indexOf(neg) >= 0 || rowRecallTerms.indexOf(neg) >= 0) {
+        warnings.push({ message: 'negativeExample「' + neg + '」与 aliases/recallTerms 重叠（会互相抵消打分）' });
+      }
+    });
     // 易混意图是软引用（写意图名称），未登记不阻断导入，但提醒填写者核对——入图时解析不到会丢弃
     splitConfusable(row.confusableIntents).forEach((name) => {
       if (ctx.intentNameSet && !ctx.intentNameSet.has(name)) {
@@ -1346,7 +1535,7 @@ function collectRowErrors(kind, row, ctx) {
     const confidence = parseConfidence(row.confidence);
     if (Number.isNaN(confidence)) errors.push('置信度必须是 0~1 的数值');
     if (text && row.intentRef) {
-      const key = row.intentRef + ' ' + text;
+      const key = row.intentRef + ' ' + text;
       if (ctx.seenTextByIntent.has(key)) errors.push('同一意图下说法文本重复');
       if (ctx.textOwnerIntent.has(text) && ctx.textOwnerIntent.get(text) !== row.intentRef) {
         warnings.push({ message: '说法「' + text + '」同时挂在多个意图下（歧义），请人工复核' });
@@ -1372,7 +1561,7 @@ function validateRow(kind, row, batch, excludeRowId) {
         ctx.intentRefSet.add(r.ref);
         if (r.name) ctx.intentNameSet.add(r.name);
       } else if (r.text && r.intentRef) {
-        ctx.seenTextByIntent.set(r.intentRef + ' ' + r.text, true);
+        ctx.seenTextByIntent.set(r.intentRef + ' ' + r.text, true);
         if (!ctx.textOwnerIntent.has(r.text)) ctx.textOwnerIntent.set(r.text, r.intentRef);
       }
     });
@@ -1395,7 +1584,7 @@ const ROW_INPUT_FIELDS = {
     // 服务边界
     'scopeIn', 'scopeOut', 'confusableIntents', 'disambiguationHints',
     // 执行契约
-    'executionMode', 'riskLevel', 'readiness', 'requiredSlots', 'capabilityBindings',
+    'executionMode', 'riskLevel', 'readiness', 'requiredSlots', 'answerRef', 'queryRef', 'menuRef', 'skillRef', 'workflowRef', 'agentRef',
     'roles', 'businessObjects', 'keySlots', 'businessObjectId', 'answerForm', 'heat',
     // 策略配置
     'taskPolicyShapes', 'taskPolicyMode', 'taskPolicyMaxTasks',
@@ -1425,7 +1614,7 @@ function normalizeRowInput(kind, input) {
 function rowIdentityKey(kind, row) {
   if (kind === 'functions') return row.path;
   if (kind === 'intents') return row.funcPath + '/' + row.name;
-  return row.intentRef + ' ' + row.kind + ' ' + row.text;
+  return row.intentRef + ' ' + row.kind + ' ' + row.text;
 }
 
 function rowIdFor(kind, row) {
@@ -1516,6 +1705,12 @@ function validateSheets(raw) {
       sourceStatus: row.status,
       code: row.code,
       note: row.note,
+      // V4 精度字段：导入→导出→回导闭环必须保留
+      aliases: row.aliases || '',
+      recallTerms: row.recallTerms || '',
+      recallTermSets: row.recallTermSets || '',
+      negativeExamples: row.negativeExamples || '',
+      semanticPriority: row.semanticPriority || '',
       ...(row._review ? { _review: row._review } : {}),
     });
   });
@@ -1528,7 +1723,7 @@ function validateSheets(raw) {
     if (errors.length) { reject(row, errors); return; }
     const confidence = parseConfidence(row.confidence);
     utterRows.push({
-      rowId: 'u-' + sha12(row.intentRef + ' ' + row.kind + ' ' + row.text),
+      rowId: 'u-' + sha12(row.intentRef + ' ' + row.kind + ' ' + row.text),
       intentRef: row.intentRef,
       kind: row.kind,
       text: row.text,
@@ -1602,7 +1797,8 @@ function multiSheetToRaw(wb) {
   const msGet = (row, idx) => (idx == null || idx < 0) ? '' : String(row[idx] || '').trim();
   const msCol = (headers, names) => { for (const n of names) { const i = headers.indexOf(n); if (i >= 0) return i; } return -1; };
   const msSheet = (names) => { for (const n of names) { for (const sn of wb.SheetNames) { if (sn.indexOf(n) >= 0 || n.indexOf(sn) >= 0) return wb.Sheets[sn]; } } return null; };
-  const msRows = (sheet) => { if (!sheet) return []; const r = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }); return r.length < 2 ? [] : r.slice(1).filter((row) => row.join('').trim()); };
+  // 官方 V4 模板每张分表第 2 行是绿色「填写说明」行（单元格内为多行文本）；按含换行符识别并整行跳过，避免说明文字混入候选数据
+  const msRows = (sheet) => { if (!sheet) return []; const r = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }); return r.length < 2 ? [] : r.slice(1).filter((row) => row.join('').trim() && !row.some((cell) => String(cell).indexOf('\n') >= 0)); };
   const msHeaders = (sheet) => { if (!sheet) return []; const r = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }); return r.length < 1 ? [] : r[0].map((h) => String(h || '').trim()); };
 
   // ── 1. 功能树 → functions raw ──
@@ -1610,19 +1806,29 @@ function multiSheetToRaw(wb) {
   const fH = msHeaders(funcSheet);
   const cFName = msCol(fH, ['功能名称', '功能', '名称']);
   const cFParent = msCol(fH, ['上级功能', '上级', '父功能']);
-  const cFPath = msCol(fH, ['App菜单路径', '菜单路径', '路径']);
   const cFDesc = msCol(fH, ['业务说明', '说明', '描述']);
   const cFScopeIn = msCol(fH, ['范围内关键词', '范围内']);
   const cFScopeOut = msCol(fH, ['范围外关键词', '范围外']);
   const cFBizObj = msCol(fH, ['业务对象', '对象']);
   const funcRows = msRows(funcSheet);
-  const funcByPath = {};
+  // V4 官方模板：功能全路径由「上级功能」列逐级拼出（/ 分隔）；App菜单路径只是界面参考（> 连接），不参与建路径
+  const nameToParent = {};
+  funcRows.forEach((r) => { const name = msGet(r, cFName); if (name) nameToParent[name] = msGet(r, cFParent); });
   const pathByName = {};
+  const resolveFuncPath = (name, seen) => {
+    if (Object.prototype.hasOwnProperty.call(pathByName, name)) return pathByName[name];
+    if (seen.has(name)) return name; // 上级链成环时按根处理，交由契约校验拦截
+    seen.add(name);
+    const parent = nameToParent[name] || '';
+    const parentPath = parent ? resolveFuncPath(parent, seen) : '';
+    const path = parentPath ? parentPath + '/' + name : name;
+    pathByName[name] = path;
+    return path;
+  };
+  const funcByPath = {};
   funcRows.forEach((r) => {
     const name = msGet(r, cFName); if (!name) return;
-    const parent = msGet(r, cFParent);
-    const path = msGet(r, cFPath) || (parent ? parent + '/' + name : name);
-    pathByName[name] = path;
+    const path = resolveFuncPath(name, new Set());
     funcByPath[path] = { path, name: name, description: msGet(r, cFDesc), scopeIn: msGet(r, cFScopeIn), scopeOut: msGet(r, cFScopeOut), businessObjects: msGet(r, cFBizObj), clientClass: '不区分', securityLevel: 'L2-内部', department: '待补充', status: '启用' };
   });
 
@@ -1659,7 +1865,7 @@ function multiSheetToRaw(wb) {
       scopeOut: funcByPath[path] ? funcByPath[path].scopeOut : '',
       businessObjects: funcByPath[path] ? funcByPath[path].businessObjects : '',
       aliases: '', recallTerms: '', negativeExamples: '', recallTermSets: '',
-      requiredSlots: '', capabilityBindings: '', confusableIntents: '', disambiguationHints: '',
+      requiredSlots: '', answerRef: '', queryRef: '', menuRef: '', skillRef: '', workflowRef: '', agentRef: '', confusableIntents: '', disambiguationHints: '',
       heat: 'P2-低频', status: '生效',
       lifecycle: 'active-活跃', readiness: 'ready-就绪', orchestrationMode: 'deterministic-确定式',
     };
@@ -1721,7 +1927,16 @@ function multiSheetToRaw(wb) {
     }
   });
 
-  // ── 5. 系统能力 → capabilityBindings + answerForm 回填 ──
+  // ── 5. 系统能力 → 6 个 ref 字段 + answerForm 回填 ──
+  // 落地方式 cmethod 路由到对应 ref 字段（answerRef/queryRef/menuRef/skillRef/workflowRef/agentRef）
+  var CAP_REF_FIELD = {
+    '调接口': 'queryRef', 'API': 'queryRef', '数据卡片': 'queryRef',
+    '技能编排': 'skillRef', '技能': 'skillRef',
+    '工作流': 'workflowRef',
+    '智能体': 'agentRef', 'Agent': 'agentRef',
+    '页面直达': 'menuRef', '菜单': 'menuRef',
+    '话术答复': 'answerRef', '知识应答': 'answerRef',
+  };
   const capSheet = msSheet(['系统能力', '能力', '系统对接']);
   const capH = msHeaders(capSheet);
   const cCFunc = msCol(capH, ['关联功能', '功能']);
@@ -1738,7 +1953,8 @@ function multiSheetToRaw(wb) {
     const ref = path + '/' + iname;
     const intent = intentByRef[ref];
     if (intent) {
-      intent.capabilityBindings = (intent.capabilityBindings ? intent.capabilityBindings + ',' : '') + cname;
+      var refField = CAP_REF_FIELD[cmethod] || 'queryRef';
+      intent[refField] = (intent[refField] ? intent[refField] + ',' : '') + cname;
       if (cmethod && fulfillMap[cmethod]) intent.answerForm = fulfillMap[cmethod];
     }
   });
@@ -1770,6 +1986,20 @@ function multiSheetToRaw(wb) {
       intentB.confusableIntents = (intentB.confusableIntents ? intentB.confusableIntents + ',' : '') + inameA;
       if (hint) intentB.disambiguationHints = (intentB.disambiguationHints ? intentB.disambiguationHints + ',' : '') + hint;
     }
+  });
+
+  // ── 7. 常见问答 → utterances（问题作为扩展问进入候选层，答案不入候选模型） ──
+  const faqSheet = msSheet(['常见问答', '问答', 'FAQ']);
+  const qH = msHeaders(faqSheet);
+  const cQFunc = msCol(qH, ['关联功能', '功能']);
+  const cQType = msCol(qH, ['关联场景', '场景']);
+  const cQText = msCol(qH, ['问题', '问题话术']);
+  msRows(faqSheet).forEach((r) => {
+    const qfunc = msGet(r, cQFunc); const qtext = msGet(r, cQText);
+    if (!qfunc || !qtext) return;
+    const path = pathByName[qfunc] || qfunc;
+    const iname = qfunc + '-' + (msGet(r, cQType) || '问答');
+    utterances.push({ intentRef: path + '/' + iname, funcPath: path, iname, text: qtext, kind: '扩展问', source: '存量导入', confidence: '', status: '候选' });
   });
 
   // ── 组装 raw ──
@@ -1832,7 +2062,7 @@ function applyToIntakeDocument(document, approved, batchId, now) {
     const exists = edges.some((e) => e && e.type === type && e.source === source && e.target === target);
     if (exists) return false;
     edges.push({
-      id: 'edge:ki:' + sha12([type, source, target].join(' ')),
+      id: 'edge:ki:' + sha12([type, source, target].join(' ')),
       type,
       source,
       target,
@@ -1961,15 +2191,18 @@ function applyToIntakeDocument(document, approved, batchId, now) {
     //   query/menu/skill/workflow/agent → 各自 _ref 必填；read-execute → capabilities/query_ref/api_or_workflow_id 任一。
     // 无真实绑定引用时按校验器既有约定写 mock: 占位（产生 MOCK_FULFILLMENT_REFERENCE 警告而非错误，发布前替换）。
     const execModeResolved = execModeValue || (mappedType === 'ASK' || mappedType === 'HELP' ? 'knowledge-only' : 'confirm-required');
-    const capabilityList = splitList(row.capabilityBindings);
+    // 从 6 个 ref 字段汇总能力列表（替代原 capabilityBindings 单列）
+    var _refValues = { answer_ref: row.answerRef, query_ref: row.queryRef, menu_ref: row.menuRef, skill_ref: row.skillRef, workflow_ref: row.workflowRef, agent_ref: row.agentRef };
+    const capabilityList = Object.keys(_refValues).map(function (k) { return _refValues[k]; }).filter(Boolean).map(function (v) { return splitList(v); }).reduce(function (a, b) { return a.concat(b); }, []);
     const slotList = splitList(row.requiredSlots);
     let fulfillmentResolved = fulfillmentKind;
     let refPlaceholder = null;
-    if (fulfillmentResolved === 'query') refPlaceholder = { key: 'query_ref', value: 'mock:query:' + row.ref };
-    else if (fulfillmentResolved === 'menu') refPlaceholder = { key: 'menu_ref', value: row.funcPath };
-    else if (fulfillmentResolved === 'skill') refPlaceholder = { key: 'skill_ref', value: 'mock:skill:' + row.ref };
-    else if (fulfillmentResolved === 'workflow') refPlaceholder = { key: 'workflow_ref', value: 'mock:workflow:' + row.ref };
-    else if (fulfillmentResolved === 'agent') refPlaceholder = { key: 'agent_ref', value: 'mock:agent:' + row.ref };
+    if (fulfillmentResolved === 'query') refPlaceholder = { key: 'query_ref', value: row.queryRef || 'mock:query:' + row.ref };
+    else if (fulfillmentResolved === 'menu') refPlaceholder = { key: 'menu_ref', value: row.menuRef || row.funcPath };
+    else if (fulfillmentResolved === 'skill') refPlaceholder = { key: 'skill_ref', value: row.skillRef || 'mock:skill:' + row.ref };
+    else if (fulfillmentResolved === 'workflow') refPlaceholder = { key: 'workflow_ref', value: row.workflowRef || 'mock:workflow:' + row.ref };
+    else if (fulfillmentResolved === 'agent') refPlaceholder = { key: 'agent_ref', value: row.agentRef || 'mock:agent:' + row.ref };
+    else if (fulfillmentResolved === 'answer' && row.answerRef) refPlaceholder = { key: 'answer_ref', value: row.answerRef };
     else if (fulfillmentResolved === 'unconfigured' && execModeResolved === 'read-execute') {
       // 读执行但未配置交付：落地为 query + mock 引用，保证 conditional 必填可满足
       fulfillmentResolved = 'query';
@@ -2000,6 +2233,13 @@ function applyToIntakeDocument(document, approved, batchId, now) {
         readiness: readinessValue,
         orchestration_mode: orchModeValue,
         risk_level: parseEnumValue(row.riskLevel) || 'L0',
+        // V4 精度字段:V4GraphAdapter 打分依赖,下游 v1→v4 转换器从 intentNode 读取
+        // recallTermSets 模板定义为 multiline（string），存 JSON 字符串以通过模板校验；下游解析回数组
+        aliases: splitList(row.aliases),
+        recallTerms: splitList(row.recallTerms),
+        recallTermSets: JSON.stringify(parseTermSets(row.recallTermSets)),
+        negativeExamples: splitList(row.negativeExamples),
+        semanticPriority: Number(row.semanticPriority) || 0,
         scenes: JSON.stringify([{
           intentType: mappedType,
           userGoal: row.goal || row.description || row.name,
@@ -2201,10 +2441,18 @@ function callBuilderAgent(agentPath, bodyObj) {
           resolve(parsed);
           return;
         }
-        reject(Object.assign(new Error('扩展问服务返回 ' + response.statusCode), { code: 'KNOWLEDGE_INTAKE_EXPAND_BACKEND' }));
+        const detail = parsed && (
+          (parsed.error && parsed.error.message)
+          || (typeof parsed.detail === 'string' ? parsed.detail : (parsed.detail && parsed.detail.message))
+          || parsed.message
+        ) || '';
+        reject(Object.assign(
+          new Error('builder-agent 服务返回 ' + response.statusCode + (detail ? '：' + detail : '')),
+          { code: 'KNOWLEDGE_INTAKE_AGENT_BACKEND', statusCode: response.statusCode }
+        ));
       });
     });
-    request.on('timeout', () => request.destroy(Object.assign(new Error('扩展问服务响应超时'), { code: 'KNOWLEDGE_INTAKE_EXPAND_TIMEOUT' })));
+    request.on('timeout', () => request.destroy(Object.assign(new Error('builder-agent 服务响应超时'), { code: 'KNOWLEDGE_INTAKE_AGENT_TIMEOUT' })));
     request.on('error', reject);
     request.end(payload);
   });
@@ -2250,6 +2498,73 @@ function routeBatchItems(pathname, query, body) {
   return { batchId, action, query, body };
 }
 
+// ── 召回试测（借鉴小i工作台「业务人员即时试测+回归用例」形态，判定语义走图谱声明） ──
+
+// 试测候选集组装（纯函数，单测覆盖）：approved+pending 意图都参与（候选层也要能试）；
+// 驳回意图与业务状态「停用」意图视同下线，不进候选（可插拔语义），数量单独上报给前端提示。
+function buildRecallCandidates(batch) {
+  const intents = batch.rows.intents || [];
+  const offline = intents.filter((row) => row.status === 'rejected' || row.sourceStatus === '停用');
+  const online = intents.filter((row) => row.status !== 'rejected' && row.sourceStatus !== '停用');
+  const utterancesByIntent = new Map();
+  (batch.rows.utterances || []).forEach((row) => {
+    if (row.status === 'rejected' || !row.intentRef) return;
+    if (!utterancesByIntent.has(row.intentRef)) utterancesByIntent.set(row.intentRef, { biaowen: [], other: [] });
+    const bucket = row.kind === '标问' ? 'biaowen' : 'other';
+    utterancesByIntent.get(row.intentRef)[bucket].push(row.text);
+  });
+  const ranked = online.map((row) => {
+    const bucket = utterancesByIntent.get(row.ref) || { biaowen: [], other: [] };
+    return { row, utteranceTotal: bucket.biaowen.length + bucket.other.length };
+  });
+  // 候选超限时裁剪语料最少的意图，保证提示词预算（在线意图数照实上报）
+  ranked.sort((a, b) => b.utteranceTotal - a.utteranceTotal);
+  const candidates = ranked.slice(0, MAX_RECALL_CANDIDATES).map(({ row }) => {
+    const bucket = utterancesByIntent.get(row.ref) || { biaowen: [], other: [] };
+    return {
+      ref: row.ref,
+      name: row.name,
+      description: (row.description || '').slice(0, 100),
+      goal: (row.goal || '').slice(0, 100),
+      scopeIn: splitList(row.scopeIn).slice(0, 6),
+      scopeOut: splitList(row.scopeOut).slice(0, 6),
+      confusableIntents: splitConfusable(row.confusableIntents).slice(0, 6),
+      utterances: bucket.biaowen.concat(bucket.other).slice(0, MAX_RECALL_UTTERANCES_PER_INTENT),
+    };
+  });
+  return { candidates, onlineCount: online.length, offlineCount: offline.length };
+}
+
+// 试测结论评估（纯函数）：设定期望意图时给三态定性结论（过=期望意图 hit 且居首；歧义=期望意图在命中列表但非干净居首；不过=未命中）；
+// 未设定期望时只记录结果不下结论。全程无分数阈值，定性由 LLM 判定、结论由位置关系推导。
+function evaluateRecallOutcome(matches, expectedRef) {
+  const top = (matches || [])[0] || null;
+  const topRef = top ? top.ref : '';
+  const topName = top ? top.name || '' : '';
+  if (!expectedRef) return { outcome: null, topRef, topName };
+  if (top && top.ref === expectedRef && top.verdict === 'hit') return { outcome: 'pass', topRef, topName };
+  if ((matches || []).some((m) => m.ref === expectedRef)) return { outcome: 'ambiguous', topRef, topName };
+  return { outcome: 'fail', topRef, topName };
+}
+
+// LLM 返回 → 前端契约：ref 白名单过滤（防幻觉意图）、附意图名、定性字段收敛
+function normalizeRecallMatches(backendMatches, intentByRef) {
+  return ((Array.isArray(backendMatches) ? backendMatches : []) || [])
+    .filter((m) => m && intentByRef.has(m.ref))
+    .slice(0, 5)
+    .map((m) => {
+      const row = intentByRef.get(m.ref);
+      return {
+        ref: m.ref,
+        name: row ? row.name : m.ref,
+        verdict: m.verdict === 'ambiguous' ? 'ambiguous' : 'hit',
+        evidence: Array.isArray(m.evidence) ? m.evidence.map(String).map((s) => s.trim()).filter(Boolean).slice(0, 3) : [],
+        reason: String(m.reason || ''),
+        confidence: ['high', 'medium', 'low'].includes(m.confidence) ? m.confidence : 'medium',
+      };
+    });
+}
+
 // 预览与入图共用的合并计算：取已审核行 → loopback 加载图谱 → 纯函数合并 → 校验（不落盘）
 async function computeApply(batch, asset, wanted, authHeader) {
   const pick = (rows) => (rows || []).filter((row) => {
@@ -2275,7 +2590,7 @@ async function computeApply(batch, asset, wanted, authHeader) {
  * （op:'add'、resolution:'pending'），修订审阅面板逐条采纳（=人工确认生效）/放弃（=驳回留痕）。
  */
 function applyExpansionResults(batch, intentRows, backendResults, count, now) {
-  const existingTexts = new Set((batch.rows.utterances || []).map((row) => row.intentRef + ' ' + row.text));
+  const existingTexts = new Set((batch.rows.utterances || []).map((row) => row.intentRef + ' ' + row.text));
   const addedByIntent = {};
   const changes = [];
   let autoApproved = 0;
@@ -2287,13 +2602,13 @@ function applyExpansionResults(batch, intentRows, backendResults, count, now) {
     (result.utterances || []).slice(0, count).forEach((item) => {
       const text = String(item.text || '').trim();
       if (!text || text.length < 2 || text.length > 50) return;
-      const key = row.ref + ' ' + text;
+      const key = row.ref + ' ' + text;
       if (existingTexts.has(key)) return;
       existingTexts.add(key);
       let confidence = Number(item.confidence);
       if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) confidence = 0.8;
       batch.rows.utterances.push({
-        rowId: 'u-' + sha12(row.ref + ' LLM ' + text + ' ' + now),
+        rowId: 'u-' + sha12(row.ref + ' LLM ' + text + ' ' + now),
         intentRef: row.ref,
         kind: '扩展问',
         text,
@@ -2770,7 +3085,7 @@ async function handleRequest(req, res, pathname, url, body) {
           if (refByOld.has(r.intentRef)) movedUtterances.push({ row: r, to: refByOld.get(r.intentRef) });
         });
         movedUtterances.forEach((m) => {
-          const targetId = 'u-' + sha12(m.to + ' ' + m.row.kind + ' ' + m.row.text);
+          const targetId = 'u-' + sha12(m.to + ' ' + m.row.kind + ' ' + m.row.text);
           const hit = batch.rows.utterances.find((r) => r !== m.row && r.rowId === targetId);
           if (hit) fail('KNOWLEDGE_INTAKE_ROW_DUPLICATE', '目标位置已有说法，无法移动：' + m.row.text, 409);
         });
@@ -2792,7 +3107,7 @@ async function handleRequest(req, res, pathname, url, body) {
         moves.push(() => movedUtterances.forEach((m) => {
           const oldId = m.row.rowId;
           m.row.intentRef = m.to;
-          m.row.rowId = 'u-' + sha12(m.to + ' ' + m.row.kind + ' ' + m.row.text);
+          m.row.rowId = 'u-' + sha12(m.to + ' ' + m.row.kind + ' ' + m.row.text);
           idMoves.push({ oldId, newId: m.row.rowId });
           if (demoteForEdit(m.row)) cascaded.utterances += 1;
         }));
@@ -2804,14 +3119,14 @@ async function handleRequest(req, res, pathname, url, body) {
           if (r.intentRef === fromRef) movedUtterances.push({ row: r, to: toRef });
         });
         movedUtterances.forEach((m) => {
-          const targetId = 'u-' + sha12(m.to + ' ' + m.row.kind + ' ' + m.row.text);
+          const targetId = 'u-' + sha12(m.to + ' ' + m.row.kind + ' ' + m.row.text);
           const hit = batch.rows.utterances.find((r) => r !== m.row && r.rowId === targetId);
           if (hit) fail('KNOWLEDGE_INTAKE_ROW_DUPLICATE', '目标位置已有说法，无法迁移：' + m.row.text, 409);
         });
         moves.push(() => movedUtterances.forEach((m) => {
           const oldId = m.row.rowId;
           m.row.intentRef = m.to;
-          m.row.rowId = 'u-' + sha12(m.to + ' ' + m.row.kind + ' ' + m.row.text);
+          m.row.rowId = 'u-' + sha12(m.to + ' ' + m.row.kind + ' ' + m.row.text);
           idMoves.push({ oldId, newId: m.row.rowId });
           if (demoteForEdit(m.row)) cascaded.utterances += 1;
         }));
@@ -3080,6 +3395,128 @@ async function handleRequest(req, res, pathname, url, body) {
       };
     }
 
+    // ── 召回试测：输一句问话 → LLM 依据意图声明判定命中（业务人员的「试一试」） ──
+
+    if (req.method === 'POST' && routed.action === 'recall-test') {
+      const query = String((routed.body && routed.body.query) || '').trim();
+      if (!query) fail('KNOWLEDGE_INTAKE_QUERY_REQUIRED', '请输入要试测的问句', 400);
+      if (query.length > MAX_RECALL_QUERY_LEN) fail('KNOWLEDGE_INTAKE_QUERY_TOO_LONG', '试测问句请控制在 ' + MAX_RECALL_QUERY_LEN + ' 字内', 400);
+      const batch = loadBatch(batchId);
+      const { candidates, onlineCount, offlineCount } = buildRecallCandidates(batch);
+      if (!candidates.length) fail('KNOWLEDGE_INTAKE_NO_RECALL_CANDIDATES', '批次内没有可参与试测的意图（停用/驳回意图不参与）', 400);
+      let backend;
+      try {
+        backend = await callBuilderAgent('/v1/recall-test', { query, candidates });
+      } catch (error) {
+        fail('KNOWLEDGE_INTAKE_RECALL_BACKEND', '召回试测失败：' + error.message, error.statusCode >= 400 && error.statusCode < 600 ? error.statusCode : 502);
+      }
+      const intentByRef = new Map((batch.rows.intents || []).map((row) => [row.ref, row]));
+      const matches = normalizeRecallMatches(backend && backend.matches, intentByRef);
+      return {
+        batchId,
+        query,
+        matches,
+        considered: candidates.length,
+        onlineCount,
+        offlineCount,
+        omitted: Math.max(0, onlineCount - candidates.length),
+      };
+    }
+
+    if (req.method === 'GET' && routed.action === 'recall-cases') {
+      const batch = loadBatch(batchId);
+      const intentByRef = new Map((batch.rows.intents || []).map((row) => [row.ref, row]));
+      const cases = loadRecallCases(batchId).map((item) => ({
+        ...item,
+        expectedName: item.expectedRef && intentByRef.get(item.expectedRef) ? intentByRef.get(item.expectedRef).name : '',
+      }));
+      return { batchId, cases, total: cases.length };
+    }
+
+    if (req.method === 'POST' && routed.action === 'recall-cases') {
+      const batch = loadBatch(batchId);
+      const query = String((routed.body && routed.body.query) || '').trim();
+      if (!query || query.length > MAX_RECALL_QUERY_LEN) fail('KNOWLEDGE_INTAKE_CASE_QUERY_INVALID', '用例问句必填且不超过 ' + MAX_RECALL_QUERY_LEN + ' 字', 400);
+      const expectedRef = String((routed.body && routed.body.expectedRef) || '').trim();
+      if (expectedRef && !(batch.rows.intents || []).some((row) => row.ref === expectedRef)) {
+        fail('KNOWLEDGE_INTAKE_CASE_EXPECTED_MISSING', '期望意图不在本批次：' + expectedRef, 400);
+      }
+      const cases = loadRecallCases(batchId);
+      if (cases.length >= MAX_RECALL_CASES) fail('KNOWLEDGE_INTAKE_CASE_LIMIT', '用例已达上限（' + MAX_RECALL_CASES + ' 条），请先清理不再需要的用例', 400);
+      if (cases.some((item) => item.query === query)) fail('KNOWLEDGE_INTAKE_CASE_DUPLICATED', '相同问句的用例已存在', 409);
+      const item = {
+        id: 'rc-' + sha12(query + ' ' + expectedRef + ' ' + Date.now().toString(36) + ' ' + crypto.randomBytes(3).toString('hex')),
+        query,
+        expectedRef,
+        note: String((routed.body && routed.body.note) || '').slice(0, 200),
+        createdAt: new Date().toISOString(),
+        lastResult: null,
+      };
+      cases.push(item);
+      saveRecallCases(batchId, cases);
+      return { batchId, case: item, total: cases.length };
+    }
+
+    if (req.method === 'POST' && routed.action === 'recall-cases/run') {
+      const batch = loadBatch(batchId);
+      const { candidates, onlineCount, offlineCount } = buildRecallCandidates(batch);
+      if (!candidates.length) fail('KNOWLEDGE_INTAKE_NO_RECALL_CANDIDATES', '批次内没有可参与试测的意图（停用/驳回意图不参与）', 400);
+      const cases = loadRecallCases(batchId);
+      const wantedIds = new Set(Array.isArray(routed.body && routed.body.ids) ? routed.body.ids.map(String) : []);
+      const targets = wantedIds.size ? cases.filter((item) => wantedIds.has(item.id)) : cases;
+      if (!targets.length) fail('KNOWLEDGE_INTAKE_NO_RECALL_CASES', '没有可运行的试测用例，请先添加', 400);
+      const intentByRef = new Map((batch.rows.intents || []).map((row) => [row.ref, row]));
+      const results = [];
+      const CONCURRENCY = 4;
+      for (let i = 0; i < targets.length; i += CONCURRENCY) {
+        const chunk = targets.slice(i, i + CONCURRENCY);
+        const settled = await Promise.all(chunk.map(async (item) => {
+          const query = String(item.query || '');
+          try {
+            const backend = await callBuilderAgent('/v1/recall-test', { query, candidates });
+            const matches = normalizeRecallMatches(backend && backend.matches, intentByRef);
+            const verdict = evaluateRecallOutcome(matches, item.expectedRef || '');
+            item.lastResult = { ranAt: new Date().toISOString(), outcome: verdict.outcome, topRef: verdict.topRef, matched: matches.length };
+            return {
+              caseId: item.id,
+              query,
+              expectedRef: item.expectedRef || '',
+              expectedName: item.expectedRef && intentByRef.get(item.expectedRef) ? intentByRef.get(item.expectedRef).name : '',
+              matches,
+              outcome: verdict.outcome,
+              topRef: verdict.topRef,
+              error: '',
+            };
+          } catch (error) {
+            return { caseId: item.id, query, expectedRef: item.expectedRef || '', expectedName: '', matches: [], outcome: null, topRef: '', error: error.message };
+          }
+        }));
+        results.push(...settled);
+      }
+      saveRecallCases(batchId, cases);
+      return {
+        batchId,
+        results,
+        total: results.length,
+        passed: results.filter((r) => r.outcome === 'pass').length,
+        ambiguous: results.filter((r) => r.outcome === 'ambiguous').length,
+        failed: results.filter((r) => r.outcome === 'fail').length,
+        errors: results.filter((r) => r.error).length,
+        onlineCount,
+        offlineCount,
+      };
+    }
+
+    if (req.method === 'DELETE' && routed.action.startsWith('recall-cases/')) {
+      loadBatch(batchId);
+      const caseId = routed.action.slice('recall-cases/'.length);
+      const cases = loadRecallCases(batchId);
+      const next = cases.filter((item) => item.id !== caseId);
+      if (next.length === cases.length) fail('KNOWLEDGE_INTAKE_CASE_NOT_FOUND', '试测用例不存在：' + caseId, 404);
+      saveRecallCases(batchId, next);
+      return { batchId, deleted: true, total: next.length };
+    }
+
     if (req.method === 'POST' && routed.action === 'skeleton-assist') {
       const batch = loadBatch(batchId);
       const skeleton = buildSkeletonForAssist(batch);
@@ -3263,11 +3700,13 @@ async function handleRequest(req, res, pathname, url, body) {
         '7. 风险等级（riskLevel）：纯查询通常L0-L1，涉及资金操作L2以上',
         '8. 就绪状态（readiness）：规划中时不应绑定具体系统能力',
         '',
-        '【描述唯一性——防止向量空间稀释】',
+        '【描述质量——四要素标准 + 唯一性】',
         '9. 意图描述（description）：',
+        '   - 描述必须包含四要素：用户角色（谁用）+触发场景（什么时候用）+功能边界（包含/不包含什么）+产出结果（得到什么）',
+        '   - 缺少功能边界要素应标记 incomplete（功能边界决定相邻意图区分度，直接影响语义召回精确率）',
         '   - 描述必须跨意图唯一，禁止使用共享模板文案（如"该功能属于XX领域的手机银行功能"）',
         '   - 描述重复会稀释向量空间，导致语义召回时多个意图互相干扰',
-        '   - 审核时如发现描述为通用模板套话，应标记为 incomplete 并给出贴合具体业务的唯一描述',
+        '   - 审核时如发现描述为通用模板套话或缺少四要素中任一项，应标记为 incomplete 并给出贴合具体业务的唯一描述',
         '',
         '【说法（utterances）——扩展问可以多条】',
         '10. 标问=作为精确匹配的基准说法，每个意图1条',
@@ -3282,7 +3721,7 @@ async function handleRequest(req, res, pathname, url, body) {
         '   - incomplete（不完整）：内容过于简短或缺少关键信息',
         '   - inaccurate（不准确）：内容与银行业务常识不符或存在事实错误',
         '   - inconsistent（不一致）：字段之间互相矛盾',
-        '   - style（规范）：命名不规范、描述未按三段式编写、用词不专业、格式不符合字段说明中的要求',
+        '   - style（规范）：命名不规范、描述未按四要素编写、用词不专业、格式不符合字段说明中的要求',
         '2. 只对有问题的字段给出审核意见，没有问题的字段不要输出',
         '3. issue 要简明说明问题所在，用业务人员能看懂的语言',
         '4. newValue 必须是该字段修改后的完整新值，用户点击采纳后会直接替换该字段内容，所以必须是可直接使用的最终内容',
@@ -3311,15 +3750,23 @@ async function handleRequest(req, res, pathname, url, body) {
         '    - 禁止使用与当前意图无关的通用银行示例作为 newValue',
         '12. 【关键】字段说明（|说明：后的文字）仅用于理解字段含义和格式要求，其中的示例仅为格式参考，',
         '    绝对不可将字段说明中的示例直接复制为 newValue。newValue 必须基于当前审核节点的实际业务内容生成。',
-        '13. 【别名质量深度审核】审核 aliases 时，除基本数量检查外，还需检查：',
-        '    - 词群家族覆盖：别名是否覆盖了用户常用的不同词群表达（如交易/流水/明细/进出账），',
+        '13. 【别名质量深度审核】审核 aliases 时，除基本数量检查外，还需检查四维度覆盖：',
+        '    - 【维度覆盖】别名必须覆盖四个维度，每个维度至少1条：',
+        '      · 直接说法（查X/看X/搜X）——用户最直白的表达',
+        '      · 口语化变体（还有多少/剩多少/有没有）——日常口语习惯',
+        '      · 场景化表达（工资到账没/退款到了没）——带具体业务场景',
+        '      · 操作型表达（怎么查/在哪里看/如何办理）——引导型问句',
+        '      若≥2个维度缺失，应标记 incomplete 并按缺失维度补充',
+        '    - 词群家族覆盖：同一目标下用户会用不同词群表达（如交易/流水/明细/进出账），',
         '      若一半以上是同一词群的同义词，应标记 incomplete 并补充其他词群',
         '    - 操作家族覆盖：若该意图含办理/管理/设置属性，别名是否包含"怎么开通/怎么办理/怎么申请"等操作型说法，',
         '      若全是查询态表达，应标记 incomplete 并补充操作型说法',
         '    - 菜单名/动作名混入：别名中是否有照抄菜单名/页面标题的条目，若有应标记 style 并建议替换为用户自然说法',
         '    - 跨意图标志性词汇混入：别名中是否出现其他意图的标志性词汇（如账单类意图出现"转账"），若有应标记 inaccurate',
         '    - 说法长度：别名条目是否在 2-24 字范围内，是否有连续 3 位以上数字，若有应标记 style',
-        '14. 【描述唯一性审核】审核 description 时，需检查：',
+        '14. 【描述四要素审核】审核 description 时，需检查：',
+        '    - 描述是否包含四要素：用户角色+触发场景+功能边界+产出结果，缺少任一项应标记 incomplete',
+        '    - 功能边界（包含/不包含什么）是最关键要素——它决定相邻意图区分度，缺失会导致语义召回互相干扰',
         '    - 描述是否为通用模板套话（如"该功能属于XX领域的手机银行功能"），若是应标记 incomplete',
         '    - 描述必须贴合当前意图的具体业务含义，与其他意图区分开',
         '',
@@ -3510,7 +3957,12 @@ function exportFlatRows(batch) {
       r.riskLevel = it.riskLevel || '';
       r.readiness = it.readiness || '';
       r.requiredSlots = it.requiredSlots || '';
-      r.capabilityBindings = it.capabilityBindings || '';
+      r.answerRef = it.answerRef || '';
+      r.queryRef = it.queryRef || '';
+      r.menuRef = it.menuRef || '';
+      r.skillRef = it.skillRef || '';
+      r.workflowRef = it.workflowRef || '';
+      r.agentRef = it.agentRef || '';
       r.businessObjectId = it.businessObjectId || '';
       r.taskPolicyShapes = it.taskPolicyShapes || '';
       r.taskPolicyMode = it.taskPolicyMode || '';
@@ -3766,6 +4218,9 @@ module.exports = {
   buildSkeletonForAssist,
   applyExpansionResults,
   applyReviewAction,
+  buildRecallCandidates,
+  evaluateRecallOutcome,
+  normalizeRecallMatches,
   createRevision,
   remapRevisionRowIds,
   revisionOpenCount,
@@ -3776,6 +4231,10 @@ module.exports = {
   buildBlankTemplate,
   multiSheetToRaw,
   sheetToRows,
+  // 供跨模块调用（org-graph 草稿自动同步）
+  saveBatch,
+  listBatches,
+  INTAKE_DIR,
   INTENT_TYPE_MAP,
   FULFILLMENT_KIND_MAP,
   splitConfusable,

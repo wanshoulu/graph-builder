@@ -1,0 +1,56 @@
+{
+  "asset_id": "ccb-mobile-banking",
+  "active_version": "org-graph-v2",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "ccb-intent-graph-v1",
+      "document_version": "1.0.0",
+      "template_id": "intent-graph",
+      "published_at": "2026-09-15T23:58:10.179Z",
+      "note": "建行手机银行意图图谱 v1.0 — 基于13个业务域903个功能节点自动构建",
+      "stats": {
+        "nodes": 779,
+        "edges": 1464
+      }
+    },
+    {
+      "version": "org-graph-v2",
+      "file": "org-graph-v2.json",
+      "document_id": "ccb-intent-graph-v1",
+      "document_version": "1.0.0",
+      "template_id": "intent-graph",
+      "published_at": "2026-09-16T00:08:26.004Z",
+      "note": "建行手机银行意图图谱 v1.0 — 基于13个业务域346个功能自动构建",
+      "stats": {
+        "nodes": 817,
+        "edges": 1540
+      }
+    }
+  ],
+  "auditLog": [
+    {
+      "at": "2026-09-15T23:58:10.218Z",
+      "action": "publish",
+      "version": "org-graph-v1",
+      "note": "建行手机银行意图图谱 v1.0 — 基于13个业务域903个功能节点自动构建",
+      "stats": {
+        "nodes": 779,
+        "edges": 1464
+      },
+      "contentDigest": "sha256:76d05d25c29bb1c0faf0b3216571f7b11c39355a36a3a1b983cc5fbf14ae4ca4"
+    },
+    {
+      "at": "2026-09-16T00:08:26.145Z",
+      "action": "publish",
+      "version": "org-graph-v2",
+      "note": "建行手机银行意图图谱 v1.0 — 基于13个业务域346个功能自动构建",
+      "stats": {
+        "nodes": 817,
+        "edges": 1540
+      },
+      "contentDigest": "sha256:dfb28f2a5e6992c17a15e1eeb7dd8e6b505af3e6fee90385651d552aad8dbc66"
+    }
+  ]
+}

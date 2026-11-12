@@ -132,8 +132,11 @@ function localRecall(document, query, transfer) {
     }
     if (!expression.score && nameSimilarity < 0.27 && !objectHit && !partialObject && !(transfer && isTransferIntent)) raw = 0;
     const topic = coreTopic(query);
+    // 业务限定词检查只作用于字面证据（localRecall 阶段先记录 qualifierGap 标记，
+    // 封顶延迟到 semanticRecall 之后：语义向量分 >=70 时豁免——曾致"查下我的总资产"对
+    // 资产查询节点语义 84 分被字面检查压到 39，top1 让位给不相关意图）。
     const qualifierGap = topic.length >= 4 && !expression.exact && !normalize(semanticText).includes(topic);
-    if (qualifierGap) { raw = Math.min(raw, 0.39); evidence.push('业务限定词未覆盖'); }
+    if (qualifierGap) evidence.push('业务限定词未覆盖');
     const delivery = fulfillment(node, byId);
     return {
       id: node.id, name, domain: string(p.domain), intentType: type, businessObject: object,
@@ -250,7 +253,9 @@ async function semanticRecall(query, candidates, embed = embedTexts) {
     c.score = Math.max(c.localScore, Math.round(c.semanticScore * 0.7 + c.localScore * 0.3));
     if (c.actionMismatch) c.score = Math.min(c.score, 39);
     if (c.negative) c.score = Math.min(c.score, 24);
-    if (c.qualifierGap) c.score = Math.min(c.score, 39);
+    // 业务限定词封顶只在语义证据不足时生效：semanticScore>=70 说明深层语义已对齐，
+    // 豁免字面封顶（避免语义正确的结果被字面未覆盖压死）
+    if (c.qualifierGap && c.semanticScore < 70) c.score = Math.min(c.score, 39);
     if (c.semanticScore >= 65) c.evidence.push(`语义相近：${c.semanticScore} 分`);
   });
 }
@@ -261,7 +266,7 @@ function compact(candidate) {
 function coreTopic(query) {
   return normalize(string(query)
     .replace(/^(?:再|然后|请|帮我|我想|我要|给我)*/g, '')
-    .replace(/^(?:咨询|了解|介绍|查询|查看|查一下|查|看看|办理|申请|修改|取消|怎么查|如何查)*/g, '')
+    .replace(/^(?:咨询|了解|介绍|查询|查看|查一下|查查|查下|查|看看|办理|申请|修改|取消|怎么查|如何查)*/g, '')
     .replace(/给[\u4e00-\u9fa5]+(?:转|打|汇)\s*[0-9]+(?:\.[0-9]+)?[\u4e00-\u9fa5]*/g, '转账')
     .replace(/(?:有什么规则|规则是什么|怎么办|怎么操作|怎么查|如何|怎么|在哪里|在哪|一下|相关知识)$/g, ''));
 }
@@ -310,12 +315,18 @@ function decide(segment, candidates, policy, judgment, transfer) {
 }
 async function runDraftIntentTrial(document, rawQuery, inputPolicy, dependencies = {}) {
   if (!document || !Array.isArray(document.nodes) || !Array.isArray(document.edges)) throw new Error('缺少当前图谱草稿');
-  if (document.nodes.length > 2000) throw new Error('图谱过大，请缩小试问范围');
+  if (document.nodes.length > 5000) throw new Error('图谱过大，请缩小试问范围（当前上限 5000 节点）');
   const query = string(rawQuery).slice(0, 500);
   if (!query) throw new Error('请输入用户问题');
   const policy = policyOptions(inputPolicy);
   const intentCount = document.nodes.filter((n) => n.type === 'INTENT').length;
-  if (intentCount > 500) throw new Error('当前图谱超过 500 个具体意图，请先按业务域缩小试问范围');
+  // 大图治理：>500 意图时只关闭 LLM 裁决（成本失控），语义向量召回保留——
+  // 字符级 dice 对中文口语变体区分度差（"查下我的总资产" vs "查下我的积分" dice 高达 0.545），
+  // 没有语义层的打分会在 top3 里混入不相关意图。<=500 保持用户所选策略。
+  if (intentCount > 500 && policy.model !== 'off') {
+    policy.model = 'off';
+  }
+  if (intentCount > 2000) throw new Error('当前图谱超过 2000 个具体意图，试问引擎不支持该规模');
   const shape = splitQuery(query);
   const transfer = shape.transfer || null;
   const stages = { local: 'ok', semantic: 'skipped', model: 'skipped' };

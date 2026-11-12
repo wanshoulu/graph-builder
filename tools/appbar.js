@@ -2,17 +2,16 @@
  * 图谱应用统一顶栏注入脚本（单文件应用页共用，无框架依赖）。
  * 用法：在页面 <body> 起始处插入 <div id="gb-appbar"></div> 并引入本脚本（或内联）。
  * 设计基调与 web SPA（antd #2878b5）一致；品牌为 graph-builder，不含平台名。
- * 「工作台」链接默认指向独立门户 /tools/index.html；部署在子路径时，
+ * 「工作台」链接默认指向 SPA builder 工作台（/builder）；部署在子路径时，
  * 在引入本脚本前设置 window.GB_HOME = '/your-spa-base/' 即可覆盖。
  */
 (function () {
   'use strict';
-  var HOME = (typeof window.GB_HOME === 'string' && window.GB_HOME) || '/tools/index.html';
+  var HOME = (typeof window.GB_HOME === 'string' && window.GB_HOME) || '/builder';
   var APPS = [
-    { href: '/tools/workbench.html', label: '构建工作台' },
-    { href: '/tools/intent-graph-editor.html', label: '图谱编辑器' },
-    { href: '/tools/graph-intent-visual.html', label: '图谱画布' },
-    { href: '/intent-rsi', label: 'RSI 进化' },
+    { href: '/tools/knowledge-qa.html', label: '知识问答' },
+    { href: '/tools/credit-risk-agent.html', label: '信贷风控' },
+    { href: '/tools/schedule-agent.html', label: '日程管理' },
   ];
   var mount = document.getElementById('gb-appbar');
   if (!mount) return;

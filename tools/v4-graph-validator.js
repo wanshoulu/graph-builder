@@ -2,7 +2,7 @@
  * 意图图谱 V4.1 资产校验器（builder 建图链路专用）
  *
  * 对齐 docs/ai-native-bank/intent-graph-schema-v4.md v4.1（2026-09-24 评审通过）§11 的 14 条校验。
- * 模板：data/graph-builder-templates/intent-graph-v4.json（template_id: intent-graph-v4）。
+ * 模板：data/graph-builder-templates/template.intent.v4.json（template_id: intent-graph-v4）。
  *
  * builder 文档形态与 V4.1 文件的映射（由前端 lib/intentGraphV4.ts 导出时转换）：
  *   层级        → has_child 边（父→子）；导出派生 parent_intent_id / path
@@ -96,12 +96,12 @@ function validateV4Rules(document, ctx) {
   registries.policies.forEach(function (p) { if (text(p && p.id)) policyIds[text(p.id)] = p; });
   registries.skillBindings.forEach(function (s) { if (text(s && s.skillId)) skillIds[text(s.skillId)] = s; });
 
-  const refExists = function (kind, id, where) {
+  const refExists = function (kind, id, where, ruleNum) {
     const table = { capability: capabilityIds, faq: faqIds, policy: policyIds, skill: skillIds }[kind];
     if (!table[id]) {
       errors.push({ code: 'V4_DANGLING_REF', message: '悬空引用：' + where + ' 引用的' +
         { capability: '能力', faq: 'FAQ', policy: '策略', skill: '技能绑定' }[kind] +
-        '「' + id + '」不在资源注册表中（校验第 9 条）', path: where });
+        '「' + id + '」不在资源注册表中（校验第 ' + (ruleNum || 9) + ' 条）', path: where });
     }
   };
 
@@ -191,6 +191,29 @@ function validateV4Rules(document, ctx) {
     }
   });
 
+  // ── 第 2 条：path 与父节点链一致 ──
+  nodes.forEach(function (n) {
+    const id = text(n && n.id);
+    if (!id) return;
+    const declaredPath = text(n && n.properties && n.properties.path);
+    if (!declaredPath) return; // path 缺失由骨架层报
+    // 沿父链构造期望路径
+    const segments = [];
+    let cur = n;
+    while (cur) {
+      const cid = text(cur && cur.id);
+      if (!cid) break;
+      segments.unshift(text(cur && cur.properties && cur.properties.title) || cid);
+      const pid = parentOf[cid];
+      cur = pid ? nodeById[pid] : null;
+    }
+    const expectedPath = segments.join('/');
+    if (declaredPath !== expectedPath) {
+      errors.push({ code: 'V4_PATH_MISMATCH', message: '节点「' + id + '」path「' + declaredPath +
+        '」与父节点链构造的路径「' + expectedPath + '」不一致（校验第 2 条：path 必须与父节点 title 链一致）' });
+    }
+  });
+
   // ── 场景校验（第 4/5/6/7/8/10/11/13/14 条） ──
   const descSeen = {};
   const aliasSeen = {};
@@ -249,13 +272,19 @@ function validateV4Rules(document, ctx) {
 
       const sem = (scene && scene.semantic_definition) || {};
       const desc = text(sem.description);
-      // 第 4 条：描述 ≥8 字 + 全图场景维度唯一
+      // 第 4 条：描述 ≥8 字 + 四要素（角色+场景+边界+产出）+ 全图场景维度唯一
       if (!desc) {
         errors.push({ code: 'V4_SCENE_DESC_MISSING', message: label + ' 缺少 semantic_definition.description' });
       } else {
         if (desc.length < 8) {
           errors.push({ code: 'V4_SCENE_DESC_SHORT', message: label + ' 的场景描述不足 8 字（当前 ' + desc.length +
             ' 字）：「' + desc + '」' });
+        }
+        // 四要素检查：功能边界是最关键要素（决定相邻意图区分度）
+        var hasBoundary = /(不含|不包括|排除|仅限|限于|支持.*[^不]含|覆盖.*范围)/.test(desc) ||
+          (desc.indexOf('包含') >= 0 && desc.indexOf('不') >= 0);
+        if (desc.length >= 20 && !hasBoundary) {
+          warnings.push({ code: 'V4_DESC_NO_BOUNDARY', message: label + ' 的场景描述缺少功能边界（应说明包含/不包含什么，决定相邻意图区分度）：「' + desc.substring(0, 40) + '...」' });
         }
         if (descSeen[desc]) {
           errors.push({ code: 'V4_SCENE_DESC_DUP', message: label + ' 的场景描述与「' + descSeen[desc] +
@@ -273,10 +302,31 @@ function validateV4Rules(document, ctx) {
 
       const retrieval = (scene && scene.retrieval_profile) || {};
       const aliases = Array.isArray(retrieval.aliases) ? retrieval.aliases.map(text).filter(Boolean) : [];
-      // 第 5/6 条：别名 ≥3、格式、全图场景维唯一
+      // 第 5/6 条：别名 ≥3 + 维度覆盖 + 格式 + 全图场景维唯一
       if (aliases.length < 3) {
         errors.push({ code: 'V4_ALIAS_TOO_FEW', message: label + ' 别名不足 3 条（当前 ' + aliases.length +
-          '，要求 ≥3，建议 8~16 条）' });
+          '，要求 ≥3，建议 8~16 条覆盖四维度）' });
+      }
+      // 维度覆盖检查：直接说法、口语化变体、场景化表达、操作型表达
+      var V4_UTT_DIMS = [
+        { key: 'direct', label: '直接说法', patterns: [/^(查|看|搜|找|要|想看|想查)/] },
+        { key: 'colloquial', label: '口语化变体', patterns: [/(多少|还剩|有没有|是不是|到底|真的)/] },
+        { key: 'scene', label: '场景化表达', patterns: [/(如果|万一|比如|像.*那样|的时候|之后|之前)/] },
+        { key: 'operation', label: '操作型表达', patterns: [/^(怎么|如何|在哪|哪里|哪能|怎样)/] },
+      ];
+      var v4Covered = {};
+      aliases.forEach(function (a) {
+        V4_UTT_DIMS.forEach(function (dim) {
+          if (!v4Covered[dim.key] && dim.patterns.some(function (p) { return p.test(a); })) {
+            v4Covered[dim.key] = true;
+          }
+        });
+      });
+      var v4Missing = V4_UTT_DIMS.filter(function (dim) { return !v4Covered[dim.key]; });
+      if (aliases.length >= 3 && v4Missing.length >= 2) {
+        warnings.push({ code: 'V4_ALIAS_DIM_GAP', message: label + ' 别名维度覆盖不足（缺 ' +
+          v4Missing.map(function (m) { return m.label; }).join('+') +
+          '），建议每个维度至少1条：直接说法/口语化变体/场景化表达/操作型表达' });
       }
       aliases.forEach(function (a) {
         const problems = aliasFormatProblems(a);
@@ -299,6 +349,44 @@ function validateV4Rules(document, ctx) {
           warnings.push({ code: 'V4_NEGATIVE_OVERLAP', message: label + ' 负例「' + neg + '」与本场景别名/召回词重叠' });
         }
       });
+
+      // recallTerms 质量检查：数量下限 + 与 aliases 的互补关系
+      const recallTerms = Array.isArray(retrieval.recallTerms) ? retrieval.recallTerms.map(text).filter(Boolean) : [];
+      if (recallTerms.length === 0 && aliases.length < 5) {
+        warnings.push({ code: 'V4_RECALL_TERMS_EMPTY', message: label + ' 别名不足5条且 recallTerms 为空（recallTerms 是子串匹配的关键召回素材，建议至少 3 个关键词）' });
+      }
+      // recallTerms 与 aliases 完全重叠时，召回素材无增量价值
+      if (recallTerms.length > 0) {
+        var recallOnlyTerms = recallTerms.filter(function (t) { return aliases.indexOf(t) < 0; });
+        if (recallOnlyTerms.length === 0) {
+          warnings.push({ code: 'V4_RECALL_TERMS_NO增量', message: label + ' recallTerms 与 aliases 完全重叠（recallTerms 应补充别名中未覆盖的关键词以提升子串召回）' });
+        }
+      }
+      // recallTermSets 格式校验
+      const recallTermSets = Array.isArray(retrieval.recallTermSets) ? retrieval.recallTermSets : [];
+      recallTermSets.forEach(function (set, idx) {
+        if (!Array.isArray(set) || set.length === 0) {
+          warnings.push({ code: 'V4_RECALL_SET_INVALID', message: label + ' recallTermSets[' + idx + '] 不是非空数组' });
+        }
+      });
+
+      // 负例来源检查：负例应与兄弟场景（同 parent）的别名有交集，否则可能缺乏区分度
+      if (negatives.length >= 2 && scene && scene.parent) {
+        var siblingAliases = [];
+        parsed.scenes.forEach(function (otherScene) {
+          if (otherScene && otherScene.parent === scene.parent && otherScene !== scene) {
+            var osRetrieval = (otherScene.semantic_definition && otherScene.semantic_definition.retrieval) || {};
+            var osAliases = Array.isArray(osRetrieval.aliases) ? osRetrieval.aliases.map(text).filter(Boolean) : [];
+            siblingAliases = siblingAliases.concat(osAliases);
+          }
+        });
+        if (siblingAliases.length > 0) {
+          var matchedNegatives = negatives.filter(function (neg) { return siblingAliases.indexOf(neg) >= 0; });
+          if (matchedNegatives.length === 0) {
+            warnings.push({ code: 'V4_NEGATIVE_NOT_FROM_SIBLING', message: label + ' 负例均不来自兄弟场景别名（负例应优先选用相邻场景的典型说法以测试边界区分度）' });
+          }
+        }
+      }
 
       // 第 10 条互斥：knowledge_binding vs task_binding；executionMode 合法性
       const knowledge = (scene && scene.knowledge_binding) || null;
@@ -356,8 +444,12 @@ function validateV4Rules(document, ctx) {
         if (text(pid)) refExists('policy', text(pid), label + ' bindings.policies');
       });
       const skillBinding = (task && task.skillBinding) || null;
-      if (skillBinding && text(skillBinding.skillId)) {
-        refExists('skill', text(skillBinding.skillId), label + ' task_binding.skillBinding.skillId');
+      if (skillBinding) {
+        if (!text(skillBinding.skillId)) {
+          errors.push({ code: 'V4_SKILL_ID_EMPTY', message: label + ' task_binding.skillBinding 已声明但 skillId 为空（校验第 13 条：skillBinding.skillId 不可为空）' });
+        } else {
+          refExists('skill', text(skillBinding.skillId), label + ' task_binding.skillBinding.skillId', 13);
+        }
       }
       const slots = (task && task.slotContract && Array.isArray(task.slotContract.slots)) ? task.slotContract.slots : [];
       slots.forEach(function (slot) {
@@ -430,7 +522,7 @@ function validateV4Rules(document, ctx) {
 
 /**
  * 组装 V4.1 资产校验器：骨架 + x6 字段级 + V4.1 语义规则。
- * @param {string} templatePath intent-graph-v4.json 路径
+ * @param {string} templatePath template.intent.v4.json 路径
  */
 function createV4IntentValidator(templatePath) {
   // 相对路径统一按 cwd 解析为绝对（fs 与 require 的相对基准不同，避免歧义）

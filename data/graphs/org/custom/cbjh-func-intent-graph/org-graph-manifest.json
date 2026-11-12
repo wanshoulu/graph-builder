@@ -1,0 +1,55 @@
+{
+  "asset_id": "cbjh-func-intent-graph",
+  "active_version": "org-graph-v1",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "cbjh-func-intent-graph-doc",
+      "document_version": "1.0.0",
+      "template_id": "org-people",
+      "published_at": "2026-11-08T04:40:27.864Z",
+      "note": "功能树 xlsx 建图成品（intent-graph-v2.1-p2-batch903）",
+      "name": "建行手机银行功能场景图谱",
+      "stats": {
+        "nodes": 2238,
+        "edges": 4202
+      },
+      "source_ref": "intent-graph-v2.1-p2-batch903"
+    }
+  ],
+  "publishRequests": [
+    {
+      "id": "pr-cbjh-mw7ccluc",
+      "status": "approved",
+      "note": "功能树 xlsx 建图成品（intent-graph-v2.1-p2-batch903）",
+      "snapshotFile": "publish-requests/pr-cbjh-mw7ccluc.json",
+      "stats": {
+        "nodes": 2238,
+        "edges": 4202
+      },
+      "createdAt": "2026-11-08T04:37:31.720Z",
+      "decidedAt": "2026-11-08T04:40:28.085Z"
+    }
+  ],
+  "updated_at": "2026-11-08T06:21:53.000Z",
+  "auditLog": [
+    {
+      "at": "2026-11-08T04:40:27.954Z",
+      "action": "publish",
+      "version": "org-graph-v1",
+      "note": "功能树 xlsx 建图成品（intent-graph-v2.1-p2-batch903）",
+      "stats": {
+        "nodes": 2238,
+        "edges": 4202
+      },
+      "contentDigest": "sha256:c5abe109ff674405d0ac6fac932eb79f77134cca984d2ea1e5c1c19b52cf8f09"
+    },
+    {
+      "at": "2026-11-08T04:40:28.085Z",
+      "action": "publish_approved",
+      "requestId": "pr-cbjh-mw7ccluc",
+      "version": "org-graph-v1"
+    }
+  ]
+}

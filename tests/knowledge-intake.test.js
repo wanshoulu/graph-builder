@@ -9,7 +9,7 @@
 
 process.env.SKIP_AUTH = 'true';
 process.env.KNOWLEDGE_INTAKE_DIR = require('node:fs').mkdtempSync(
-  require('node:path').join(require('node:os').tmpdir(), 'knowledge-intake-test-')
+    require('node:path').join(require('node:os').tmpdir(), 'knowledge-intake-test-' + process.pid + '-')
 );
 
 const test = require('node:test');
@@ -32,7 +32,7 @@ function validRaw() {
       { rowNumber: 3, path: '财富管理/账户查询', name: '账户查询', description: '查询本人账户余额、明细与持仓的服务', clientClass: '个人客户', securityLevel: 'L2-内部', department: '财富管理部', status: '启用', note: '' },
     ],
     intents: [
-      { rowNumber: 2, name: '查询账户余额', funcPath: '财富管理/账户查询', intentType: '查询', description: '客户询问余额时的查询意图，返回实时余额卡片，明细查询见查询交易明细', businessObjects: '账户', keySlots: '账户', answerForm: '数据卡片', heat: 'P0-高频', status: '生效', code: '', note: '' },
+      { rowNumber: 2, name: '查询账户余额', funcPath: '财富管理/账户查询', intentType: '查询', description: '客户询问余额时的查询意图，返回实时余额卡片，明细查询见查询交易明细', aliases: '查询账户余额,查余额,账户余额查询,查账户余额', recallTerms: '余额,账户余额', negativeExamples: '查交易明细,查流水', businessObjects: '账户', keySlots: '账户', answerForm: '数据卡片', heat: 'P0-高频', status: '生效', code: '', note: '' },
     ],
     utterances: [
       { rowNumber: 2, intentRef: '财富管理/账户查询/查询账户余额', kind: '标问', text: '查询账户余额', source: '人工编写', confidence: '', status: '已审核', reviewNote: '', note: '' },
@@ -92,7 +92,7 @@ test('validateSheets：意图标识未登记、同意图重复说法、驳回无
 test('validateSheets：跨意图重复说法给 warning 不拒绝；无标问给 warning', () => {
   const raw = validRaw();
   raw.intents.push(
-    { rowNumber: 3, name: '查询交易明细', funcPath: '财富管理/账户查询', intentType: '查询', description: '查询本人账户历史交易明细的意图，返回流水列表', businessObjects: '账户', keySlots: '账户,时间段', answerForm: '数据卡片', heat: 'P0-高频', status: '生效', code: '', note: '' },
+    { rowNumber: 3, name: '查询交易明细', funcPath: '财富管理/账户查询', intentType: '查询', description: '查询本人账户历史交易明细的意图，返回流水列表', aliases: '查询交易明细,查交易明细,交易流水查询,看流水', recallTerms: '明细,流水', negativeExamples: '查余额,查账户余额', businessObjects: '账户', keySlots: '账户,时间段', answerForm: '数据卡片', heat: 'P0-高频', status: '生效', code: '', note: '' },
   );
   raw.utterances.push(
     { rowNumber: 4, intentRef: '财富管理/账户查询/查询账户余额', kind: '扩展问', text: '看看流水', source: '人工编写', confidence: '', status: '候选', reviewNote: '', note: '' },
@@ -253,7 +253,7 @@ test('validateSheets：易混意图未在本批次登记给 warning 不拒绝；
   const raw = validRaw();
   raw.intents[0] = { ...raw.intents[0], goal: '确认本人账户实时余额', confusableIntents: '查询交易明细;不存在的意图' };
   raw.intents.push(
-    { rowNumber: 3, name: '查询交易明细', funcPath: '财富管理/账户查询', intentType: '查询', description: '查询本人账户历史交易明细的意图，返回流水列表', businessObjects: '账户', keySlots: '账户,时间段', answerForm: '数据卡片', heat: 'P0-高频', status: '生效', code: '', note: '' },
+    { rowNumber: 3, name: '查询交易明细', funcPath: '财富管理/账户查询', intentType: '查询', description: '查询本人账户历史交易明细的意图，返回流水列表', aliases: '查询交易明细,查交易明细,交易流水查询,看流水', recallTerms: '明细,流水', negativeExamples: '查余额,查账户余额', businessObjects: '账户', keySlots: '账户,时间段', answerForm: '数据卡片', heat: 'P0-高频', status: '生效', code: '', note: '' },
   );
   const outcome = validateSheets(raw);
   assert.equal(outcome.rejected.length, 0, JSON.stringify(outcome.rejected));
@@ -319,9 +319,9 @@ function buildWorkbookBuffer() {
     ['财富管理/账户查询', '账户查询', '查询本人账户余额、明细与持仓的服务', '个人客户', 'L2-内部', '财富管理部', '启用', ''],
   ]), '1-业务功能分类');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-    ['意图名称', '所属功能全路径', '业务意图类型', '业务描述', '涉及业务对象', '关键要素', '答案形态', '热度', '状态', '意图编码（选填）', '备注'],
-    ['查询账户余额', '财富管理/账户查询', '查询', '客户询问余额时的查询意图，返回实时余额卡片', '账户', '账户', '数据卡片', 'P0-高频', '生效', '', ''],
-    ['余额错误申诉', '财富管理/不存在的功能', '查询', '客户对余额展示有异议时的申诉意图', '账户', '', '转人工', 'P2-低频', '草稿', '', ''],
+    ['意图名称', '所属功能全路径', '业务意图类型', '业务描述', '别名列表', '涉及业务对象', '关键要素', '答案形态', '热度', '状态', '意图编码（选填）', '备注'],
+    ['查询账户余额', '财富管理/账户查询', '查询', '客户询问余额时的查询意图，返回实时余额卡片', '查询账户余额,查余额,账户余额查询,查账户余额', '账户', '账户', '数据卡片', 'P0-高频', '生效', '', ''],
+    ['余额错误申诉', '财富管理/不存在的功能', '查询', '客户对余额展示有异议时的申诉意图', '', '账户', '', '转人工', 'P2-低频', '草稿', '', ''],
   ]), '2-意图清单');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
     ['意图标识', '说法类型', '说法文本', '来源', '置信度', '状态', '审核意见', '备注'],
@@ -701,11 +701,11 @@ test('两段式守卫：纯 Excel 导入（未人工确认）不能直接预览/
 
 // ── v4：一体化填写单表导入 + 一体化骨架树 ───────────────────────────────────
 
-const { flatToRaw } = require('../routes/knowledge-intake');
+const { flatToRaw, multiSheetToRaw } = require('../routes/knowledge-intake');
 
 test('flatToRaw：单表归并三类行，属性就近填充，说法行继承上一意图，跨功能无意图可继承时报错', () => {
   const raw = flatToRaw([
-    { rowNumber: 2, path: '财富管理', fname: '财富管理', fdesc: '财富管理业务域的完整三段式描述示例', clientClass: '个人客户', securityLevel: 'L2-内部', department: '财富管理部', fstatus: '启用', iname: '查询理财产品', intentType: '查询', idesc: '客户查询在售理财产品的意图描述示例', answerForm: '数据卡片', heat: 'P0-高频', istatus: '生效', kind: '标问', text: '查询理财产品' },
+    { rowNumber: 2, path: '财富管理', fname: '财富管理', fdesc: '财富管理业务域的完整三段式描述示例', clientClass: '个人客户', securityLevel: 'L2-内部', department: '财富管理部', fstatus: '启用', iname: '查询理财产品', intentType: '查询', idesc: '客户查询在售理财产品的意图描述示例', aliases: '查询理财产品,查理财,在售理财查询,看理财', recallTerms: '理财,产品', negativeExamples: '查存款,查基金', answerForm: '数据卡片', heat: 'P0-高频', istatus: '生效', kind: '标问', text: '查询理财产品' },
     { rowNumber: 3, path: '财富管理', text: '有什么理财可以买' },
     { rowNumber: 4, path: '财富管理', iname: '查询理财产品', text: '看看在售理财' },
     { rowNumber: 5, path: '贷款', text: '没有意图名称的说法' },
@@ -727,13 +727,59 @@ test('flatToRaw：单表归并三类行，属性就近填充，说法行继承�
   assert.equal(outcome.sheets.utterances.length, 3);
 });
 
+test('multiSheetToRaw：官方 V4 模板跳过填写说明行，路径按上级功能逐级拼出，负例回填、FAQ 归入说法', () => {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['序号', '功能名称', '层级', '上级功能', 'App菜单路径', '业务说明', '范围内关键词', '范围外关键词', '导航词', '业务对象', '有无用户意图', '备注'],
+    ['自己编号\n1,2,3…', '功能的业务名称\n要简洁明确', '下拉选\n领域/分类/功能', '上一级的名称\n领域留空', 'App里的菜单路径', '一句话说清\n这个功能管什么', '典型关键词', '范围外词', '导航词', '核心对象', '下拉选\n是/否', '备注'],
+    ['1', '账户服务', '领域', '', '首页>账户', '账户类业务的总入口', '账户,余额', '理财', '账户', '账户', '否', ''],
+    ['2', '余额查询', '功能', '账户服务', '首页>账户>余额查询', '查询银行卡的可用余额和余额', '余额', '明细', '余额', '账户,银行卡', '是', ''],
+  ]), '功能树');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['功能名称', '场景类型', '场景描述', '用户目标', '适用渠道', '执行方式', '需要确认', '风险等级', '备注'],
+    ['从功能树里\n复制功能名称', '下拉选\n查询/办理/问答', '这个场景\n具体做什么', '用户目的', '全渠道', '下拉选\n直接执行', '下拉选\n是/否', '下拉选\nL0-L3', ''],
+    ['余额查询', '查询', '查银行卡可用余额和余额', '知道卡里还有多少钱', '全渠道', '直接执行', '否', 'L1', ''],
+    ['余额查询', '问答', '余额相关的常见问题解答', '了解余额相关的问题', '全渠道', '仅回答', '否', 'L0', ''],
+  ]), '场景声明');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['功能名称', '场景类型', '素材类型', '素材内容', '备注'],
+    ['从功能树里\n复制功能名称', '下拉选', '下拉选', '用户会说的原话', ''],
+    ['余额查询', '查询', '标准别名', '查余额', ''],
+    ['余额查询', '查询', '口语变体', '看看余额', ''],
+    ['余额查询', '查询', '口语变体', '余额多少', ''],
+    ['余额查询', '查询', '负例', '查交易明细', '这是明细查询'],
+    ['余额查询', '问答', '标准别名', '余额问答', ''],
+    ['余额查询', '问答', '口语变体', '余额常见问题', ''],
+    ['余额查询', '问答', '口语变体', '余额疑问', ''],
+  ]), '说法素材');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ['序号', '关联功能', '关联场景', '问题', '答案', '备注'],
+    ['自己编号', '从功能树里\n复制功能名称', '下拉选\n问答', '问题\n用用户语气', '标准答案', ''],
+    ['1', '余额查询', '问答', '余额怎么算的', '按日切分计算', ''],
+  ]), '常见问答');
+
+  const raw = multiSheetToRaw(wb);
+  assert.equal(raw.functions.length, 2, '填写说明行不产生功能行');
+  assert.equal(raw.functions[0].path, '账户服务', '领域节点路径 = 功能名称');
+  assert.equal(raw.functions[1].path, '账户服务/余额查询', '路径按上级功能拼出而非 App菜单路径');
+  assert.equal(raw.intents.length, 2, '填写说明行不产生意图行');
+  assert.equal(raw.intents[0].funcPath, '账户服务/余额查询');
+  assert.equal(raw.intents[0].negativeExamples, '查交易明细', '负例回填意图、不进说法候选');
+  assert.equal(raw.utterances.length, 7, '标准别名 + 口语变体 + FAQ 问题');
+  assert.equal(raw.utterances[0].kind, '标问');
+  assert.equal(raw.utterances[6].intentRef, '账户服务/余额查询/余额查询-问答', 'FAQ 问题挂到问答场景意图');
+
+  const outcome = validateSheets(raw);
+  assert.equal(outcome.rejected.length, 0, JSON.stringify(outcome.rejected));
+});
+
 test('import：一体化单表工作簿直接导入，与三张分表同一候选层语义', async () => {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-    ['功能全路径', '功能名称', '功能描述', '客户分类', '安全分级', '责任部门', '功能状态', '意图名称', '意图类型', '意图描述', '答案形态', '热度', '意图状态', '说法类型', '说法文本', '说法来源', '说法状态'],
-    ['财富管理', '财富管理', '面向个人客户的财富管理业务域，含产品与持仓服务', '个人客户', 'L2-内部', '财富管理部', '启用', '查询理财产品', '查询', '客户查询在售理财产品的意图，返回产品列表', '数据卡片', 'P0-高频', '生效', '标问', '查询理财产品', '人工编写', '已审核'],
-    ['财富管理', '', '', '', '', '', '', '', '', '', '', '', '', '', '有什么理财可以买', '人工编写', '候选'],
-    ['财富管理/账户查询', '账户查询', '查询本人账户余额、明细与持仓的服务', '个人客户', 'L2-内部', '财富管理部', '启用', '查询账户余额', '查询', '客户询问余额时的查询意图，返回实时余额', '数据卡片', 'P0-高频', '生效', '标问', '查询账户余额', '人工编写', '已审核'],
+    ['功能全路径', '功能名称', '功能描述', '客户分类', '安全分级', '责任部门', '功能状态', '意图名称', '意图类型', '意图描述', '别名列表', '答案形态', '热度', '意图状态', '说法类型', '说法文本', '说法来源', '说法状态'],
+    ['财富管理', '财富管理', '面向个人客户的财富管理业务域，含产品与持仓服务', '个人客户', 'L2-内部', '财富管理部', '启用', '查询理财产品', '查询', '客户查询在售理财产品的意图，返回产品列表', '查询理财产品,查理财,在售理财查询,看理财', '数据卡片', 'P0-高频', '生效', '标问', '查询理财产品', '人工编写', '已审核'],
+    ['财富管理', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '有什么理财可以买', '人工编写', '候选'],
+    ['财富管理/账户查询', '账户查询', '查询本人账户余额、明细与持仓的服务', '个人客户', 'L2-内部', '财富管理部', '启用', '查询账户余额', '查询', '客户询问余额时的查询意图，返回实时余额', '查询账户余额,查余额,账户余额查询,查账户余额', '数据卡片', 'P0-高频', '生效', '标问', '查询账户余额', '人工编写', '已审核'],
   ]), '一体化填写');
   const mp = multipartBody(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
   const result = await call('POST', '/api/knowledge-intake/import', mp.body, mp.contentType);
@@ -827,7 +873,7 @@ test('buildAcceptanceReport：各维全 ≥90（含预检全 fit）时 ready=tru
         { rowId: 'f-1', path: '个人金融', name: '个人金融', status: 'approved', description: '面向个人客户的存取款、支付结算等基础金融服务，是功能网中的业务域。', department: '个人金融部' },
       ],
       intents: [
-        { rowId: 'i-1', funcPath: '个人金融', ref: '个人金融/查询账户余额', name: '查询账户余额', status: 'approved', description: '查询名下账户的当前余额与可用余额，支持多币种与定期账户。', answerForm: '数据卡片', intentType: '查询', scopeIn: '本人名下账户', scopeOut: '不含他行账户', triggerScene: '客户询问余额时', executionMode: 'read-execute', riskLevel: 'L0', orchestrationMode: 'single', lifecycle: 'active', readiness: 'ready' },
+        { rowId: 'i-1', funcPath: '个人金融', ref: '个人金融/查询账户余额', name: '查询账户余额', status: 'approved', description: '查询名下账户的当前余额与可用余额，支持多币种与定期账户。', answerForm: '数据卡片', intentType: '查询', aliases: '查询账户余额,查余额,账户余额查询,查账户余额', recallTerms: '余额,账户余额', negativeExamples: '查交易明细,查流水', scopeIn: '本人名下账户', scopeOut: '不含他行账户', triggerScene: '客户询问余额时', executionMode: 'read-execute', riskLevel: 'L0', orchestrationMode: 'single', lifecycle: 'active', readiness: 'ready' },
       ],
       utterances: [
         { rowId: 'u-1', intentRef: '个人金融/查询账户余额', kind: '标问', text: '查询账户余额', status: 'approved' },
@@ -962,6 +1008,9 @@ const GRID_FUNC = (path, name) => ({
 const GRID_INTENT = (name, funcPath) => ({
   name, funcPath, intentType: '查询',
   description: '在线编辑生成的意图描述，用于网格自测（不少于10字）',
+  aliases: '查询账户余额,查余额,账户余额查询,查账户余额',
+  recallTerms: '余额,账户余额',
+  negativeExamples: '查交易明细,查流水',
   businessObjects: '', keySlots: '', triggerScene: '', scopeIn: '', scopeOut: '', roles: '',
   answerForm: '话术答复', heat: 'P1-中频', status: '生效', code: '', note: '',
 });
@@ -1035,7 +1084,7 @@ test('在线编辑：空白批次 + 行 CRUD + 两段式降级 + 级联重接/�
   const utterAfter = (await call('GET', '/api/knowledge-intake/batches/' + bid + '/items?kind=utterances')).body.data.items[0];
   assert.equal(utterAfter.intentRef, '财富管理/账户查询/余额查询');
   const crypto = require('node:crypto');
-  const expectedUId = 'u-' + crypto.createHash('sha1').update('财富管理/账户查询/余额查询 标问 查询账户余额', 'utf8').digest('hex').slice(0, 12);
+  const expectedUId = 'u-' + crypto.createHash('sha1').update('财富管理/账户查询/余额查询 标问 查询账户余额', 'utf8').digest('hex').slice(0, 12);
   assert.equal(utterAfter.rowId, expectedUId, '重接后 rowId 与导入生成器一致');
   assert.equal(utterAfter.status, 'pending', '级联重接使说法确认失效');
   assert.equal(renamed.body.data.row.status, 'pending');
@@ -1412,4 +1461,62 @@ test('功能改名级联后，open 修订里的说法 rowId 同步 remap（不�
   assert.equal(change.stale, false, 'remap 后行仍可寻址');
   assert.equal(change.liveStatus, 'pending');
   await call('DELETE', '/api/knowledge-intake/batches/' + batchId);
+});
+
+// ── 召回试测（候选集组装 / 结论评估 / LLM 返回收敛） ──────────────────────────
+
+test('buildRecallCandidates：驳回与停用视同下线不进候选，语料多的意图优先保留', () => {
+  const { buildRecallCandidates } = require('../routes/knowledge-intake');
+  const batch = {
+    rows: {
+      intents: [
+        { ref: 'F/A', name: '甲意图', status: 'approved', sourceStatus: '生效', description: '描述甲', goal: '目标甲', scopeIn: '范围一;范围二', scopeOut: '', confusableIntents: '乙意图' },
+        { ref: 'F/B', name: '乙意图', status: 'pending', sourceStatus: '草稿', description: '描述乙', goal: '', scopeIn: '', scopeOut: '', confusableIntents: '' },
+        { ref: 'F/C', name: '停用意图', status: 'pending', sourceStatus: '停用', description: '描述丙', goal: '', scopeIn: '', scopeOut: '', confusableIntents: '' },
+        { ref: 'F/D', name: '驳回意图', status: 'rejected', sourceStatus: '生效', description: '描述丁', goal: '', scopeIn: '', scopeOut: '', confusableIntents: '' },
+      ],
+      utterances: [
+        { intentRef: 'F/A', kind: '标问', text: '甲的说法', status: 'pending' },
+        { intentRef: 'F/A', kind: '扩展问', text: '甲的扩展', status: 'pending' },
+        { intentRef: 'F/A', kind: '扩展问', text: '甲的驳回说法', status: 'rejected' },
+        { intentRef: 'F/C', kind: '标问', text: '停用意图的说法', status: 'pending' },
+      ],
+    },
+  };
+  const { candidates, onlineCount, offlineCount } = buildRecallCandidates(batch);
+  assert.equal(onlineCount, 2);
+  assert.equal(offlineCount, 2, '停用 + 驳回都算下线');
+  assert.equal(candidates.length, 2);
+  assert.deepEqual(candidates.map((c) => c.ref), ['F/A', 'F/B'], '语料多的意图排前');
+  assert.deepEqual(candidates[0].utterances, ['甲的说法', '甲的扩展'], '驳回说法不进证据池，标问在前');
+  assert.deepEqual(candidates[0].scopeIn, ['范围一', '范围二']);
+  assert.deepEqual(candidates[0].confusableIntents, ['乙意图']);
+});
+
+test('evaluateRecallOutcome：三态结论只由位置关系推导，无期望不下结论', () => {
+  const { evaluateRecallOutcome } = require('../routes/knowledge-intake');
+  const matches = [
+    { ref: 'F/B', name: '乙', verdict: 'hit' },
+    { ref: 'F/A', name: '甲', verdict: 'ambiguous' },
+  ];
+  assert.equal(evaluateRecallOutcome(matches, 'F/B').outcome, 'pass', '期望意图 hit 且居首');
+  assert.equal(evaluateRecallOutcome(matches, 'F/A').outcome, 'ambiguous', '期望在列但非首位 hit → 歧义');
+  assert.equal(evaluateRecallOutcome(matches, 'F/C').outcome, 'fail');
+  assert.equal(evaluateRecallOutcome([], 'F/A').outcome, 'fail');
+  assert.equal(evaluateRecallOutcome(matches, '').outcome, null, '未设定期望不下结论');
+  assert.equal(evaluateRecallOutcome(matches, '').topRef, 'F/B');
+});
+
+test('normalizeRecallMatches：ref 白名单过滤 + 名称回填 + 定性字段收敛', () => {
+  const { normalizeRecallMatches } = require('../routes/knowledge-intake');
+  const intentByRef = new Map([['F/A', { name: '甲意图' }]]);
+  const matches = normalizeRecallMatches([
+    { ref: 'F/A', verdict: 'hit', evidence: [' 说法一 ', ''], reason: '依据描述', confidence: 'ultra' },
+    { ref: 'F/GHOST', verdict: 'hit', evidence: [], reason: '幻觉意图', confidence: 'high' },
+  ], intentByRef);
+  assert.equal(matches.length, 1, '白名单外的幻觉 ref 被过滤');
+  assert.equal(matches[0].name, '甲意图');
+  assert.deepEqual(matches[0].evidence, ['说法一']);
+  assert.equal(matches[0].confidence, 'medium', '非法置信度收敛为 medium');
+  assert.equal(normalizeRecallMatches(null, intentByRef).length, 0);
 });

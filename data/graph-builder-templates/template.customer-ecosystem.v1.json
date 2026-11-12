@@ -1,0 +1,605 @@
+{
+  "template_id": "customer-ecosystem",
+  "template_version": "1.0.0",
+  "name": "客户生态图谱模板",
+  "name_en": "Customer Ecosystem Graph Template",
+  "description": "对公客户生态图谱：企业客户、关键决策人与子公司/供应商/经销商/下游客户/兄弟公司/任职关系，真实数据源为 test-docs 对公客户画像与关系网络 CSV（2026-08-25 接入）。",
+  "origin": "builtin",
+  "parent_template_id": null,
+  "node_types": [
+    {
+      "type": "CUSTOMER",
+      "label": "企业客户",
+      "style": {
+        "color": "#2563eb",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "企业名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "customerCode",
+          "label": "客户编号",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "industry",
+          "label": "行业分类",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "chainPosition",
+          "label": "产业链位置",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "registeredCapital",
+          "label": "注册资本(万元)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "employeeCount",
+          "label": "员工数",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "revenueRange",
+          "label": "营收区间(万元)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "companyType",
+          "label": "企业类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "listed",
+          "label": "上市情况",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "specialNew",
+          "label": "专精特新",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "assetLiabilityRatio",
+          "label": "资产负债率(%)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "revenueGrowth",
+          "label": "营收增速(%)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "foundedYear",
+          "label": "成立年份",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "province",
+          "label": "所在省份",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "isBankCustomer",
+          "label": "是否本行客户",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "key": "tags",
+          "label": "标签",
+          "type": "tags",
+          "required": false,
+          "default": []
+        }
+      ]
+    },
+    {
+      "type": "PERSON",
+      "label": "关键决策人",
+      "style": {
+        "color": "#059669",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "姓名",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "title",
+          "label": "职务",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "phone",
+          "label": "联系方式",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "customerCode",
+          "label": "所属客户编号",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "PRODUCT",
+      "label": "金融产品",
+      "style": {
+        "color": "#d97706",
+        "shape": "diamond"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "产品名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "category",
+          "label": "产品大类",
+          "type": "string",
+          "required": false,
+          "default": "",
+          "description": "信贷融资/结算融资/供应链金融/担保服务"
+        },
+        {
+          "key": "applicableIndustries",
+          "label": "适用行业",
+          "type": "tags",
+          "required": false,
+          "default": []
+        },
+        {
+          "key": "applicableChainPositions",
+          "label": "适用产业链位置",
+          "type": "tags",
+          "required": false,
+          "default": []
+        },
+        {
+          "key": "minRevenue",
+          "label": "最低营收要求(万元)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "maxAssetLiabilityRatio",
+          "label": "最高资产负债率要求(%)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "description",
+          "label": "产品说明",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "tags",
+          "label": "标签",
+          "type": "tags",
+          "required": false,
+          "default": []
+        }
+      ]
+    }
+  ],
+  "edge_types": [
+    {
+      "type": "SUBSIDIARY",
+      "label": "子公司关系",
+      "source_types": [
+        "CUSTOMER"
+      ],
+      "target_types": [
+        "CUSTOMER"
+      ],
+      "style": {
+        "color": "#2563eb"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "relationType",
+          "label": "原始关联类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "SUPPLIER",
+      "label": "上游供应商",
+      "source_types": [
+        "CUSTOMER"
+      ],
+      "target_types": [
+        "CUSTOMER"
+      ],
+      "style": {
+        "color": "#0891b2"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "relationType",
+          "label": "原始关联类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "DISTRIBUTOR",
+      "label": "下游经销商",
+      "source_types": [
+        "CUSTOMER"
+      ],
+      "target_types": [
+        "CUSTOMER"
+      ],
+      "style": {
+        "color": "#0891b2"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "relationType",
+          "label": "原始关联类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "DOWNSTREAM_CUSTOMER",
+      "label": "下游客户",
+      "source_types": [
+        "CUSTOMER"
+      ],
+      "target_types": [
+        "CUSTOMER"
+      ],
+      "style": {
+        "color": "#0891b2"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "relationType",
+          "label": "原始关联类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "SIBLING",
+      "label": "兄弟公司",
+      "source_types": [
+        "CUSTOMER"
+      ],
+      "target_types": [
+        "CUSTOMER"
+      ],
+      "style": {
+        "color": "#7c3aed"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "relationType",
+          "label": "原始关联类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "WORK_FOR",
+      "label": "任职于",
+      "source_types": [
+        "PERSON"
+      ],
+      "target_types": [
+        "CUSTOMER"
+      ],
+      "style": {
+        "color": "#059669"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "relationType",
+          "label": "原始关联类型",
+          "type": "string",
+          "required": false,
+          "default": "关键决策人"
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "SUITABLE_PRODUCT",
+      "label": "适用产品推荐",
+      "source_types": [
+        "CUSTOMER"
+      ],
+      "target_types": [
+        "PRODUCT"
+      ],
+      "style": {
+        "color": "#d97706"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "关系权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "reason",
+          "label": "推荐理由",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "priority",
+          "label": "优先级",
+          "type": "string",
+          "required": false,
+          "default": "medium"
+        },
+        {
+          "key": "estimatedAmount",
+          "label": "建议额度(万元)",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    }
+  ],
+  "starter_graph": {
+    "nodes": [
+      {
+        "id": "cust:KH002",
+        "type": "CUSTOMER",
+        "properties": {
+          "name": "比亚迪股份有限公司",
+          "customerCode": "KH002",
+          "industry": "新能源汽车",
+          "isBankCustomer": true
+        }
+      },
+      {
+        "id": "cust:bydsemi",
+        "type": "CUSTOMER",
+        "properties": {
+          "name": "比亚迪半导体",
+          "customerCode": "",
+          "industry": "新能源汽车",
+          "isBankCustomer": false
+        }
+      },
+      {
+        "id": "person:KH002-1",
+        "type": "PERSON",
+        "properties": {
+          "name": "王传福",
+          "title": "关键决策人",
+          "phone": "0755-8988XXXX",
+          "customerCode": "KH002"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge:sub-1",
+        "type": "SUBSIDIARY",
+        "source": "cust:KH002",
+        "target": "cust:bydsemi",
+        "properties": {
+          "weight": 9,
+          "relationType": "子公司",
+          "origin": "seed:csv"
+        }
+      },
+      {
+        "id": "edge:wf-1",
+        "type": "WORK_FOR",
+        "source": "person:KH002-1",
+        "target": "cust:KH002",
+        "properties": {
+          "weight": 9,
+          "relationType": "关键决策人",
+          "origin": "seed:csv"
+        }
+      }
+    ]
+  },
+  "validation_rules": {
+    "unique_node_ids": true,
+    "unique_edge_ids": true,
+    "no_orphan_edges": true,
+    "allow_self_loop": false
+  },
+  "metadata": {
+    "created_at": "2026-08-25T00:00:00.000Z",
+    "updated_at": "2026-08-25T00:00:00.000Z"
+  },
+  "layout": {
+    "default_layout": "force"
+  }
+}

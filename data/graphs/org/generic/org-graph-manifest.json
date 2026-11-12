@@ -1,0 +1,117 @@
+{
+  "asset_id": "generic-knowledge",
+  "active_version": null,
+  "versions": [],
+  "publishRequests": [
+    {
+      "id": "pr-muytk39v-nmlyv6",
+      "status": "rejected",
+      "note": "部署E2E审批链验证",
+      "snapshotFile": "publish-requests/pr-muytk39v-nmlyv6.json",
+      "stats": {
+        "nodes": 1,
+        "edges": 0
+      },
+      "createdAt": "2026-10-08T00:49:36.421Z",
+      "decidedAt": "2026-10-08T00:49:40.042Z"
+    },
+    {
+      "id": "pr-muytralx-tkktx3",
+      "status": "rejected",
+      "note": "部署E2E审批链验证",
+      "snapshotFile": "publish-requests/pr-muytralx-tkktx3.json",
+      "stats": {
+        "nodes": 1,
+        "edges": 0
+      },
+      "createdAt": "2026-10-08T00:55:12.557Z",
+      "decidedAt": "2026-10-08T00:55:20.174Z"
+    },
+    {
+      "id": "pr-muyty14u-jge2mw",
+      "status": "rejected",
+      "note": "部署E2E审批链验证",
+      "snapshotFile": "publish-requests/pr-muyty14u-jge2mw.json",
+      "stats": {
+        "nodes": 1,
+        "edges": 0
+      },
+      "createdAt": "2026-10-08T01:00:26.825Z",
+      "decidedAt": "2026-10-08T01:00:45.932Z"
+    },
+    {
+      "id": "pr-muyu2hj1-v1otdz",
+      "status": "rejected",
+      "note": "部署E2E审批链验证",
+      "snapshotFile": "publish-requests/pr-muyu2hj1-v1otdz.json",
+      "stats": {
+        "nodes": 1,
+        "edges": 0
+      },
+      "createdAt": "2026-10-08T01:03:54.702Z",
+      "decidedAt": "2026-10-08T01:03:59.495Z"
+    }
+  ],
+  "auditLog": [
+    {
+      "at": "2026-10-08T00:49:36.421Z",
+      "action": "publish_requested",
+      "requestId": "pr-muytk39v-nmlyv6",
+      "stats": {
+        "nodes": 1,
+        "edges": 0
+      },
+      "note": "部署E2E审批链验证"
+    },
+    {
+      "at": "2026-10-08T00:49:40.042Z",
+      "action": "publish_rejected",
+      "requestId": "pr-muytk39v-nmlyv6"
+    },
+    {
+      "at": "2026-10-08T00:55:12.557Z",
+      "action": "publish_requested",
+      "requestId": "pr-muytralx-tkktx3",
+      "stats": {
+        "nodes": 1,
+        "edges": 0
+      },
+      "note": "部署E2E审批链验证"
+    },
+    {
+      "at": "2026-10-08T00:55:20.174Z",
+      "action": "publish_rejected",
+      "requestId": "pr-muytralx-tkktx3"
+    },
+    {
+      "at": "2026-10-08T01:00:26.825Z",
+      "action": "publish_requested",
+      "requestId": "pr-muyty14u-jge2mw",
+      "stats": {
+        "nodes": 1,
+        "edges": 0
+      },
+      "note": "部署E2E审批链验证"
+    },
+    {
+      "at": "2026-10-08T01:00:45.932Z",
+      "action": "publish_rejected",
+      "requestId": "pr-muyty14u-jge2mw"
+    },
+    {
+      "at": "2026-10-08T01:03:54.702Z",
+      "action": "publish_requested",
+      "requestId": "pr-muyu2hj1-v1otdz",
+      "stats": {
+        "nodes": 1,
+        "edges": 0
+      },
+      "note": "部署E2E审批链验证"
+    },
+    {
+      "at": "2026-10-08T01:03:59.496Z",
+      "action": "publish_rejected",
+      "requestId": "pr-muyu2hj1-v1otdz"
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "asset_id": "personal-credit-risk",
+  "active_version": "org-graph-v5",
+  "versions": [
+    {
+      "version": "org-graph-v1",
+      "file": "org-graph-v1.json",
+      "document_id": "personal-credit-risk-doc",
+      "document_version": "1.0.0",
+      "template_id": "org-people",
+      "published_at": "2026-09-03T09:42:45.131Z",
+      "note": "v1：mock 数据首版（团伙欺诈/担保环/多头借贷/正常对照）",
+      "stats": {
+        "nodes": 39,
+        "edges": 43
+      }
+    },
+    {
+      "version": "org-graph-v2",
+      "file": "org-graph-v2.json",
+      "document_id": "personal-credit-risk-doc",
+      "document_version": "1.0.0",
+      "template_id": "org-people",
+      "published_at": "2026-09-03T09:49:28.368Z",
+      "note": "v2：真实感人名 + 家族/企业/资产/夫妻共债维度扩充",
+      "stats": {
+        "nodes": 51,
+        "edges": 62
+      }
+    },
+    {
+      "version": "org-graph-v3",
+      "file": "org-graph-v3.json",
+      "document_id": "personal-credit-risk-doc",
+      "document_version": "1.0.0",
+      "template_id": "org-people",
+      "published_at": "2026-09-03T14:36:37.888Z",
+      "note": "v3：微调修正（节点/边数同 v2，修正个别关系属性）",
+      "stats": {
+        "nodes": 51,
+        "edges": 62
+      }
+    },
+    {
+      "version": "org-graph-v4",
+      "file": "org-graph-v4.json",
+      "document_id": "personal-credit-risk-doc",
+      "document_version": "1.0.0",
+      "template_id": "org-people",
+      "published_at": "2026-09-03T14:37:05.095Z",
+      "note": "v4：继续微调（同 v2 规模，补充缺失边属性）",
+      "stats": {
+        "nodes": 51,
+        "edges": 62
+      }
+    },
+    {
+      "version": "org-graph-v5",
+      "file": "org-graph-v5.json",
+      "document_id": "personal-credit-risk-doc",
+      "document_version": "1.0.0",
+      "template_id": "org-people",
+      "published_at": "2026-10-12T10:00:00.000Z",
+      "note": "v5+：规模扩充至 88 节点/114 边，新增 6 类风险场景（团伙扩散/担保链蔓延/家族企业二代/虚假注册/跨省多头/身份冒用），覆盖全部 8 个图算法工具",
+      "stats": {
+        "nodes": 88,
+        "edges": 114
+      }
+    }
+  ]
+}

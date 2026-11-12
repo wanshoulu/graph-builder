@@ -2,33 +2,66 @@
   "assets": [
     {
       "assetId": "personal-credit-risk",
-      "name": "个贷风控人员图谱",
+      "name": "个贷风控人员图谱资产",
       "description": "借款人为中心的个贷风控知识图谱（亲属/担保/单位/负债/逾期/风险标签），当前为脱敏 mock 数据",
-      "templateFile": "personal-credit-risk.json",
+      "templateFile": "template.personal-credit-risk.v1.json",
       "createdAt": "2026-09-03T09:42:05.056Z",
-      "createdFrom": "upload"
+      "createdFrom": "upload",
+      "kind": "asset"
     },
     {
       "assetId": "ccb-mobile-banking",
-      "name": "建行手机银行意图图谱",
+      "name": "建行手机银行意图图谱资产",
       "description": "建行手机银行功能意图图谱（查询/转账/理财/悦生活/信用卡/贷款/账户管理等）",
-      "templateFile": "ccb-mobile-banking.json",
+      "templateFile": "template.ccb-mobile-banking.v1.json",
       "createdAt": "2026-09-15T17:42:07.589Z",
-      "createdFrom": "copy:intent-graph"
+      "createdFrom": "copy:intent-graph",
+      "kind": "asset"
     },
     {
       "assetId": "bank-semantic-graph",
-      "name": "银行业务语义图谱",
+      "name": "银行业务语义图谱资产",
       "description": "面向语义记忆的银行业务知识图谱：金融产品、账户、信用卡、贷款、服务、概念、规则，7种节点+10种边，77节点130边",
-      "templateFile": "bank-semantic-graph.json",
+      "templateFile": "template.bank-semantic-graph.v1.json",
       "createdAt": "2026-09-16T00:00:00.000Z",
-      "createdFrom": "upload"
+      "createdFrom": "upload",
+      "kind": "asset"
+    },
+    {
+      "assetId": "cbjh-func-intent-graph",
+      "name": "建行手机银行功能场景图谱资产",
+      "description": "基于功能树 xlsx（2237 节点）直转换的意图图谱：1811 叶子/427 聚合/4202 边，schema v4.1 零错误",
+      "templateFile": "template.intent.v2.json",
+      "createdAt": "2026-11-08T04:33:21.092Z",
+      "createdFrom": "copy:intent-graph",
+      "kind": "asset"
     }
   ],
   "builtinMeta": {
     "generic-knowledge": {
-      "name": "通用知识图谱",
+      "name": "通用知识图谱资产（未发布）",
       "description": ""
+    },
+    "intent-graph": {
+      "name": "意图图谱资产（示例：工行转账汇款/理财）"
+    },
+    "intent-graph-v4": {
+      "name": "意图图谱 V4.1 功能树资产（未发布）"
+    },
+    "org-people": {
+      "name": "组织人员图谱资产"
+    },
+    "customer-ecosystem": {
+      "name": "客户生态图谱资产"
+    },
+    "finance-knowledge": {
+      "name": "金融知识图谱资产"
+    },
+    "icbc-hr": {
+      "name": "工行人力资源图谱资产"
+    },
+    "personal-credit-risk": {
+      "name": "个贷风控人员图谱资产"
     }
   }
 }

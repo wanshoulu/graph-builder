@@ -19,7 +19,7 @@ const path = require('path');
 const { applyToIntakeDocument, rollbackFromDocument } = require('../routes/knowledge-intake');
 const { validateGraph } = require('../tools/x6-graph-template-validator');
 
-const TEMPLATE_PATH = path.join(__dirname, '..', 'data', 'graph-builder-templates', 'intent-graph.json');
+const TEMPLATE_PATH = path.join(__dirname, '..', 'data', 'graph-builder-templates', 'template.intent.v2.json');
 const template = JSON.parse(fs.readFileSync(TEMPLATE_PATH, 'utf8'));
 
 function baseGraphDoc() {
@@ -40,7 +40,7 @@ function fullCoverageApproved() {
     ],
     intents: [
       { rowId: 'i-1', ref: '财富管理/账户查询/查询账户余额', name: '查询账户余额', funcPath: '财富管理/账户查询', intentType: '查询', description: '客户询问账户余额时的查询意图', answerForm: '话术答复' },
-      { rowId: 'i-2', ref: '财富管理/账户查询/办理定期存款', name: '办理定期存款', funcPath: '财富管理/账户查询', intentType: '办理', description: '客户办理整存整取定期存款的意图', executionMode: 'confirm-required-确认后执行', requiredSlots: '存期,金额', capabilityBindings: '定期开户接口', confusableIntents: '查询账户余额' },
+      { rowId: 'i-2', ref: '财富管理/账户查询/办理定期存款', name: '办理定期存款', funcPath: '财富管理/账户查询', intentType: '办理', description: '客户办理整存整取定期存款的意图', executionMode: 'confirm-required-确认后执行', requiredSlots: '存期,金额', skillRef: '定期开户接口', confusableIntents: '查询账户余额' },
       { rowId: 'i-3', ref: '财富管理/账户查询/查询交易明细', name: '查询交易明细', funcPath: '财富管理/账户查询', intentType: '查询', description: '客户查询交易流水的意图', executionMode: 'read-execute-读执行', answerForm: '数据卡片', requiredSlots: '时间范围' },
       { rowId: 'i-4', ref: '财富管理/账户查询/跳转手机银行', name: '跳转手机银行', funcPath: '财富管理/账户查询', intentType: '查询', description: '跳转手机银行相关页面的意图', answerForm: '跳转办理' },
       { rowId: 'i-5', ref: '财富管理/账户查询/咨询理财风险', name: '咨询理财风险', funcPath: '财富管理/账户查询', intentType: '咨询', description: '客户咨询理财产品风险等级的意图' },

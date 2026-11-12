@@ -1,5 +1,5 @@
 /**
- * 意图图谱模板自检（data/graph-builder-templates/intent-graph.json）
+ * 意图图谱模板自检（data/graph-builder-templates/template.intent.v2.json）
  * 模板自身结构 + starter_graph 过 X6 校验器（对齐 org-graph.js 发布门禁）
  *
  * schema 与真实数据来源：AI Harbor 意图建模 v2.1（intent-graph-v2.1-p1-batch10）——
@@ -13,7 +13,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { validateGraph } = require('../tools/x6-graph-template-validator');
-const template = require('../data/graph-builder-templates/intent-graph.json');
+const template = require('../data/graph-builder-templates/template.intent.v2.json');
 
 test('模板骨架：id/版本/9 类节点/21 类边（对齐 ontology）', () => {
   assert.equal(template.template_id, 'intent-graph');

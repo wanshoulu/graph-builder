@@ -44,6 +44,7 @@ const { handleKnowledgeIntakeRequest } = require('./routes/knowledge-intake');
 const { handleIntentGraphEditorRequest } = require('./routes/intent-graph-editor');
 const { handleIntentGraphAutobuildRequest } = require('./routes/intent-graph-autobuild');
 const { handleIntentRsiRequest } = require('./routes/intent-rsi');
+const { handleGraphBuilderToolsRequest } = require('./routes/graph-builder-tools');
 
 const PORT = Number(process.env.PORT || 3013);
 const HOST = process.env.HOST || '127.0.0.1';
@@ -152,15 +153,15 @@ const server = http.createServer((req, res) => {
       ok: true, service: 'graph-builder', version: '1.1.0',
       port: PORT, time: new Date().toISOString(),
       routes: ['/api/knowledge-intake/*', '/api/org-graph/*', '/api/intent-graph/*',
-        '/api/intent-graph-autobuild/*', '/api/intent-rsi/*', '/api/graph/data'],
+        '/api/intent-graph-autobuild/*', '/api/intent-rsi/*', '/api/graph-builder/tools/*', '/api/graph/data'],
       rsiAgent: process.env.RSI_AGENT_URL || 'http://rsi-agent:18132',
       spa: fs.existsSync(path.join(WEB_DIST, 'index.html')),
     });
   }
 
-  // 独立门户：根路径直接落到工具页，避免 readFile 直出相对资源时 404
+  // 根路径落到统一工作台（OntoMind 图谱构建 SPA，/auto-build /builder /intake /evaluation /management /intent-rsi）
   if (p === '/' || p === '/index.html') {
-    res.writeHead(302, { Location: '/tools/index.html' });
+    res.writeHead(302, { Location: '/auto-build' });
     return res.end();
   }
   if (p === '/favicon.ico' || p === '/vite.svg') {
@@ -177,6 +178,8 @@ const server = http.createServer((req, res) => {
   if (p.startsWith('/api/intent-graph/')) return handleIntentGraphEditorRequest(req, res);
   // RSI 意图进化：35 个端点含 /agent/* 工具桥与 /auto-evolve SSE 长连接
   if (p.startsWith('/api/intent-rsi')) return handleIntentRsiRequest(req, res);
+  // 逐节点/逐边 AI 字段审核（SPA builder 的 AI 辅助面板用）
+  if (p.startsWith('/api/graph-builder/tools/')) return handleGraphBuilderToolsRequest(req, res);
   if (p === '/api/graph/data') return serveGraphData(res, u.searchParams);
 
   // 历史 dist 保留的单体工具页链接统一回落门户，避免点进去 404。
@@ -212,7 +215,7 @@ server.requestTimeout = 30 * 60 * 1000;
 server.headersTimeout = 65 * 1000;
 
 server.listen(PORT, HOST, () => {
-  console.log(`[graph-builder] http://${HOST}:${PORT}  →  /tools/index.html`);
+  console.log(`[graph-builder] http://${HOST}:${PORT}  →  统一工作台 /auto-build（SPA）· 辅助导航 /tools/index.html`);
   console.log(`[graph-builder] RSI 工作台           →  /intent-rsi （V2 SPA）/ /tools/intent-rsi-lab.html（V1 实验台）`);
   console.log(`[graph-builder] RSI Agent            →  ${process.env.RSI_AGENT_URL || 'http://rsi-agent:18132'}`);
   console.log(`[graph-builder] SKIP_AUTH=${process.env.SKIP_AUTH} DEV_MODE=${process.env.DEV_MODE}`);

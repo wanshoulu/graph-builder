@@ -27,6 +27,7 @@ var FLAT_COLUMNS = [
   { key: 'fdomain',           name: '功能业务域' },
   { key: 'fmenuKey',          name: '功能菜单键' },
   { key: 'iname',             name: '意图名称' },
+  { key: 'code',              name: '意图编码' },
   { key: 'idomain',           name: '意图业务域' },
   { key: 'imenuKey',          name: '意图菜单键' },
   { key: 'iaction',           name: '动作类型' },
@@ -691,14 +692,14 @@ function mapExecutionMode(mode) {
     'knowledge-only-知识应答': 'answer',
     'multi_intent-多意图': 'workflow',
     // 兼容旧值
-    'navigation-only-仅导航': 'page',
+    'navigation-only-仅导航': 'menu',
     'unavailable-不可用': 'unconfigured',
     // 纯中文标签
     '读执行': 'query',
     '确认后执行': 'skill',
     '知识应答': 'answer',
     '多意图': 'workflow',
-    '仅导航': 'page',
+    '仅导航': 'menu',
     '不可用': 'unconfigured',
     // 纯英文值
     'read-execute': 'query',
@@ -707,8 +708,8 @@ function mapExecutionMode(mode) {
     'multi_intent': 'workflow',
     'query': 'query',
     'answer': 'answer',
-    'page': 'page',
-    'menu': 'page', // 兼容旧值 menu → page（V4.1 枚举为 page）
+    'page': 'menu', // 兼容旧值 page → menu（模板枚举为 menu）
+    'menu': 'menu',
     'skill': 'skill',
     'workflow': 'workflow',
     'agent': 'agent',
@@ -760,7 +761,7 @@ var EXEC_MODE_CN_MAP = {
 var FULFILL_KIND_CN_MAP = {
   '调接口': '__api__', // 特殊标记：根据是否写操作动态决定 query/skill
   '技能编排': 'skill', '工作流': 'workflow',
-  '智能体': 'agent', '页面直达': 'page', '话术答复': 'answer',
+  '智能体': 'agent', '页面直达': 'menu', '话术答复': 'answer',
   '数据卡片': 'query', '转人工': 'agent',
 };
 

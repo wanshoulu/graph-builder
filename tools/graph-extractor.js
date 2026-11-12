@@ -122,6 +122,7 @@ class GraphExtractor {
       entitiesExtracted: allEntities.length,
       entitiesResolved: nodes.length,
       relationsExtracted: edges.length,
+      discardedTypeItems: extraction.discardedTypeItems || 0,
       gleaningPass: opts.gleaning !== false,
       timeMs: Date.now() - startTime,
       builtAt: new Date().toISOString(),
@@ -141,6 +142,7 @@ class GraphExtractor {
     var pass1 = await this._extractBatch(docs, 'first');
     var allEntities = pass1.entities || [];
     var allRelations = pass1.relations || [];
+    var discardedTypeItems = pass1.discardedTypeItems || 0;
 
     if (opts.gleaning !== false) {
       var gleanDocs = docs.filter(function(d) {
@@ -149,6 +151,7 @@ class GraphExtractor {
       });
       if (gleanDocs.length > 0) {
         var pass2 = await this._extractBatch(gleanDocs, 'glean');
+        discardedTypeItems += pass2.discardedTypeItems || 0;
         // Merge, avoiding duplicates by name+type
         var existingKeys = {};
         allEntities.forEach(function(e) { existingKeys[(e.name||'')+'::'+(e.type||'')] = true; });
@@ -168,7 +171,20 @@ class GraphExtractor {
       }
     }
 
-    return { rawEntities: allEntities, entities: this._resolveEntities(allEntities), relations: allRelations };
+    var resolvedEntities = this._resolveEntities(allEntities);
+    // 跨块冲突检测与解决：同名不同类型实体、重复/矛盾关系
+    var conflictResult = this._detectAndResolveConflicts(resolvedEntities, allRelations);
+    resolvedEntities = conflictResult.entities;
+    allRelations = conflictResult.relations;
+    // 跨块关系发现：分块抽取后，补抽跨块实体间遗漏的关系
+    var crossChunkRels = await this._discoverCrossChunkRelations(resolvedEntities, allRelations, docs);
+    if (crossChunkRels.length) allRelations = allRelations.concat(crossChunkRels);
+    return {
+      rawEntities: allEntities,
+      entities: resolvedEntities,
+      relations: allRelations,
+      discardedTypeItems: discardedTypeItems,
+    };
   }
 
   /**
@@ -190,6 +206,7 @@ class GraphExtractor {
         entitiesExtracted: extraction.rawEntities.length,
         entitiesResolved: extraction.entities.length,
         relationsExtracted: extraction.relations.length,
+        discardedTypeItems: extraction.discardedTypeItems || 0,
         gleaningPass: opts.gleaning !== false,
         timeMs: Date.now() - startTime,
         builtAt: new Date().toISOString(),
@@ -201,9 +218,11 @@ class GraphExtractor {
    * 可断点续跑的逐块抽取：completed 里已完成的 doc 直接复用（不烧 LLM），其余逐块抽取，
    * 每块成功即回调 onDocDone（调用方落盘 checkpoint，失败重试/进程重启后从断点继续）。
    * 与 _extractBatch 的关键差异：单块失败不再静默吞掉——记入 failedDocs，由调用方明示与续跑。
-   * gleaning 规则与 _runExtraction 一致（first pass 实体 <3 的文档再扫一遍）。
+   * gleaning 规则与 _runExtraction 一致（first pass 实体 <3 的文档再扫一遍），但走受限并发且逐块
+   * 回调 onGleanDone（调用方落盘 checkpoint，续跑不再整段重烧）；单块 gleaning 失败只计
+   * stats.gleanFailed 不进 failedDocs（首抽已成功，gleaning 是增益扫描）。
    * @param {Array} docs [{ id, title, content }]
-   * @param {object} options { gleaning?, completed?: {docId: {entities, relations}}, onDocDone?: (docId, entities, relations)=>void }
+   * @param {object} options { gleaning?, completed?, gleaned?, onDocDone?, onGleanStart?, onGleanDone? }
    * @returns extractFromContent 同构结果 + { resumed, failedDocs }
    */
   async extractFromDocsResumable(docs, options) {
@@ -216,46 +235,104 @@ class GraphExtractor {
     var rawRelations = [];
     var failedDocs = [];
     var resumed = 0;
+    var discardedTypeItems = 0;
+    var gleanFailedCount = 0;
 
-    for (var i = 0; i < docs.length; i++) {
-      var doc = docs[i];
-      if (completed[doc.id]) {
-        rawEntities = rawEntities.concat(completed[doc.id].entities || []);
-        rawRelations = rawRelations.concat(completed[doc.id].relations || []);
-        resumed += 1;
-        continue;
+    // 受限并发抽取：qwen-plus 实测 ~128s/块，全串行长文档过慢（22 块 ≈ 47 分钟），3 并发 ≈ 16 分钟。
+    // 失败隔离与逐块 checkpoint 落盘语义不变；JS 单线程下 push/计数无需加锁。
+    var concurrency = Math.max(1, Math.min(Number(opts.concurrency) || 3, 8));
+    var nextIndex = 0;
+    var worker = async function () {
+      while (nextIndex < docs.length) {
+        var doc = docs[nextIndex++];
+        if (completed[doc.id]) {
+          rawEntities = rawEntities.concat(completed[doc.id].entities || []);
+          rawRelations = rawRelations.concat(completed[doc.id].relations || []);
+          resumed += 1;
+          continue;
+        }
+        try {
+          var llmOut = await self._callLLM(self._buildExtractionPrompt([doc], false, rawEntities), self._extractionSystemPrompt());
+          var parsed = self._parseExtractionResult(llmOut, [doc]);
+          if (parsed.parseError) {
+            // 解析失败 ≠ 空结果：不落 checkpoint（下次续跑重试本块），调用方按失败块明示
+            failedDocs.push({ id: doc.id, error: '解析失败: ' + parsed.parseError });
+            continue;
+          }
+          rawEntities = rawEntities.concat(parsed.entities || []);
+          rawRelations = rawRelations.concat(parsed.relations || []);
+          discardedTypeItems += parsed.discardedTypeItems || 0;
+          if (typeof opts.onDocDone === 'function') opts.onDocDone(doc.id, parsed.entities || [], parsed.relations || []);
+        } catch (e) {
+          failedDocs.push({ id: doc.id, error: String((e && e.message) || e).slice(0, 200) });
+        }
       }
-      try {
-        var llmOut = await self._callLLM(self._buildExtractionPrompt([doc], false));
-        var parsed = self._parseExtractionResult(llmOut, [doc]);
-        rawEntities = rawEntities.concat(parsed.entities || []);
-        rawRelations = rawRelations.concat(parsed.relations || []);
-        if (typeof opts.onDocDone === 'function') opts.onDocDone(doc.id, parsed.entities || [], parsed.relations || []);
-      } catch (e) {
-        failedDocs.push({ id: doc.id, error: String((e && e.message) || e).slice(0, 200) });
-      }
-    }
+    };
+    var workers = [];
+    for (var w = 0; w < concurrency; w++) workers.push(worker());
+    await Promise.all(workers);
 
     if (opts.gleaning !== false) {
       var entityCountByDoc = {};
       rawEntities.forEach(function (e) { entityCountByDoc[e.sourceDoc] = (entityCountByDoc[e.sourceDoc] || 0) + 1; });
       var gleanDocs = docs.filter(function (d) { return (entityCountByDoc[d.id] || 0) < 3; });
       if (gleanDocs.length > 0) {
-        var pass2 = await this._extractBatch(gleanDocs, 'glean');
+        var gleaned = opts.gleaned || {};
+        var toGlean = gleanDocs.filter(function (d) { return !gleaned[d.id]; });
+        if (typeof opts.onGleanStart === 'function') opts.onGleanStart(gleanDocs.length);
         var existingKeys = {};
         rawEntities.forEach(function (e) { existingKeys[(e.name || '') + '::' + (e.type || '')] = true; });
-        (pass2.entities || []).forEach(function (e) {
-          var key = (e.name || '') + '::' + (e.type || '');
-          if (!existingKeys[key]) { rawEntities.push(e); existingKeys[key] = true; }
+        var existingRelKeys = {};
+        rawRelations.forEach(function (r) { existingRelKeys[(r.source || '') + '::' + (r.type || '') + '::' + (r.target || '')] = true; });
+        var mergeGleanResults = function (entities, relations) {
+          (entities || []).forEach(function (e) {
+            var key = (e.name || '') + '::' + (e.type || '');
+            if (!existingKeys[key]) { rawEntities.push(e); existingKeys[key] = true; }
+          });
+          (relations || []).forEach(function (r) {
+            var key = (r.source || '') + '::' + (r.type || '') + '::' + (r.target || '');
+            if (!existingRelKeys[key]) { rawRelations.push(r); existingRelKeys[key] = true; }
+          });
+        };
+        // checkpoint 命中的 glean 块直接复用（续跑不重烧）
+        gleanDocs.forEach(function (d) {
+          if (!gleaned[d.id]) return;
+          mergeGleanResults(gleaned[d.id].entities || [], gleaned[d.id].relations || []);
+          if (typeof opts.onGleanDone === 'function') opts.onGleanDone(d.id, gleaned[d.id].entities || [], gleaned[d.id].relations || []);
         });
-        (pass2.relations || []).forEach(function (r) {
-          var key = (r.source || '') + '::' + (r.type || '') + '::' + (r.target || '');
-          if (!rawRelations.find(function (x) { return (x.source + '::' + x.type + '::' + x.target) === key; })) rawRelations.push(r);
-        });
+        // 受限并发 gleaning（旧实现走串行 _extractBatch，大文档最坏撞 nginx 3600s 超时）
+        var gleanFailed = 0;
+        var gleanNext = 0;
+        var gleanWorker = async function () {
+          while (gleanNext < toGlean.length) {
+            var gdoc = toGlean[gleanNext++];
+            try {
+              var llmOut = await self._callLLM(self._buildExtractionPrompt([gdoc], true, rawEntities), self._extractionSystemPrompt());
+              var parsed = self._parseExtractionResult(llmOut, [gdoc]);
+              if (parsed.parseError) { gleanFailed += 1; continue; }
+              discardedTypeItems += parsed.discardedTypeItems || 0;
+              mergeGleanResults(parsed.entities || [], parsed.relations || []);
+              if (typeof opts.onGleanDone === 'function') opts.onGleanDone(gdoc.id, parsed.entities || [], parsed.relations || []);
+            } catch (e) {
+              gleanFailed += 1;
+            }
+          }
+        };
+        var gleanWorkers = [];
+        for (var gw = 0; gw < concurrency; gw++) gleanWorkers.push(gleanWorker());
+        await Promise.all(gleanWorkers);
+        gleanFailedCount = gleanFailed;
       }
     }
 
     var resolved = this._resolveEntities(rawEntities);
+    // 跨块冲突检测与解决：同名不同类型实体、重复/矛盾关系
+    var conflictResult = this._detectAndResolveConflicts(resolved, rawRelations);
+    resolved = conflictResult.entities;
+    rawRelations = conflictResult.relations;
+    // 跨块关系发现：分块抽取后，补抽跨块实体间遗漏的关系
+    var crossChunkRels = await this._discoverCrossChunkRelations(resolved, rawRelations, docs);
+    if (crossChunkRels.length) rawRelations = rawRelations.concat(crossChunkRels);
     return {
       entities: resolved,
       relations: rawRelations,
@@ -266,7 +343,10 @@ class GraphExtractor {
         entitiesExtracted: rawEntities.length,
         entitiesResolved: resolved.length,
         relationsExtracted: rawRelations.length,
+        crossChunkRelations: crossChunkRels.length,
+        discardedTypeItems: discardedTypeItems,
         gleaningPass: opts.gleaning !== false,
+        gleanFailed: gleanFailedCount,
         timeMs: Date.now() - startTime,
         builtAt: new Date().toISOString(),
       },
@@ -384,30 +464,56 @@ class GraphExtractor {
     var self = this;
     var allEntities = [];
     var allRelations = [];
+    var discardedTypeItems = 0;
     var batchSize = this.batchSize;
 
     for (var i = 0; i < docs.length; i += batchSize) {
       var batch = docs.slice(i, i + batchSize);
       var isGlean = passType === 'glean';
-      var prompt = self._buildExtractionPrompt(batch, isGlean);
+      var prompt = self._buildExtractionPrompt(batch, isGlean, allEntities);
 
       try {
-        var result = await self._callLLM(prompt);
+        var result = await self._callLLM(prompt, self._extractionSystemPrompt());
         var parsed = self._parseExtractionResult(result, batch);
         allEntities = allEntities.concat(parsed.entities || []);
         allRelations = allRelations.concat(parsed.relations || []);
+        discardedTypeItems += parsed.discardedTypeItems || 0;
       } catch(e) {
         console.error('[GraphExtractor] Batch ' + i + ' failed:', e.message);
       }
     }
 
-    return { entities: allEntities, relations: allRelations };
+    return { entities: allEntities, relations: allRelations, discardedTypeItems: discardedTypeItems };
   }
 
-  _buildExtractionPrompt(batch, isGlean) {
+  _extractionSystemPrompt() {
+    return '你是知识图谱抽取引擎。只输出严格合法的 JSON，不要输出任何解释或额外文字；'
+      + '实体与关系的 type 必须逐字取自用户消息给出的类型清单，无法确定类型的条目宁可不抽，不得猜测近似类型；'
+      + '原文中没有依据的实体和关系一律不输出。';
+  }
+
+  // 类型容错匹配：精确 → 忽略大小写 → 去分隔符后忽略大小写；都不中返回 null（由调用方丢弃并计数，不静默塞默认类型）
+  _matchType(raw, typeMap) {
+    if (raw == null) return null;
+    var t = String(raw).trim();
+    if (Object.prototype.hasOwnProperty.call(typeMap, t)) return t;
+    var lower = t.toLowerCase();
+    var keys = Object.keys(typeMap);
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i].toLowerCase() === lower) return keys[i];
+    }
+    var compact = lower.replace(/[\s\-_]+/g, '');
+    for (var j = 0; j < keys.length; j++) {
+      if (keys[j].toLowerCase().replace(/[\s\-_]+/g, '') === compact) return keys[j];
+    }
+    return null;
+  }
+
+  _buildExtractionPrompt(batch, isGlean, contextEntities) {
     var self = this;
+    // 单块读取上限必须 ≥ 路由分块长度（org-graph /extract 传 4000）：截断小于块长会静默丢块尾内容
     var docsText = batch.map(function(d, i) {
-      return '--- Document ' + (i+1) + ' (' + d.id + '): ' + d.title + ' ---\n' + d.content.slice(0, 2500);
+      return '--- Document ' + (i+1) + ' (' + d.id + '): ' + d.title + ' ---\n' + d.content.slice(0, 4000);
     }).join('\n\n');
 
     var entityTypesDesc = Object.keys(self.entityTypes).map(function(t) {
@@ -422,7 +528,25 @@ class GraphExtractor {
       ? '\n这是第二次扫描，请重点关注第一次可能遗漏的次要实体和隐含关系。提高召回率，宁可多抽不要漏。'
       : '';
 
-    return '你是一个知识图谱构建专家。从以下技术文档中抽取实体和关系。' + gleanHint + '\n\n' +
+    // 全局上下文：注入已抽取实体列表，促使 LLM 在不同块间使用一致命名
+    var contextHint = '';
+    if (contextEntities && contextEntities.length > 0) {
+      // 最多 50 个，按名称去重后展示，避免 prompt 过长
+      var seen = {};
+      var lines = [];
+      for (var i = 0; i < contextEntities.length && lines.length < 50; i++) {
+        var e = contextEntities[i];
+        var key = (e.name || '') + '::' + (e.type || '');
+        if (seen[key]) continue;
+        seen[key] = true;
+        lines.push('  - ' + e.name + ' (' + e.type + ')');
+      }
+      contextHint = '\n\n注意：以下实体已从前序段落中抽取。如果当前段落中出现相同实体，请使用相同的名称和类型，避免重复抽取不同写法的同一实体：\n'
+        + lines.join('\n') + '\n';
+    }
+
+    return '从以下文档内容中抽取实体和关系。实体类型、关系类型以下方清单为准，type 必须逐字取自清单；'
+      + '无法从原文确定类型的条目宁可不抽，不得猜测。' + gleanHint + contextHint + '\n\n' +
       '实体类型:\n' + entityTypesDesc + '\n\n' +
       '关系类型:\n' + relationTypesDesc + '\n\n' +
       '文档内容:\n' + docsText + '\n\n' +
@@ -439,93 +563,335 @@ class GraphExtractor {
 
   _parseExtractionResult(llmOutput, batch) {
     var self = this;
-    var defaultEntityType = Object.keys(self.entityTypes)[0];
-    // 默认 schema 保持历史回退值 RELATES_TO（Knowledge Studio 行为不变）；自定义 schema 回退第一个类型
-    var defaultRelationType = self.relationTypes.RELATES_TO ? 'RELATES_TO' : Object.keys(self.relationTypes)[0];
+    // 先剥壳取 JSON 串（纯字符串操作不会抛错）；解析失败时 catch 用同一串做截断抢救
+    var jsonStr = llmOutput;
+    var codeMatch = llmOutput.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeMatch) jsonStr = codeMatch[1].trim();
+    var startIdx = jsonStr.indexOf('{');
+    var endIdx = jsonStr.lastIndexOf('}');
+    if (startIdx >= 0 && endIdx > startIdx) {
+      jsonStr = jsonStr.slice(startIdx, endIdx + 1);
+    }
     try {
-      // Try to extract JSON from markdown code blocks
-      var jsonStr = llmOutput;
-      var codeMatch = llmOutput.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeMatch) jsonStr = codeMatch[1].trim();
-      // Find first { and last }
-      var startIdx = jsonStr.indexOf('{');
-      var endIdx = jsonStr.lastIndexOf('}');
-      if (startIdx >= 0 && endIdx > startIdx) {
-        jsonStr = jsonStr.slice(startIdx, endIdx + 1);
-      }
       var parsed = JSON.parse(jsonStr);
 
-      // Validate entities
-      var entities = (parsed.entities || []).map(function(e) {
-        return {
-          name: (e.name || '').trim(),
-          type: self.entityTypes[e.type] ? e.type : defaultEntityType,
-          description: (e.description || '').slice(0, 200),
-          sourceDoc: e.sourceDoc || batch[0]?.id || '',
-          sourceChunk: '',
-          confidence: Math.min(1, Math.max(0, e.confidence || 0.7)),
-        };
-      }).filter(function(e) { return e.name.length > 1 && e.name.length < 100; });
+      // 非法 type 不再静默塞默认类型（会编造语义）——容错匹配命中则归一，否则丢弃并计数
+      // （discardedTypeItems 只计类型不匹配；名称长度过滤不计入，与 9-28 口径一致）
+      var coercedEntities = (parsed.entities || []).map(function(e) { return self._coerceEntity(e, batch); });
+      var coercedRelations = (parsed.relations || []).map(function(r) { return self._coerceRelation(r, batch); });
+      var discardedTypeItems = coercedEntities.filter(function(e) { return !e; }).length
+        + coercedRelations.filter(function(r) { return !r; }).length;
 
-      // Validate relations
-      var entityNames = {};
-      entities.forEach(function(e) { entityNames[e.name] = true; });
+      var entities = coercedEntities.filter(function(e) { return e && e.name.length > 1 && e.name.length < 100; });
+      var relations = coercedRelations.filter(function(r) { return r && r.source.length > 1 && r.target.length > 1 && r.source !== r.target; });
 
-      var relations = (parsed.relations || []).map(function(r) {
-        return {
-          source: (r.source || '').trim(),
-          type: self.relationTypes[r.type] ? r.type : defaultRelationType,
-          target: (r.target || '').trim(),
-          sourceDoc: r.sourceDoc || batch[0]?.id || '',
-          confidence: Math.min(1, Math.max(0, r.confidence || 0.7)),
-        };
-      }).filter(function(r) {
-        return r.source.length > 1 && r.target.length > 1 && r.source !== r.target;
-      });
-
-      return { entities: entities, relations: relations };
+      return { entities: entities, relations: relations, discardedTypeItems: discardedTypeItems };
     } catch(e) {
+      // 截断抢救（9-28 0 实体事故防线）：max_tokens 掐断输出时，已完整闭合的实体/关系对象仍可回收
+      var salvagedEntities = self._salvageObjects(jsonStr, 'entities').map(function(x) { return self._coerceEntity(x, batch); })
+        .filter(function(e) { return e && e.name.length > 1 && e.name.length < 100; });
+      var salvagedRelations = self._salvageObjects(jsonStr, 'relations').map(function(x) { return self._coerceRelation(x, batch); })
+        .filter(function(r) { return r && r.source.length > 1 && r.target.length > 1 && r.source !== r.target; });
+      if (salvagedEntities.length > 0 || salvagedRelations.length > 0) {
+        console.error('[GraphExtractor] JSON 截断，抢救出 ' + salvagedEntities.length + ' 实体 / ' + salvagedRelations.length + ' 关系');
+        return { entities: salvagedEntities, relations: salvagedRelations, discardedTypeItems: 0, salvaged: true };
+      }
       console.error('[GraphExtractor] Parse error:', e.message, 'output preview:', llmOutput.slice(0, 200));
-      return { entities: [], relations: [] };
+      // parseError 标记：可续跑通道据此记入 failedDocs（不写 checkpoint、续跑重试），不再当成功空结果缓存 7 天
+      return { entities: [], relations: [], discardedTypeItems: 0, parseError: 'LLM 输出无法解析为实体 JSON: ' + String(e.message).slice(0, 180) };
     }
   }
 
+  // 抽取条目归一（正常解析与截断抢救共用）：type 容错匹配命中则归一，不中返回 null（由调用方丢弃）
+  _coerceEntity(e, batch) {
+    var entityType = this._matchType(e && e.type, this.entityTypes);
+    if (!entityType) return null;
+    return {
+      name: (e.name || '').trim(),
+      type: entityType,
+      description: (e.description || '').slice(0, 200),
+      sourceDoc: e.sourceDoc || batch[0]?.id || '',
+      sourceChunk: '',
+      confidence: Math.min(1, Math.max(0, e.confidence || 0.7)),
+    };
+  }
+
+  _coerceRelation(r, batch) {
+    var relationType = this._matchType(r && r.type, this.relationTypes);
+    if (!relationType) return null;
+    return {
+      source: (r.source || '').trim(),
+      type: relationType,
+      target: (r.target || '').trim(),
+      sourceDoc: r.sourceDoc || batch[0]?.id || '',
+      confidence: Math.min(1, Math.max(0, r.confidence || 0.7)),
+    };
+  }
+
+  // 字符串感知扫描（inStr/esc 状态机）：从截断 JSON 里收集已完整闭合的直接子对象。
+  // 深度语义：根对象 1 层不计，子对象在 2→1 闭合时回收；typeKey 决定形状过滤（entities→含 name / relations→含 source+target）
+  _salvageObjects(jsonStr, typeKey) {
+    var results = [];
+    var inStr = false, esc = false, depth = 0, start = -1;
+    for (var i = 0; i < jsonStr.length; i++) {
+      var ch = jsonStr[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (ch === '\\') esc = true;
+        else if (ch === '"') inStr = false;
+        continue;
+      }
+      if (ch === '"') { inStr = true; continue; }
+      if (ch === '{') { if (depth === 1) start = i; depth += 1; }
+      else if (ch === '}') {
+        if (depth < 2) { depth = Math.max(0, depth - 1); continue; }
+        depth -= 1;
+        if (depth === 1 && start >= 0) {
+          try {
+            var obj = JSON.parse(jsonStr.slice(start, i + 1));
+            if (obj && typeof obj === 'object' && !Array.isArray(obj)) results.push(obj);
+          } catch (e) { /* 半截对象丢弃 */ }
+          start = -1;
+        }
+      }
+    }
+    var shapeOk = typeKey === 'relations'
+      ? function (o) { return typeof o.source === 'string' && typeof o.target === 'string'; }
+      : function (o) { return typeof o.name === 'string'; };
+    return results.filter(shapeOk);
+  }
+
+  // 实体名称归一化：全角→半角 + 去括号后缀 + 去尾标点 + 小写
+  _normalizeEntityName(raw) {
+    var s = String(raw == null ? '' : raw);
+    var out = '';
+    for (var i = 0; i < s.length; i++) {
+      var code = s.charCodeAt(i);
+      if (code === 0x3000) { out += ' '; continue; }
+      if (code >= 0xff01 && code <= 0xff5e) { out += String.fromCharCode(code - 0xfee0); continue; }
+      out += s[i];
+    }
+    // 去括号后缀：手机银行（App版）→ 手机银行
+    out = out.replace(/[\(（][^\)）]*[\)）]/g, '').trim();
+    out = out.replace(/\s+/g, ' ').trim().replace(/[、，。：:；;·\-_]+$/, '').trim().toLowerCase();
+    return out;
+  }
+
+  // 去常见后缀后比较：手机银行 vs 手机银行App → 基名 "手机银行" 一致 → 合并
+  _stripCommonSuffix(name) {
+    return name.replace(/(app|application|系统|平台|服务|功能|模块|service|system|module)$/i, '').trim();
+  }
+
   _resolveEntities(entities) {
+    var self = this;
     var resolved = [];
+    // 主索引：normalized name + type → resolved 索引
     var seen = {};
+    // 副索引：去后缀基名 + type → resolved 索引（用于模糊匹配）
+    var baseSeen = {};
 
     entities.forEach(function(e) {
-      var key = (e.name || '').toLowerCase() + '::' + (e.type || '');
-      // seen[key] 存索引，0 也是合法索引（历史 bug：if (seen[key]) 对 0 失效导致同名实体不去重）
-      if (Object.prototype.hasOwnProperty.call(seen, key)) {
-        // Merge: keep higher confidence, append descriptions
-        var existing = resolved[seen[key]];
-        if (e.confidence > existing.confidence) {
-          existing.confidence = e.confidence;
-          existing.description = e.description || existing.description;
-        }
-        if (e.sourceDoc && existing.sourceDoc.indexOf(e.sourceDoc) < 0) {
-          existing.sourceDoc += ', ' + e.sourceDoc;
-        }
-      } else {
-        seen[key] = resolved.length;
-        resolved.push(e);
+      var normKey = (self._normalizeEntityName(e.name) || '') + '::' + (e.type || '');
+      var baseKey = (self._stripCommonSuffix(self._normalizeEntityName(e.name)) || '') + '::' + (e.type || '');
+
+      // 1. 精确归一化匹配
+      if (Object.prototype.hasOwnProperty.call(seen, normKey)) {
+        var existing = resolved[seen[normKey]];
+        self._mergeEntity(existing, e);
+        return;
       }
+      // 2. 去后缀模糊匹配（基名 ≥4 字符时才启用，避免短名误合并）
+      var baseName = self._stripCommonSuffix(self._normalizeEntityName(e.name));
+      if (baseName && baseName.length >= 4 && Object.prototype.hasOwnProperty.call(baseSeen, baseKey)) {
+        var existIdx = baseSeen[baseKey];
+        var existE = resolved[existIdx];
+        // 保留更长的名称作为规范名（更具体）
+        if (e.name.length > existE.name) {
+          existE.name = e.name;
+        }
+        self._mergeEntity(existE, e);
+        // 也建立精确索引，后续同名直接命中
+        seen[normKey] = existIdx;
+        return;
+      }
+      // 3. 新实体
+      seen[normKey] = resolved.length;
+      if (baseName && baseName.length >= 4) baseSeen[baseKey] = resolved.length;
+      resolved.push(e);
     });
 
     return resolved;
   }
 
-  _callLLM(prompt) {
+  // 合并重复实体：保留更高置信度，追加描述和来源
+  _mergeEntity(existing, incoming) {
+    if (incoming.confidence > existing.confidence) {
+      existing.confidence = incoming.confidence;
+      if (incoming.description && incoming.description.length > (existing.description || '').length) {
+        existing.description = incoming.description;
+      }
+    }
+    if (incoming.sourceDoc && existing.sourceDoc.indexOf(incoming.sourceDoc) < 0) {
+      existing.sourceDoc += ', ' + incoming.sourceDoc;
+    }
+  }
+
+  // 跨块冲突检测与解决：分块抽取后合并，可能产生同实体不同类型、重复/矛盾关系
+  // 此方法在 _resolveEntities 之后、跨块关系发现之前执行，确保基础数据干净
+  _detectAndResolveConflicts(entities, relations) {
+    var self = this;
+
+    // 1. 同名不同类型实体冲突：归一化名称相同但 type 不同 → 保留更高置信度的一方
+    var byNormName = {};
+    entities.forEach(function(e) {
+      var norm = self._normalizeEntityName(e.name);
+      if (!byNormName[norm]) byNormName[norm] = [];
+      byNormName[norm].push(e);
+    });
+    var entityKeep = {};
+    Object.keys(byNormName).forEach(function(norm) {
+      var group = byNormName[norm];
+      if (group.length <= 1) { group.forEach(function(e) { entityKeep[e] = true; }); return; }
+      // 同名同类型的已由 _resolveEntities 合并；此处仅处理同名不同类型
+      var typeMap = {};
+      group.forEach(function(e) {
+        var tk = e.type || 'unknown';
+        if (!typeMap[tk]) typeMap[tk] = e;
+        else typeMap[tk] = (e.confidence || 0) > (typeMap[tk].confidence || 0) ? e : typeMap[tk];
+      });
+      // 每种类型保留最高置信度的实体
+      Object.keys(typeMap).forEach(function(tk) { entityKeep[typeMap[tk]] = true; });
+    });
+    var cleanEntities = entities.filter(function(e) { return entityKeep[e]; });
+
+    // 2. 关系去重与冲突解决
+    var seenRel = {};
+    var cleanRelations = [];
+    relations.forEach(function(r) {
+      var src = (r.source || '').toLowerCase();
+      var tgt = (r.target || '').toLowerCase();
+      var rtype = (r.type || '').toLowerCase();
+      var key = src + '::' + tgt + '::' + rtype;
+      if (seenRel[key]) {
+        // 已有同 source+target+type 关系，保留更高置信度
+        var existing = seenRel[key];
+        if ((r.confidence || 0) > (existing.confidence || 0)) {
+          existing.confidence = r.confidence;
+        }
+        return;
+      }
+      seenRel[key] = r;
+      cleanRelations.push(r);
+    });
+
+    return { entities: cleanEntities, relations: cleanRelations };
+  }
+
+  // 跨块关系发现：分块抽取后，实体间跨块关系可能遗漏。此方法对已消解的实体做一次全局关系补抽。
+  // 仅当 >1 个 sourceDoc（即 >1 块）时执行；单块文档无需跨块发现。
+  async _discoverCrossChunkRelations(resolvedEntities, existingRelations, docs) {
+    var self = this;
+    if (!resolvedEntities || resolvedEntities.length < 2) return [];
+    if (!this.llmRoute || !this.llmRoute.apiKey) return [];
+
+    // 按 sourceDoc 分组
+    var byDoc = {};
+    resolvedEntities.forEach(function(e) {
+      var docIds = String(e.sourceDoc || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      docIds.forEach(function(did) {
+        if (!byDoc[did]) byDoc[did] = [];
+        byDoc[did].push(e);
+      });
+    });
+    var docIds = Object.keys(byDoc);
+    if (docIds.length < 2) return []; // 单块无需跨块发现
+
+    // 构建已有关系索引（避免重复）
+    var existingKeys = {};
+    existingRelations.forEach(function(r) {
+      existingKeys[(r.source || '').toLowerCase() + '::' + (r.type || '') + '::' + (r.target || '').toLowerCase()] = true;
+    });
+
+    // 构建实体列表（按块分组，每块最多 30 个实体避免 prompt 过长）
+    var entityLines = [];
+    docIds.forEach(function(did) {
+      var ents = byDoc[did].slice(0, 30);
+      var docTitle = (docs.find(function(d) { return d.id === did; }) || {}).title || did;
+      entityLines.push('段落 (' + docTitle + '):');
+      ents.forEach(function(e) {
+        entityLines.push('  - ' + e.name + ' (' + e.type + ')');
+      });
+    });
+
+    // 已有关系摘要（最多 40 条，避免 prompt 过长）
+    var relLines = existingRelations.slice(0, 40).map(function(r) {
+      return '  ' + r.source + ' -> ' + r.target + ' (' + r.type + ')';
+    });
+
+    var relationTypesDesc = Object.keys(self.relationTypes).map(function(t) {
+      return '- ' + t + ': ' + self.relationTypes[t].desc;
+    }).join('\n');
+
+    var prompt = '以下实体从同一文档的不同段落中分别抽取。由于分块处理，跨段落实体间的关系可能遗漏。'
+      + '请基于实体语义和文档上下文，识别跨段落之间可能存在但未被抽取的关系。\n\n'
+      + '实体列表（按来源段落分组）：\n' + entityLines.join('\n') + '\n\n'
+      + '已有关系（不要重复输出这些）：\n' + (relLines.length ? relLines.join('\n') : '  (无)') + '\n\n'
+      + '可用关系类型:\n' + relationTypesDesc + '\n\n'
+      + '请只输出跨段落的新关系（source 和 target 来自不同段落），严格按以下 JSON 格式输出（不要输出其他内容）:\n'
+      + '{\n'
+      + '  "relations": [\n'
+      + '    {"source": "源实体名称", "type": "' + Object.keys(self.relationTypes).join('|') + '", "target": "目标实体名称", "confidence": 0.8}\n'
+      + '  ]\n'
+      + '}';
+
+    try {
+      var llmOut = await self._callLLM(prompt, self._extractionSystemPrompt());
+      var parsed = self._parseExtractionResult('{"entities":[],"relations":' + (function(){
+        // 从 LLM 输出中提取 relations
+        var codeMatch = llmOut.match(/```(?:json)?\s*([\s\S]*?)```/);
+        var jsonStr = codeMatch ? codeMatch[1].trim() : llmOut;
+        var s = jsonStr.indexOf('{');
+        var e = jsonStr.lastIndexOf('}');
+        if (s >= 0 && e > s) jsonStr = jsonStr.slice(s, e + 1);
+        try {
+          var obj = JSON.parse(jsonStr);
+          return JSON.stringify(obj.relations || obj.relation || []);
+        } catch(err) { return '[]'; }
+      })() + '}', []);
+      var newRelations = (parsed.relations || []).filter(function(r) {
+        // 去重：与已有关系不重复
+        var key = (r.source || '').toLowerCase() + '::' + (r.type || '') + '::' + (r.target || '').toLowerCase();
+        if (existingKeys[key]) return false;
+        existingKeys[key] = true;
+        // 确保跨块：source 和 target 的实体需存在
+        var srcExists = resolvedEntities.some(function(e) { return e.name === r.source; });
+        var tgtExists = resolvedEntities.some(function(e) { return e.name === r.target; });
+        return srcExists && tgtExists && r.source !== r.target;
+      });
+      if (newRelations.length > 0) {
+        console.error('[GraphExtractor] 跨块关系发现：新增 ' + newRelations.length + ' 条跨块关系');
+      }
+      return newRelations;
+    } catch(err) {
+      console.error('[GraphExtractor] 跨块关系发现失败（非致命，跳过）:', err.message);
+      return [];
+    }
+  }
+
+  _callLLM(prompt, systemPrompt) {
     var self = this;
     var route = this.llmRoute;
-    if (!route || !route.apiKey) return Promise.resolve('{}');
+    // 缺路由必须 reject：静默空串会被当成功写进断点缓存（与 9-28 0 实体事故同根因）
+    if (!route || !route.apiKey) return Promise.reject(new Error('LLM 路由未配置（llmRoute.apiKey 缺失），拒绝返回空结果'));
 
     return new Promise(function(resolve, reject) {
+      var messages = [];
+      if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+      messages.push({ role: 'user', content: prompt });
       var body = JSON.stringify({
         model: route.model || 'deepseek-chat',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2000,
+        messages: messages,
+        max_tokens: 8192,
         temperature: 0.2, // low temp for structured extraction
       });
       var req = https.request({
@@ -550,6 +916,11 @@ class GraphExtractor {
         });
       });
       req.on('error', reject);
+      // 单块调用必须带超时：qwen-plus 实测 ~128s/块，120s 会误杀慢块，取 300s；
+      // 无超时的挂起 socket 会把整条分块抽取链卡死（checkpoint 停滞）
+      req.setTimeout(300000, function () {
+        req.destroy(new Error('LLM 请求超时（300s）'));
+      });
       req.write(body);
       req.end();
     });

@@ -78,3 +78,53 @@ test('maxBlocks 显式放大（整文档导入场景，/extract 端点 clamp 上
   const blocksDefault = chunkContent(paragraphs.join('\n\n'));
   assert.equal(blocksDefault.length, 10, '不传 maxBlocks 仍默认 10');
 });
+
+test('表格保护：表格行不被拆到不同块', () => {
+  const table = [
+    '概述段落文字。',
+    '',
+    '| 字段 | 值 |',
+    '| --- | --- |',
+    '| 名称 | 手机银行 |',
+    '| 类型 | 移动应用 |',
+    '| 负责人 | 张三 |',
+    '| 功能 | 转账查询 |',
+    '',
+    '后续段落文字。',
+  ].join('\n');
+  const blocks = chunkContent(table, 200, 50, 5);
+  // 至少有一块包含完整表格（多行 | 开头）
+  const tableBlock = blocks.find(b => b.split('\n').filter(l => l.trim().charAt(0) === '|').length >= 3);
+  assert.ok(tableBlock, '表格行应保持在同一块中不被拆散');
+});
+
+test('列表保护：列表项不被拆到不同块', () => {
+  const list = [
+    '概述段落。',
+    '',
+    '- 项目一：手机银行',
+    '- 项目二：网银系统',
+    '- 项目三：智能柜台',
+    '- 项目四：微信银行',
+    '',
+    '后续段落。',
+  ].join('\n');
+  const blocks = chunkContent(list, 80, 20, 5);
+  // 列表项应保持在同一块
+  const listBlock = blocks.find(b => b.indexOf('- 项目一') >= 0);
+  assert.ok(listBlock, '列表应保持在同一块中');
+  assert.ok(listBlock.indexOf('- 项目二') >= 0, '列表项不被拆散');
+});
+
+test('超长段落句子边界切割：块末尾为句号/换行', () => {
+  // 构造超长段落，包含多个句子
+  let longPara = '这是开头。';
+  for (let i = 0; i < 200; i++) longPara += '这是第' + i + '句话。';
+  const blocks = chunkContent(longPara, 200, 50, 10);
+  assert.ok(blocks.length > 1, '应分成多块');
+  // 每块末尾应为句号（最后一块除外，可能也是句号）
+  blocks.forEach((b) => {
+    const last = b.trim().slice(-1);
+    assert.ok(last === '。' || last === '\n', '块末尾应为句号或换行，实际: ' + last);
+  });
+});

@@ -4,41 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>graph-builder | 图谱知识构建与 RSI 意图进化工作台</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='4' cy='4' r='2.4' fill='%2358a6ff'/%3E%3Ccircle cx='12' cy='6' r='2.4' fill='%233fb950'/%3E%3Ccircle cx='7' cy='12' r='2.4' fill='%23d29922'/%3E%3Cpath d='M4 4L12 6L7 12L4 4' stroke='%2330363d' fill='none'/%3E%3C/svg%3E"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='4' cy='4' r='2.4' fill='%232563eb'/%3E%3Ccircle cx='12' cy='6' r='2.4' fill='%2316a34a'/%3E%3Ccircle cx='7' cy='12' r='2.4' fill='%23d97706'/%3E%3Cpath d='M4 4L12 6L7 12L4 4' stroke='%23d0d6dd' fill='none'/%3E%3C/svg%3E"/>
 <style>
-:root{--bg:#0d1117;--panel:#11161d;--card:#161b22;--line:#30363d;--text:#e6edf3;--muted:#9da7b3;--blue:#58a6ff;--green:#3fb950;--amber:#d29922;--purple:#bc8cff}
+:root{--bg:#f4f6f8;--panel:#ffffff;--card:#ffffff;--line:#e2e6eb;--line-strong:#d0d6dd;--text:#1f2329;--muted:#646a73;--blue:#2563eb;--blue-strong:#1d4ed8;--green:#16a34a;--amber:#d97706;--purple:#7c3aed}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"Microsoft YaHei",-apple-system,Segoe UI,Arial,sans-serif;line-height:1.7}
-a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline;color:var(--blue-strong)}
 .wrap{max-width:1120px;margin:0 auto;padding:0 24px 72px}
-header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#121a26,#0d1117)}
+header{border-bottom:1px solid var(--line);background:linear-gradient(180deg,#ffffff,#f4f6f8)}
 .hd{max-width:1120px;margin:0 auto;padding:28px 24px 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:12px}
-.logo{width:38px;height:38px;border:1px solid #2d5a8a;border-radius:9px;background:#13233a;display:grid;place-items:center;font-size:20px;color:var(--blue)}
+.logo{width:38px;height:38px;border:1px solid #bfd3f0;border-radius:9px;background:#eef3fb;display:grid;place-items:center;font-size:20px;color:var(--blue)}
 h1{font-size:22px;margin:0;letter-spacing:.3px}.sub{font-size:13px;color:var(--muted);margin-top:2px}
 .badges{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.badge{font-size:12px;padding:5px 10px;border:1px solid var(--line);border-radius:20px;background:#131a24;color:var(--muted)}
-.badge.ok{border-color:#2d6d4a;background:#12291e;color:#7ee2a3}.badge.err{border-color:#6d2d2d;background:#2a1414;color:#ff9b9b}
+.badge{font-size:12px;padding:5px 10px;border:1px solid var(--line);border-radius:20px;background:#ffffff;color:var(--muted)}
+.badge.ok{border-color:#b7dcC5;background:#eef8f1;color:#15803d}.badge.err{border-color:#eec9c9;background:#fdf0f0;color:#b91c1c}
 .tagline{font-size:17px;color:var(--text);margin:34px 0 10px;font-weight:600}
 .lede{color:var(--muted);font-size:14px;margin:0 0 28px;max-width:900px}
 h2{font-size:17px;margin:38px 0 14px;padding-bottom:9px;border-bottom:1px solid var(--line)}
 h2 .num{color:var(--blue);margin-right:8px;font-variant-numeric:tabular-nums}
-p{font-size:14px;color:#cdd6e0}
+p{font-size:14px;color:#3a4149}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;transition:border-color .15s,transform .15s}
-.card:hover{border-color:#4a83c4;transform:translateY(-2px)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;transition:border-color .15s,transform .15s;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.card:hover{border-color:#93b4e8;transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.08)}
 .card .ico{font-size:20px}.card h3{font-size:15px;margin:8px 0 6px}.card p{font-size:13px;color:var(--muted);margin:0 0 12px}
 .card .go{font-size:13px;font-weight:600}
 table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0 18px}
-th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}th{background:#161b22;color:var(--text);font-weight:600}td{color:#c6d0da}
-code,.mono{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:12.5px;background:#161b22;border:1px solid var(--line);padding:2px 6px;border-radius:4px;color:#a5d6ff}
-pre{background:#0a0e14;border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow:auto;font-size:13px;color:#c9d1d9;line-height:1.6}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}th{background:#eef1f5;color:var(--text);font-weight:600}td{color:#3a4149}
+code,.mono{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:12.5px;background:#eef1f5;border:1px solid var(--line);padding:2px 6px;border-radius:4px;color:#1d4ed8}
+pre{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow:auto;font-size:13px;color:#334155;line-height:1.6}
 pre code{background:none;border:0;padding:0;color:inherit}
 .fig{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:14px 0}
 .fig img{width:100%;height:auto;display:block;background:#fff;border-radius:6px}
 .fig figcaption{font-size:12.5px;color:var(--muted);margin-top:10px}
-.note{border-left:3px solid var(--amber);background:#1c1710;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#d8c9a8;margin:14px 0}
-.lim{border-left:3px solid #6d4a2d;background:#1a1512;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#cbb9a5}
+.note{border-left:3px solid var(--amber);background:#fffbeb;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#78350f;margin:14px 0}
+.lim{border-left:3px solid #d0a26d;background:#fffaf3;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#7c4a12}
 .lim ul{margin:6px 0 0;padding-left:20px}.lim li{margin:4px 0}
 footer{border-top:1px solid var(--line);margin-top:44px;padding-top:18px;font-size:12.5px;color:var(--muted)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:18px}@media(max-width:760px){.two{grid-template-columns:1fr}}
@@ -62,10 +62,11 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-top:18px;font-si
 
 <div class="wrap">
   <div class="tagline">把 Excel、文档、表格、自然语言和存量图谱，加工成结构合法、可审计、可回滚的知识图谱；再用错题反馈把意图图谱一轮轮改好。</div>
-  <p class="lede">本页是独立部署入口。图谱构建工具页全是仓库内的单文件应用，静态资源与图表库本地化；RSI 意图进化工作台是同仓的 React 预构建 SPA。两者都不依赖 AI Harbor、OntoMind 前端或任何外部 CDN。</p>
+  <p class="lede">本页是独立部署的辅助导航。<strong>统一工作台</strong>（OntoMind 图谱构建 SPA，覆盖自动建图 / 图谱编辑 / 知识摄入 / 评测 / 管理 / RSI 意图进化六个模块）默认从根路径进入：<a href="/builder"><strong>打开统一工作台 →</strong></a>　本页与 <a href="workbench.html">raw-API 工作台</a>是仓库内单文件辅助页，图表库全部本地化，不依赖 AI Harbor、OntoMind 前端或任何外部 CDN。</p>
 
   <h2><span class="num">01</span>这是什么</h2>
   <p><strong>graph-builder</strong> 是一套 Node.js 原生 http 服务 + 独立前端组成的图谱构建与进化工具链。前半段解决「建库」：把业务人员填报的 Excel、docx/pdf 文档、CSV/JSON 表格、Agent 对话描述、内置种子数据、v2.1 存量图谱这六类原料，统一加工成一张属性图，并在每次写入时强制校验；后半段解决「改好」：用意图识别的错题驱动 RSI 闭环，产出可验证、可回滚的图谱版本。</p>
+  <div class="note">统一工作台（React SPA）入口：<a href="/builder">/builder 图谱编辑</a> · <a href="/auto-build">/auto-build 自动建图</a> · <a href="/intake">/intake 知识摄入</a> · <a href="/evaluation">/evaluation 图谱评测</a> · <a href="/management">/management 图谱管理</a> · <a href="/intent-rsi">/intent-rsi RSI 意图进化</a>。首次打开会自动落到 <code>/auto-build</code>。</div>
   <table>
     <tr><th style="width:130px">名词</th><th>含义</th></tr>
     <tr><td>知识图谱</td><td>由节点（实体/概念/功能）与边（关系）构成的有向属性图，用来把业务知识预定义成结构化数据。</td></tr>

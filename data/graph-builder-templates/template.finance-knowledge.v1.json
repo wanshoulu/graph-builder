@@ -1,0 +1,583 @@
+{
+  "template_id": "finance-knowledge",
+  "template_version": "1.0.0",
+  "name": "金融知识图谱模板",
+  "name_en": "Finance Knowledge Graph Template",
+  "description": "金融领域知识图谱：机构、产品、人物、概念、事件五类节点，覆盖产品发行、投资持股、任职、监管、合作与事件影响七种关系。",
+  "origin": "builtin",
+  "parent_template_id": null,
+  "node_types": [
+    {
+      "type": "FIN_ORG",
+      "label": "金融机构/企业",
+      "style": {
+        "color": "#2563eb",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "code",
+          "label": "机构编码",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "industry",
+          "label": "行业",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "scale",
+          "label": "规模",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "listed",
+          "label": "上市情况",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "regCode",
+          "label": "注册编码",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "FIN_PRODUCT",
+      "label": "金融产品",
+      "style": {
+        "color": "#0891b2",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "category",
+          "label": "产品类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "riskLevel",
+          "label": "风险等级",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "term",
+          "label": "期限",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "rate",
+          "label": "收益率",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "issuer",
+          "label": "发行机构",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "FIN_PERSON",
+      "label": "金融人物",
+      "style": {
+        "color": "#059669",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "姓名",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "title",
+          "label": "头衔/职位",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "org",
+          "label": "所属机构",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "role",
+          "label": "角色",
+          "type": "string",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "FIN_CONCEPT",
+      "label": "金融概念/指标/政策",
+      "style": {
+        "color": "#7c3aed",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "definition",
+          "label": "定义",
+          "type": "multiline",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "regulationRef",
+          "label": "监管依据",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "effectiveDate",
+          "label": "生效日期",
+          "type": "date",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "type": "FIN_EVENT",
+      "label": "金融事件",
+      "style": {
+        "color": "#ea580c",
+        "shape": "rect"
+      },
+      "fields": [
+        {
+          "key": "name",
+          "label": "名称",
+          "type": "string",
+          "required": true,
+          "default": ""
+        },
+        {
+          "key": "date",
+          "label": "日期",
+          "type": "date",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "type",
+          "label": "事件类型",
+          "type": "string",
+          "required": false,
+          "default": ""
+        },
+        {
+          "key": "impact",
+          "label": "影响",
+          "type": "multiline",
+          "required": false,
+          "default": ""
+        }
+      ]
+    }
+  ],
+  "edge_types": [
+    {
+      "type": "PROVIDES",
+      "label": "提供产品",
+      "source_types": [
+        "FIN_ORG"
+      ],
+      "target_types": [
+        "FIN_PRODUCT"
+      ],
+      "style": {
+        "color": "#64748b"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "INVESTED_IN",
+      "label": "投资持股",
+      "source_types": [
+        "FIN_ORG"
+      ],
+      "target_types": [
+        "FIN_ORG"
+      ],
+      "style": {
+        "color": "#64748b"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "MANAGES",
+      "label": "任职管理",
+      "source_types": [
+        "FIN_PERSON"
+      ],
+      "target_types": [
+        "FIN_ORG"
+      ],
+      "style": {
+        "color": "#64748b"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "REGULATED_BY",
+      "label": "受监管",
+      "source_types": [
+        "FIN_ORG"
+      ],
+      "target_types": [
+        "FIN_CONCEPT"
+      ],
+      "style": {
+        "color": "#64748b"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "PARTNERS_WITH",
+      "label": "合作",
+      "source_types": [
+        "FIN_ORG"
+      ],
+      "target_types": [
+        "FIN_ORG"
+      ],
+      "style": {
+        "color": "#64748b"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "IMPACTED_BY",
+      "label": "受事件影响",
+      "source_types": [
+        "FIN_ORG",
+        "FIN_PRODUCT"
+      ],
+      "target_types": [
+        "FIN_EVENT"
+      ],
+      "style": {
+        "color": "#64748b"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    },
+    {
+      "type": "RELATES_TO",
+      "label": "关联",
+      "source_types": [
+        "FIN_ORG",
+        "FIN_PRODUCT",
+        "FIN_PERSON",
+        "FIN_CONCEPT",
+        "FIN_EVENT"
+      ],
+      "target_types": [
+        "FIN_ORG",
+        "FIN_PRODUCT",
+        "FIN_PERSON",
+        "FIN_CONCEPT",
+        "FIN_EVENT"
+      ],
+      "style": {
+        "color": "#64748b"
+      },
+      "fields": [
+        {
+          "key": "weight",
+          "label": "权重",
+          "type": "number",
+          "required": false,
+          "default": 1,
+          "constraints": {
+            "min": 0,
+            "max": 10
+          }
+        },
+        {
+          "key": "origin",
+          "label": "来源",
+          "type": "string",
+          "required": false,
+          "default": "auto"
+        }
+      ]
+    }
+  ],
+  "starter_graph": {
+    "nodes": [
+      {
+        "id": "finorg:icbc",
+        "type": "FIN_ORG",
+        "properties": {
+          "name": "示例银行",
+          "code": "BANK001",
+          "industry": "银行业",
+          "scale": "大型",
+          "listed": "上市"
+        }
+      },
+      {
+        "id": "finprod:wealth",
+        "type": "FIN_PRODUCT",
+        "properties": {
+          "name": "稳健理财一年期",
+          "category": "理财产品",
+          "riskLevel": "R2",
+          "term": "365天",
+          "rate": "3.2%",
+          "issuer": "示例银行"
+        }
+      },
+      {
+        "id": "finperson:manager",
+        "type": "FIN_PERSON",
+        "properties": {
+          "name": "理财经理张伟",
+          "title": "资深理财经理",
+          "org": "示例银行",
+          "role": "销售"
+        }
+      },
+      {
+        "id": "finconcept:risk",
+        "type": "FIN_CONCEPT",
+        "properties": {
+          "name": "理财销售适当性管理",
+          "definition": "理财产品销售须匹配投资者风险承受能力",
+          "regulationRef": "资管新规",
+          "effectiveDate": "2018-04-27"
+        }
+      },
+      {
+        "id": "finevent:launch",
+        "type": "FIN_EVENT",
+        "properties": {
+          "name": "稳健理财产品发行",
+          "date": "2026-09-01",
+          "type": "产品发行",
+          "impact": "丰富稳健类产品线"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge:fin-1",
+        "type": "PROVIDES",
+        "source": "finorg:icbc",
+        "target": "finprod:wealth",
+        "properties": {
+          "weight": 8,
+          "origin": "starter"
+        }
+      },
+      {
+        "id": "edge:fin-2",
+        "type": "MANAGES",
+        "source": "finperson:manager",
+        "target": "finorg:icbc",
+        "properties": {
+          "weight": 8,
+          "origin": "starter"
+        }
+      },
+      {
+        "id": "edge:fin-3",
+        "type": "REGULATED_BY",
+        "source": "finorg:icbc",
+        "target": "finconcept:risk",
+        "properties": {
+          "weight": 5,
+          "origin": "starter"
+        }
+      },
+      {
+        "id": "edge:fin-4",
+        "type": "IMPACTED_BY",
+        "source": "finprod:wealth",
+        "target": "finevent:launch",
+        "properties": {
+          "weight": 5,
+          "origin": "starter"
+        }
+      }
+    ]
+  },
+  "validation_rules": {
+    "unique_node_ids": true,
+    "unique_edge_ids": true,
+    "no_orphan_edges": true,
+    "allow_self_loop": false
+  },
+  "metadata": {
+    "created_at": "2026-09-01T00:00:00.000Z",
+    "updated_at": "2026-09-01T00:00:00.000Z"
+  },
+  "layout": {
+    "default_layout": "force"
+  }
+}

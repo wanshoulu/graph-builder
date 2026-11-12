@@ -55,7 +55,7 @@ function callLLMJson(prompt, system, opts) {
         'Authorization': 'Bearer ' + route.apiKey,
         'Content-Length': Buffer.byteLength(body),
       },
-      timeout: 120000,
+      timeout: 180000,
     }, function(res) {
       var data = '';
       res.on('data', function(c) { data += c; });
