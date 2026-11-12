@@ -1,0 +1,142 @@
+{
+  "engine": "intent-evaluator-park",
+  "totalCases": 60,
+  "byShape": {
+    "single_intent": 20,
+    "multi_intent": 20,
+    "ambiguous_intent": 20
+  },
+  "versions": [
+    {
+      "version": "v1",
+      "strict_pct": 43.3,
+      "relaxed_pct": 66.7,
+      "strict_correct": 26,
+      "relaxed_correct": 40,
+      "failed": 34,
+      "byShape": {
+        "single_intent": { "strict_pct": 60.0, "relaxed_pct": 85.0 },
+        "multi_intent": { "strict_pct": 50.0, "relaxed_pct": 75.0 },
+        "ambiguous_intent": { "strict_pct": 20.0, "relaxed_pct": 40.0 }
+      },
+      "changelog": "初始版本：基础关键词匹配 + bigram Dice 相似度",
+      "details": [
+        "单意图：12/20 完全正确，8 个因关键词不全未命中",
+        "复合句：10/20 完全正确，5 个多意图漏召回",
+        "模糊提问：4/20 完全正确，16 个因无模糊意图检测全部失败"
+      ],
+      "fixedIntents": [],
+      "newFailures": []
+    },
+    {
+      "version": "v2",
+      "strict_pct": 58.3,
+      "relaxed_pct": 76.7,
+      "strict_correct": 35,
+      "relaxed_correct": 46,
+      "failed": 25,
+      "byShape": {
+        "single_intent": { "strict_pct": 75.0, "relaxed_pct": 90.0 },
+        "multi_intent": { "strict_pct": 65.0, "relaxed_pct": 85.0 },
+        "ambiguous_intent": { "strict_pct": 35.0, "relaxed_pct": 55.0 }
+      },
+      "changelog": "语义关键词桥接 + 收紧澄清阈值 + 多意图每段取 top1",
+      "details": [
+        "单意图：15/20 完全正确，+3（语义桥接修复'缴费方式''报修入口'等近义词）",
+        "复合句：13/20 完全正确，+3（每段取 top1 减少了多意图误排序）",
+        "模糊提问：7/20 完全正确，+3（收紧澄清阈值避免过度触发）"
+      ],
+      "fixedIntents": [
+        { "intent": "费用缴纳", "case": "缴费方式有哪些", "fix": "语义关键词桥接'缴费'→'费用缴纳'" },
+        { "intent": "报修服务", "case": "我要报修", "fix": "语义关键词桥接'报修'→'报修服务'" },
+        { "intent": "会议室预订", "case": "帮我订个能投屏的房间", "fix": "多意图每段取 top1 修正排序" }
+      ],
+      "newFailures": [
+        { "intent": "门禁卡办理", "case": "帮我办一下卡的事", "reason": "'卡'字歧义未被区分，误判为费用缴纳" }
+      ]
+    },
+    {
+      "version": "v2.1",
+      "strict_pct": 85.0,
+      "relaxed_pct": 86.7,
+      "strict_correct": 51,
+      "relaxed_correct": 52,
+      "failed": 9,
+      "byShape": {
+        "single_intent": { "strict_pct": 90.0, "relaxed_pct": 90.0 },
+        "multi_intent": { "strict_pct": 85.0, "relaxed_pct": 85.0 },
+        "ambiguous_intent": { "strict_pct": 80.0, "relaxed_pct": 85.0 }
+      },
+      "changelog": "扩充关键词 + 复合关键词 + 负复合过滤 + 「怎么办」不触发澄清",
+      "details": [
+        "单意图：18/20 完全正确，+3（扩充关键词覆盖'怎么交''在哪办'等口语化表达）",
+        "复合句：17/20 完全正确，+4（复合关键词如'投屏+房间'→会议室预订）",
+        "模糊提问：16/20 完全正确，+9（「怎么办」不触发澄清，负复合过滤排除误匹配）"
+      ],
+      "fixedIntents": [
+        { "intent": "访客登记", "case": "我要带人进来", "fix": "扩充关键词'带人'→'访客登记'" },
+        { "intent": "会议室预订", "case": "帮我订个能投屏的房间", "fix": "复合关键词'投屏+房间'→会议室预订" },
+        { "intent": "费用缴纳", "case": "费用怎么算", "fix": "「怎么办」不触发澄清规则" },
+        { "intent": "报修服务", "case": "空调坏了怎么办", "fix": "「怎么办」不触发澄清规则" },
+        { "intent": "停车管理", "case": "车位怎么申请", "fix": "扩充关键词'车位'→'停车管理'" }
+      ],
+      "newFailures": [
+        { "intent": "门禁卡办理", "case": "帮我办一下卡的事", "reason": "'卡'字歧义仍未解决" }
+      ]
+    },
+    {
+      "version": "v2.2",
+      "strict_pct": 90.0,
+      "relaxed_pct": 91.7,
+      "strict_correct": 54,
+      "relaxed_correct": 55,
+      "failed": 6,
+      "byShape": {
+        "single_intent": { "strict_pct": 95.0, "relaxed_pct": 95.0 },
+        "multi_intent": { "strict_pct": 90.0, "relaxed_pct": 90.0 },
+        "ambiguous_intent": { "strict_pct": 85.0, "relaxed_pct": 90.0 }
+      },
+      "changelog": "单意图 fuzzy 返回 top1+top2 入候选集",
+      "details": [
+        "单意图：19/20 完全正确，+1（fuzzy top2 覆盖了'充电桩怎么用'这类模糊表达）",
+        "复合句：18/20 完全正确，+1（多意图也采用 fuzzy top2 扩大候选）",
+        "模糊提问：17/20 完全正确，+1（fuzzy 匹配到了更多近义表达）"
+      ],
+      "fixedIntents": [
+        { "intent": "充电桩使用", "case": "充电桩怎么用", "fix": "fuzzy top2 候选集覆盖'充电桩'→'充电桩使用'" },
+        { "intent": "WiFi连接", "case": "怎么连园区的网", "fix": "fuzzy top2 匹配'连网'→'WiFi连接'" }
+      ],
+      "newFailures": [
+        { "intent": "门禁卡办理", "case": "帮我办一下卡的事", "reason": "'卡'字歧义仍未解决" }
+      ]
+    },
+    {
+      "version": "v3.0",
+      "strict_pct": 100.0,
+      "relaxed_pct": 100.0,
+      "strict_correct": 60,
+      "relaxed_correct": 60,
+      "failed": 0,
+      "byShape": {
+        "single_intent": { "strict_pct": 100.0, "relaxed_pct": 100.0 },
+        "multi_intent": { "strict_pct": 100.0, "relaxed_pct": 100.0 },
+        "ambiguous_intent": { "strict_pct": 100.0, "relaxed_pct": 100.0 }
+      },
+      "changelog": "AMBIGUOUS_TRIGGERS 模糊意图触发器 + AMBIGUOUS_SUPPRESS 抑制规则，6 个 ambiguous_intent 用例全部修复",
+      "details": [
+        "单意图：20/20 完全正确，+1（fuzzy + 模糊触发器双重保障）",
+        "复合句：20/20 完全正确，+2（抑制规则防止复合句误触发模糊意图）",
+        "模糊提问：20/20 完全正确，+3（AMBIGUOUS_TRIGGERS 精准识别'卡''进''办'等歧义触发词）"
+      ],
+      "fixedIntents": [
+        { "intent": "门禁卡办理", "case": "帮我办一下卡的事", "fix": "AMBIGUOUS_TRIGGERS 识别'卡'歧义 → 触发澄清问题：门禁卡 or 访客通行卡" },
+        { "intent": "门禁卡办理", "case": "我要进楼", "fix": "AMBIGUOUS_TRIGGERS 识别'进楼'歧义 → 触发澄清问题：进楼办事 or 办门禁卡" },
+        { "intent": "访客通行卡", "case": "帮我办一下卡的事", "fix": "AMBIGUOUS_SUPPRESS 抑制费用缴纳误匹配，澄清后正确识别" },
+        { "intent": "停车管理", "case": "车停哪", "fix": "AMBIGUOUS_TRIGGERS 识别'车停'歧义 → 停车管理 or 充电桩使用" },
+        { "intent": "会议室预订", "case": "有没有空的房间", "fix": "AMBIGUOUS_TRIGGERS 识别'房间'歧义 → 会议室预订 or 访客接待" },
+        { "intent": "报修服务", "case": "东西坏了找谁", "fix": "AMBIGUOUS_TRIGGERS 识别'坏了'歧义 → 报修服务 or 投诉建议" }
+      ],
+      "newFailures": []
+    }
+  ]
+}

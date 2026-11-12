@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>graph-builder | 图谱知识构建工作台</title>
+<title>graph-builder | 图谱知识构建与 RSI 意图进化工作台</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='4' cy='4' r='2.4' fill='%2358a6ff'/%3E%3Ccircle cx='12' cy='6' r='2.4' fill='%233fb950'/%3E%3Ccircle cx='7' cy='12' r='2.4' fill='%23d29922'/%3E%3Cpath d='M4 4L12 6L7 12L4 4' stroke='%2330363d' fill='none'/%3E%3C/svg%3E"/>
 <style>
 :root{--bg:#0d1117;--panel:#11161d;--card:#161b22;--line:#30363d;--text:#e6edf3;--muted:#9da7b3;--blue:#58a6ff;--green:#3fb950;--amber:#d29922;--purple:#bc8cff}
@@ -49,7 +49,7 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-top:18px;font-si
   <div class="hd">
     <div class="brand">
       <div class="logo">◈</div>
-      <div><h1>graph-builder</h1><div class="sub">模板驱动 · 写入即校验的知识图谱构建工具链 · 独立部署版</div></div>
+      <div><h1>graph-builder</h1><div class="sub">模板驱动 · 写入即校验的图谱构建工具链 + RSI 意图进化 · 独立部署版</div></div>
     </div>
     <div class="badges">
       <span class="badge" id="healthBadge">服务自检中…</span>
@@ -61,11 +61,11 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-top:18px;font-si
 </header>
 
 <div class="wrap">
-  <div class="tagline">把 Excel、文档、表格、自然语言和存量图谱，加工成结构合法、可审计、可回滚的知识图谱。</div>
-  <p class="lede">本页是独立部署入口。所有工具页面均为仓库内的单文件应用，静态资源与图表库全部本地化，不依赖 AI Harbor、OntoMind 前端或任何外部 CDN。</p>
+  <div class="tagline">把 Excel、文档、表格、自然语言和存量图谱，加工成结构合法、可审计、可回滚的知识图谱；再用错题反馈把意图图谱一轮轮改好。</div>
+  <p class="lede">本页是独立部署入口。图谱构建工具页全是仓库内的单文件应用，静态资源与图表库本地化；RSI 意图进化工作台是同仓的 React 预构建 SPA。两者都不依赖 AI Harbor、OntoMind 前端或任何外部 CDN。</p>
 
   <h2><span class="num">01</span>这是什么</h2>
-  <p><strong>graph-builder</strong> 是一套 Node.js 原生 http 服务 + 单文件前端页面组成的图谱构建工具链。它解决的是知识图谱「建库」环节：把业务人员填报的 Excel、docx/pdf 文档、CSV/JSON 表格、Agent 对话描述、内置种子数据、v2.1 存量图谱这六类原料，统一加工成一张属性图，并在每次写入时强制校验。</p>
+  <p><strong>graph-builder</strong> 是一套 Node.js 原生 http 服务 + 独立前端组成的图谱构建与进化工具链。前半段解决「建库」：把业务人员填报的 Excel、docx/pdf 文档、CSV/JSON 表格、Agent 对话描述、内置种子数据、v2.1 存量图谱这六类原料，统一加工成一张属性图，并在每次写入时强制校验；后半段解决「改好」：用意图识别的错题驱动 RSI 闭环，产出可验证、可回滚的图谱版本。</p>
   <table>
     <tr><th style="width:130px">名词</th><th>含义</th></tr>
     <tr><td>知识图谱</td><td>由节点（实体/概念/功能）与边（关系）构成的有向属性图，用来把业务知识预定义成结构化数据。</td></tr>
@@ -74,6 +74,7 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-top:18px;font-si
     <tr><td>资产（asset）</td><td>一张具名图谱，由 <code>data/graph-assets-registry.json</code> 注册，绑定一张模板。</td></tr>
     <tr><td>摄入批次</td><td>一次 Excel 导入产生的候选行集合，经逐行评审、预检、应用后才合入草稿。</td></tr>
     <tr><td>发布版本</td><td>草稿通过校验后生成的只读版本，形成 v1→v2→… 版本链，可回滚。</td></tr>
+    <tr><td>RSI</td><td><strong>Recursive Self-Improvement（递归自我改进）</strong>，出自 openJiuwen 2026 年 9 月发布的双维度 RSI 框架（Harness 优化 + Artifacts 优化）。本仓库是这套思路在「意图图谱」上的落地实现。</td></tr>
   </table>
 
   <h2><span class="num">02</span>六条建图入口，一道校验门</h2>
@@ -93,8 +94,23 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-top:18px;font-si
     <figcaption>图 1　总体定位：左为六条建图入口，中为模板校验门，右为回滚/发布/审计。原图为仓库内 <code>docs/diagrams/toolchain-overview.svg</code>。</figcaption>
   </figure>
 
-  <h2><span class="num">03</span>打开一个工具</h2>
+  <h2><span class="num">03</span>RSI 意图进化：Agent + Skill 闭环</h2>
+  <p>前半段把图谱建出来，后半段要回答「这张图识别意图准不准、怎么改」。<strong>RSI 闭环</strong>拿意图识别的错题当反馈，生成改进提案，用同一套评测引擎复测，只采纳有净收益且过门禁的改动，形成可回滚的版本链。</p>
+  <table>
+    <tr><th style="width:130px">名词</th><th>含义</th></tr>
+    <tr><td>V2 架构</td><td><code>services/rsi-agent/</code> 是独立 Python 进程：openjiuwen 0.1.19 的 <code>create_deep_agent</code> + 两份 <code>SKILL.prompt</code> 作 <code>system_prompt</code> + 5 个 HTTP 工具。<strong>Node 侧 <code>routes/intent-rsi.js</code> 不是推理主体</strong>，它负责调度、状态持久化、测量与采纳门禁。</td></tr>
+    <tr><td>Skill</td><td>放在 <code>skills/{proposal,attribution}/SKILL.prompt</code> 的提案/归因指令。扩展名必须是 <code>.prompt</code>——openjiuwen.harness 按扩展名注册 parser 接管 <code>.md</code> 读取；另有 <code>app/skill_texts.py</code> 把正文烧录进镜像，规避 WSL2 bind mount 视图陈旧。</td></tr>
+    <tr><td>决策模式</td><td><code>rules</code>（V1，Node 内规则+LLM）／<code>model</code>／<code>agent</code>（V2，Python Agent 走 <code>/v1/tasks/propose</code>）。</td></tr>
+    <tr><td>工具桥</td><td><code>/api/intent-rsi/agent/*</code> 五个端点（weaknesses / badcases / search / intent / probe）供 Agent 读 Node 状态；<code>probe_query</code> 把草案真应用到引擎做反事实复测，闭环保证来自工具反馈而非 prompt 纪律。</td></tr>
+    <tr><td>测量门禁</td><td>四关：练习题初筛 → 防回退 → 隐藏考 → 生产引擎复核。成绩带引擎指纹，跨指纹不可比；模型/召回通道降级时整次测量作废，不产生结论。</td></tr>
+  </table>
+  <p>两套前端都在仓库里：<a href="/intent-rsi">V2 工作台（React SPA）</a>覆盖任务管理、自动进化、候选对比、资产谱系与成绩轨迹；<a href="intent-rsi-lab.html">V1 实验台</a>是单文件页面，适合直接看 <code>/state</code>、<code>/baseline</code>、<code>/propose</code> 的原始响应。</p>
+  <div class="note">V2 的 Agent 是<strong>独立进程</strong>（<code>services/rsi-agent</code>，默认 :18132），需按 <code>requirements.txt</code> 安装 openjiuwen 等依赖并配置模型密钥后启动。不启动它，Node 侧仍可用 <code>rules</code>/<code>model</code> 模式，V2 工作台的状态与历史也能查看，但 <code>agent</code> 决策模式不可用。</div>
+
+  <h2><span class="num">04</span>打开一个工具</h2>
   <div class="grid">
+    <div class="card"><div class="ico">↻</div><h3>RSI V2 意图进化工作台</h3><p>React SPA：任务管理、自动进化（SSE 实时事件）、候选对比、四关门禁、资产谱系与引擎指纹。</p><a class="go" href="/intent-rsi">打开 V2 工作台 →</a></div>
+    <div class="card"><div class="ico">⌁</div><h3>RSI V1 实验台</h3><p>单文件实验台，直接查看状态、导入快照、基线、提案、评测、采纳与回滚的原始响应。</p><a class="go" href="intent-rsi-lab.html">打开 V1 实验台 →</a></div>
     <div class="card"><div class="ico">🛠</div><h3>图谱构建工作台</h3><p>选资产 → 载入草稿 → 校验 → 保存 → 质量报告 → 发布/回滚。覆盖 <code>/api/org-graph/*</code> 与 <code>/api/knowledge-intake/*</code> 主链路。</p><a class="go" href="workbench.html">打开工作台 →</a></div>
     <div class="card"><div class="ico">✎</div><h3>意图图谱编辑器</h3><p>专家手工建模：版本列表、schema 校验、导出新批次。含组织图谱视图与 AI 辅助面板。</p><a class="go" href="intent-graph-editor.html">打开编辑器 →</a></div>
     <div class="card"><div class="ico">◈</div><h3>图谱画布</h3><p>vis-network 交互式可视化：业务域/动作/语义枢纽分栏、搜索、物理布局、详情面板。</p><a class="go" href="graph-intent-visual.html">打开画布 →</a></div>
@@ -103,24 +119,34 @@ footer{border-top:1px solid var(--line);margin-top:44px;padding-top:18px;font-si
     <div class="card"><div class="ico">▦</div><h3>API 与架构文档</h3><p>端点清单、系统架构、设计决策记录、部署与开发测试指南。</p><a class="go" href="/docs/api.md">API 参考 →</a>　<a class="go" href="/docs/architecture.md">架构文档 →</a></div>
   </div>
 
-  <h2><span class="num">04</span>模板生态</h2>
-  <p>仓库内置 <strong>13 张模板</strong>（<code>data/graph-builder-templates/</code>），覆盖意图图谱、组织人力、客户风控、领域知识与通用底座五类。新增一张图谱 = 一份模板 JSON + 注册表一行，校验/草稿/版本/发布/审计全部复用，零代码。</p>
+  <h2><span class="num">05</span>模板生态</h2>
+  <p>仓库内置 <strong>14 张模板</strong>（<code>data/graph-builder-templates/</code>），覆盖意图图谱、组织人力、客户风控、领域知识与通用底座五类；其中 <code>template.intent.v2.json</code> 同时是 RSI 评测引擎的 schema 基准。新增一张图谱 = 一份模板 JSON + 注册表一行，校验/草稿/版本/发布/审计全部复用，零代码。</p>
   <div class="two">
-    <figure class="fig"><img src="/docs/diagrams/template-ecosystem.svg" alt="模板生态全景图"><figcaption>图 2　13 张模板、五类图谱、一个校验引擎。</figcaption></figure>
+    <figure class="fig"><img src="/docs/diagrams/template-ecosystem.svg" alt="模板生态全景图"><figcaption>图 2　模板生态、五类图谱、一个校验引擎。</figcaption></figure>
     <figure class="fig"><img src="/docs/diagrams/validation-pipeline.svg" alt="模板校验管线图"><figcaption>图 3　三段校验管线：骨架 → 字段 → 条件必填。</figcaption></figure>
   </div>
 
-  <h2><span class="num">05</span>快速开始</h2>
+  <h2><span class="num">06</span>快速开始</h2>
   <pre><code>npm install
-npm start          # 默认 http://127.0.0.1:3013 → /tools/index.html</code></pre>
-  <p>改端口：<code>PORT=4013 npm start</code>。跑测试：<code>npm test</code>（契约测试：<code>npm run test:contract</code>）。所有 AI 辅助能力在未配置模型密钥时自动降级，模板校验、草稿管理、应用/回滚等离线能力不受影响。</p>
+npm start          # 默认 http://127.0.0.1:3013 → /tools/index.html
+                   # RSI V2 工作台 /intent-rsi  ·  V1 实验台 /tools/intent-rsi-lab.html
+
+# 可选：启动 Python Agent（agent 决策模式才需要）
+cd services/rsi-agent &amp;&amp; pip install -r requirements.txt
+RSI_AGENT_API_BASE_URL=http://127.0.0.1:3013/api/intent-rsi/agent \
+  uvicorn app.main:app --port 18132</code></pre>
+  <p>改端口：<code>PORT=4013 npm start</code>。跑测试：<code>npm test</code>（全量，含继承的 RSI 历史失败）；全绿门禁：<code>npm run test:core</code>；只看 RSI：<code>npm run test:rsi</code>，口径见 README「测试口径」。</p>
   <div class="note">服务默认绑定 <code>127.0.0.1</code> 且 <code>SKIP_AUTH=true</code>（免鉴权）。这是为了本机开箱即用：若需对外提供，务必设置 <code>SKIP_AUTH=false</code> + <code>JWT_SECRET</code>，并在反向代理层做认证与访问控制。</div>
 
-  <h2><span class="num">06</span>已知限制</h2>
+  <h2><span class="num">07</span>已知限制</h2>
   <div class="lim">
     <ul>
-      <li>本仓库只带 13 张模板、样例 CSV、一个种子草稿和一份演示图谱；AI Harbor 中 29 MB 级存量图谱与评测大文件未随仓上传，编辑器版本列表初始为空属预期。</li>
-      <li>AI 辅助（映射、抽取、扩问、节点审核、自动建图 generate）需要 <code>.env</code> 中配置 <code>DEEPSEEK_KEY</code> 等密钥；未配置时这些端点返回明确错误，离线能力照常可用。</li>
+      <li>本仓库只带 14 张模板、样例 CSV、一个种子草稿、RSI 的 3 份种子数据和一份演示图谱；AI Harbor 中 29 MB 级存量图谱、RSI 的 1186 个运行期文件（checkpoints 2.0 GB、artifacts 388 MB 等）未随仓上传，编辑器版本列表与进化历史初始为空属预期。</li>
+      <li>AI 辅助（映射、抽取、扩问、节点审核、自动建图 generate）需要 <code>.env</code> 中配置 <code>DEEPSEEK_KEY</code>/<code>QWEN_KEY</code> 等密钥；未配置时这些端点返回明确错误，离线能力照常可用。</li>
+      <li>无模型密钥时 RSI 评分子进程仍能跑完打分，但 <code>/baseline</code> 会因召回通道降级被测量门禁拒绝（HTTP 400）「本次测量不作为收益证据」——这是设计行为，不是故障。</li>
+      <li>Python Agent 需 <code>openjiuwen==0.1.19</code> 等依赖（本机未安装），<code>agent</code> 决策模式与 <code>/agent/*</code> 工具桥须先启动该服务；无运行中 Agent 代次时 <code>/api/intent-rsi/agent/weaknesses</code> 返回 500 属预期降级。</li>
+      <li>RSI 的 18 个 Node 测试<strong>继承源仓 13 个既有失败</strong>：运行时新增了「rules 模式必须注入 propose 服务」的早期校验，而测试 fixture 仍传 <code>propose: undefined</code>；源仓与独立仓失败名单完全一致，非本次剥离引入。</li>
+      <li><code>web/dist</code> 是从单体带来的预构建产物，API 前缀仍是 <code>/ontomind/wiki/api</code>，由 <code>server.js</code> 兼容层归一化到 <code>/api</code>；<code>web/src</code> 源码已改为 <code>/api</code>，改源码后需自行 <code>npm run build</code> 重建 dist。</li>
       <li><code>/api/org-graph/builder-agent/*</code>、<code>/trial-agent/*</code> 默认指向外部 Agent 服务（<code>BUILDER_AGENT_URL</code>、<code>TRIAL_AGENT_URL</code>），独立部署时若未启动该服务，这两组端点不可用。</li>
       <li>原单体中依赖「知识产品平台 / Knowledge Builder Runtime」的 <code>x6-graph-builder.html</code> 及 <code>/api/knowledge-builder/*</code> 未纳入本仓库——它们的后端路由依赖十余个运行时模块，剥离后会留下大量 404。</li>
       <li>单文件 HTML 应用不提供打包、路由或权限模型；发布、回滚等写操作无二次确认以外的服务端保护，请勿在共享环境直接暴露。</li>

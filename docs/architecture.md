@@ -70,12 +70,18 @@
 
 ![总体定位图](diagrams/toolchain-overview.svg)
 
-**通用性定位（先立此存照）：本系统不是意图图谱专用工具。** 校验器是通用引擎（`template-driven-graph-validator.js` 由模板 JSON 驱动），意图图谱只是打样——仓库 `data/graph-builder-templates/` 内置 13 张模板，覆盖五类：意图（3 张）、组织与人力（3 张）、客户与风控（2 张）、领域知识（3 张）、通用底座（2 张）。7 个内建资产中 6 个走通用模板校验器，只有 `intent-graph-v4` 因场景模型复杂挂了专用校验器；线上组织人员、客户生态、金融知识、工行 HR、个贷风控、银行语义等非意图图谱均已用同一套引擎发布。全景见 [README 模板生态图](../README.md#内置图谱模板库13-张同一套引擎)。
+**通用性定位（先立此存照）：本系统不是意图图谱专用工具。** 校验器是通用引擎（`template-driven-graph-validator.js` 由模板 JSON 驱动），意图图谱只是打样——仓库 `data/graph-builder-templates/` 内置 13 张业务模板，覆盖五类：意图（3 张）、组织与人力（3 张）、客户与风控（2 张）、领域知识（3 张）、通用底座（2 张）；另有 1 张 `template.intent.v2.json` 不注册成资产，专供 RSI 评测引擎做 schema 常量对齐与漂移检测。7 个内建资产中 6 个走通用模板校验器，只有 `intent-graph-v4` 因场景模型复杂挂了专用校验器；线上组织人员、客户生态、金融知识、工行 HR、个贷风控、银行语义等非意图图谱均已用同一套引擎发布。全景见 [README 模板生态](../README.md#内置图谱模板库13-张业务模板--1-张引擎基准)。
 
 | 运行单元 | 技术栈 | 职责边界 | 不做什么 |
 | --- | --- | --- | --- |
-| graph-builder 服务 | Node ≥18 原生 http（无框架） | 摄入全流程 + 图谱资产全流程 + 4 组 API 路由 + 静态托管 `/tools/*` `/docs/*` | 不碰身份体系（JWT 校验透传给 middleware）；不做前端构建链（页面是仓库内单文件 HTML） |
-| 独立前端（本仓库） | 单文件 HTML + 原生 JS + 本地 vendor（vis-network / G6 / d3） | 门户、工作台、编辑器、画布、评测、展示页；全部请求同源 API | 不做任何校验决策——`valid:false` 由服务端强制，前端只是展示；不依赖 AI Harbor / OntoMind / nginx 同源代理 |
+| graph-builder 服务 | Node ≥18 原生 http（无框架） | 摄入 + 图谱资产 + 编辑器/自动建图 + RSI 共 6 组 API 路由；静态托管 `/tools/*` `/docs/*` `/assets/*`；SPA 兜底与 `/ontomind/wiki/api/*` 兼容层 | 不碰身份体系（JWT 校验透传给 middleware）；建图侧不做前端构建链 |
+| RSI 调度/测量层 | `routes/intent-rsi.js` + `rsi-production-runtime.js` + 20 个 `rsi-*.js` + 3 个 `intent-evaluator-*.js`；零第三方 npm 依赖 | 任务/分支/快照状态、SSE 事件流、评分子进程、策略台账、四关门禁与采纳权威 | **不做提案推理**——那是 Python Agent 的职责；服务端测量永不经过模型 |
+| RSI 评测引擎 | `spawn scripts/rsi-engine-score.js` 独立子进程 | 按 `--graph/--cases/--out` 打分，输出带 `engineSha/protoRev/engineMode` 指纹 | 不写全局状态，只产出结果文件与日志 |
+| Python rsi-agent（可选进程 :18132） | Python 3.11 + openjiuwen 0.1.19 + FastAPI | `create_deep_agent` + `SKILL.prompt` 作 `system_prompt` + 5 个 HTTP `@tool`；提案与归因 | **不持有 RSI 状态**（无 document 透传，状态在 Node 的 `rsi-state.json`）；不判定收益 |
+| 独立前端（单文件页） | 单文件 HTML + 原生 JS + 本地 vendor（vis-network / G6 / d3） | 门户、构建工作台、编辑器、画布、评测、展示页、RSI V1 实验台 | 不做任何校验决策；不依赖 AI Harbor / OntoMind / nginx 同源代理 |
+| RSI V2 工作台 | `web/dist/` React SPA（源码 `web/src/pages/IntentRsiEvolution/`，34 文件） | 任务管理、自动进化 SSE、候选对比、资产谱系、成绩轨迹 | 不做测量；`agent` 模式需 :18132 在线，否则只能用 `rules`/`model` |
+
+> RSI 子系统的完整链路、进程拓扑、工具桥契约与设计代价独立成文：[RSI V2 架构说明](intent-rsi-v2-architecture.md)。本页只保留它在整体架构中的位置。
 
 四层结构与依赖方向的完整展开：
 
@@ -89,6 +95,9 @@
 | 新增一种图谱资产 | 模板文件 + 注册表一行 | 引擎与流程全部复用 |
 | 新增端点（摄入侧） | routes/knowledge-intake.js | 该域的 HTTP 适配收口 |
 | 新增端点（资产侧） | routes/org-graph.js | 同上 |
+| 新增 RSI 端点 / 工具桥 | routes/intent-rsi.js | 该域 35 个端点与 `/agent/*` 工具桥统一收口 |
+| 改进化循环、门禁、策略台账 | routes/rsi-production-runtime.js + 对应 rsi-*.js | 20 个模块互相 require，必须整包理解后再改 |
+| 改 Agent 提案/归因指令 | `services/rsi-agent/skills/**/SKILL.prompt` + 重跑 `gen-skill-texts.js` | 正文被烧录进 `app/skill_texts.py`，只改文件不会生效 |
 | 新增可复用算法/工具 | tools/ 新文件 | 领域逻辑层，必须零路由依赖、node --test 直测 |
 | 跨域功能（如"审核时顺带改草稿"） | 拆两步，各自走本域端点 | 边界不腐化是契约纪律的一部分 |
 

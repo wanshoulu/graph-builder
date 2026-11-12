@@ -1,0 +1,11 @@
+# 构建产物与二进制资源保持字节原样，禁止 Git 做 CRLF 换行转换。
+# web/dist/assets/* 是 Vite 内容哈希命名的压缩 JS/CSS，换行变化会破坏产物一致性。
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.xlsx binary
+*.woff binary
+*.woff2 binary
+web/dist/** -text

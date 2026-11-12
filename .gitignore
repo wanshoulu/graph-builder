@@ -29,3 +29,25 @@ Thumbs.db
 data/graphs/autobuild-jobs/
 data/graphs/org/**/publish-requests/
 data/graphs/org/**/drafts/extract-cache/
+
+# RSI 意图进化运行期产物（种子 rsi-graph.v1.json / rsi-eval-cases*.json 保留入库）
+data/rsi/artifacts/*
+data/rsi/checkpoints/*
+data/rsi/drafts/*
+data/rsi/logs/*
+data/rsi/tasks/*
+data/rsi/snapshots/*
+data/rsi/versions/*
+data/rsi/calibration/*
+data/rsi/heldout-archive/*
+data/rsi/validation-*/
+data/rsi/*.backup.*
+!data/rsi/**/.gitkeep
+data/rsi/rsi-state.json
+data/rsi/active-task.json
+.tmp-tests/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/

@@ -1,0 +1,1549 @@
+{
+  "version": 2,
+  "generated_at": "2026-10-16T07:37:46.839Z",
+  "base": "sub-intent-graph-v2.1-p1-batch10-40-1791714163111",
+  "blind": false,
+  "cases": [
+    {
+      "case_id": "rsi_t001",
+      "query": "查一下工资单详情",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "直接命中 scope_in"
+    },
+    {
+      "case_id": "rsi_t002",
+      "query": "工资单在哪看",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "gap:口语变体-在哪看"
+    },
+    {
+      "case_id": "rsi_t003",
+      "query": "上个月工资条明细",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "gap:工资条≠工资单-A1"
+    },
+    {
+      "case_id": "rsi_t004",
+      "query": "电子工资单怎么查",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_bb9a6e5e3c29"
+      ],
+      "note": "直接命中"
+    },
+    {
+      "case_id": "rsi_t005",
+      "query": "想看电子版工资条",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_bb9a6e5e3c29"
+      ],
+      "note": "gap:工资条≠工资单-A1"
+    },
+    {
+      "case_id": "rsi_t006",
+      "query": "信用卡账单帮我查下",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_26c3aeb00dd2"
+      ],
+      "note": "口语化问法"
+    },
+    {
+      "case_id": "rsi_t007",
+      "query": "我这个月信用卡欠多少",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_26c3aeb00dd2"
+      ],
+      "note": "gap:欠多少≠账单-A1/A5"
+    },
+    {
+      "case_id": "rsi_t008",
+      "query": "查我的卡片是什么品牌",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_6c1ecb75af6e"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t009",
+      "query": "卡有什么权益",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_8b5cbccc6189"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t010",
+      "query": "我的卡是什么级别的",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_8d8ac3ad0543"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t011",
+      "query": "怎么改卡片管理设置",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_3646999bf1ab"
+      ],
+      "note": "修改类"
+    },
+    {
+      "case_id": "rsi_t012",
+      "query": "我平时在哪刷卡",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_8047124f47ee"
+      ],
+      "note": "gap:刷卡≠用卡场景-A1"
+    },
+    {
+      "case_id": "rsi_t013",
+      "query": "想办张信用卡",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_0b562ec2c297"
+      ],
+      "note": "直接命中"
+    },
+    {
+      "case_id": "rsi_t014",
+      "query": "申请信用卡进度到哪了",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_ad491c487d7e"
+      ],
+      "note": "申请进度"
+    },
+    {
+      "case_id": "rsi_t015",
+      "query": "我办卡到什么步骤了",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_ad491c487d7e"
+      ],
+      "note": "gap:步骤≠进度-A1"
+    },
+    {
+      "case_id": "rsi_t016",
+      "query": "查询申请信用卡",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_a2e2bdd8ba60"
+      ],
+      "note": "直接命中"
+    },
+    {
+      "case_id": "rsi_t017",
+      "query": "无感支付怎么开",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_15361316be64"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t018",
+      "query": "支付限额在哪看",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t019",
+      "query": "怎么改支付限额",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_a9441ceac5eb"
+      ],
+      "note": "修改类"
+    },
+    {
+      "case_id": "rsi_t020",
+      "query": "我额度多少",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_6e4e6cdfd5a5"
+      ],
+      "note": "gap:额度模糊-A5"
+    },
+    {
+      "case_id": "rsi_t021",
+      "query": "工银豆明细怎么看",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_1f79f45400d0"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t022",
+      "query": "生活缴费在哪交",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_2f16422c606e"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t023",
+      "query": "社保怎么查",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_c1417ff51ba9"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t024",
+      "query": "网点预约怎么约",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_c708a42ad245"
+      ],
+      "note": "办理类"
+    },
+    {
+      "case_id": "rsi_t025",
+      "query": "附近网点在哪",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_85ec8930276c"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t026",
+      "query": "结售汇功能在哪",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_d48cd4515379"
+      ],
+      "note": "直接命中"
+    },
+    {
+      "case_id": "rsi_t027",
+      "query": "我的个人信息在哪看",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_89bc7cb1d76c"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t028",
+      "query": "明细能打印吗",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_a28dd7c3b71b"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t029",
+      "query": "账户解控怎么弄",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_87d56c7a00f5"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t030",
+      "query": "委托代扣在哪设置",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_5f59a0964846"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t031",
+      "query": "转账限额多少",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_bd510ce3a896"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t032",
+      "query": "信用卡对账单能补发吗",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_b8848ed81676"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t033",
+      "query": "现在存贷利率多少",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_972c9e53bf71"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t034",
+      "query": "积存贵金属怎么查",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_d3f387c1c789"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t035",
+      "query": "资产规划在哪看",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_0a2960320c7d"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t036",
+      "query": "我的协议在哪查",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_6a745c136274"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t037",
+      "query": "电子银行限额怎么调",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_3ea4909b344b"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t038",
+      "query": "改电子银行限额",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_6f34a01e743b"
+      ],
+      "note": "修改类"
+    },
+    {
+      "case_id": "rsi_t039",
+      "query": "云保管里存了什么",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_2411e62b99d7"
+      ],
+      "note": "gap:存了什么≠查询-A1"
+    },
+    {
+      "case_id": "rsi_t040",
+      "query": "电子回单怎么打",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_3405c7c47392"
+      ],
+      "note": "gap:打≠查询-A1"
+    },
+    {
+      "case_id": "rsi_t041",
+      "query": "绿色能量有什么用",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_834864f4854f"
+      ],
+      "note": "gap:绿色能量≠绿色空间-A1"
+    },
+    {
+      "case_id": "rsi_t042",
+      "query": "财富交易记录在哪",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_944deca197d6"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t043",
+      "query": "公积金缴存明细",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_b9008f7a65ef"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t044",
+      "query": "薪管家怎么开通",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_aab1ae1c7bb8"
+      ],
+      "note": "口语化"
+    },
+    {
+      "case_id": "rsi_t045",
+      "query": "看看我的工资明细",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_aab1ae1c7bb8"
+      ],
+      "note": "gap:工资明细≈薪管家-A1"
+    },
+    {
+      "case_id": "rsi_t101",
+      "query": "先查工资单再看看信用卡账单",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c",
+        "intent_scene_26c3aeb00dd2"
+      ],
+      "note": "先...再切分"
+    },
+    {
+      "case_id": "rsi_t102",
+      "query": "顺便查下支付限额和转账限额",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246",
+        "intent_scene_bd510ce3a896"
+      ],
+      "note": "顺便+和切分"
+    },
+    {
+      "case_id": "rsi_t103",
+      "query": "帮我看下卡片品牌还有卡片权益",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_6c1ecb75af6e",
+        "intent_scene_8b5cbccc6189"
+      ],
+      "note": "还有切分"
+    },
+    {
+      "case_id": "rsi_t104",
+      "query": "网点预约和网点详情一起看",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_c708a42ad245",
+        "intent_scene_85ec8930276c"
+      ],
+      "note": "和...一起切分"
+    },
+    {
+      "case_id": "rsi_t105",
+      "query": "先办信用卡再查申请进度",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_0b562ec2c297",
+        "intent_scene_ad491c487d7e"
+      ],
+      "note": "先...再切分"
+    },
+    {
+      "case_id": "rsi_t106",
+      "query": "生活缴费和社保服务都在哪查",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_2f16422c606e",
+        "intent_scene_c1417ff51ba9"
+      ],
+      "note": "和...都在哪切分"
+    },
+    {
+      "case_id": "rsi_t107",
+      "query": "查额度然后改支付限额",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_6e4e6cdfd5a5",
+        "intent_scene_a9441ceac5eb"
+      ],
+      "note": "然后切分"
+    },
+    {
+      "case_id": "rsi_t108",
+      "query": "帮我查薪管家顺便看公积金",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_aab1ae1c7bb8",
+        "intent_scene_b9008f7a65ef"
+      ],
+      "note": "顺便切分"
+    },
+    {
+      "case_id": "rsi_t109",
+      "query": "电子回单和明细打印都要查",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_3405c7c47392",
+        "intent_scene_a28dd7c3b71b"
+      ],
+      "note": "和...都要切分"
+    },
+    {
+      "case_id": "rsi_t110",
+      "query": "先查结售汇再看看资产规划",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_d48cd4515379",
+        "intent_scene_0a2960320c7d"
+      ],
+      "note": "先...再切分"
+    },
+    {
+      "case_id": "rsi_t111",
+      "query": "查下我的协议还有委托代扣",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_6a745c136274",
+        "intent_scene_5f59a0964846"
+      ],
+      "note": "还有切分"
+    },
+    {
+      "case_id": "rsi_t112",
+      "query": "电子银行限额调整和支付限额一起调",
+      "difficulty": "hard",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_3ea4909b344b",
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "和...一起调切分；混淆对"
+    },
+    {
+      "case_id": "rsi_t113",
+      "query": "查财富交易顺便看积存贵金属",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_944deca197d6",
+        "intent_scene_d3f387c1c789"
+      ],
+      "note": "顺便切分"
+    },
+    {
+      "case_id": "rsi_t114",
+      "query": "先看公积金服务再查社保",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_b9008f7a65ef",
+        "intent_scene_c1417ff51ba9"
+      ],
+      "note": "先...再切分；民生混淆"
+    },
+    {
+      "case_id": "rsi_t115",
+      "query": "帮我查工资单详情还有电子工资单",
+      "difficulty": "hard",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c",
+        "intent_scene_bb9a6e5e3c29"
+      ],
+      "note": "还有切分；工资混淆对"
+    },
+    {
+      "case_id": "rsi_t116",
+      "query": "存贷利率和绿色空间都查一下",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_972c9e53bf71",
+        "intent_scene_834864f4854f"
+      ],
+      "note": "和...都切分"
+    },
+    {
+      "case_id": "rsi_t117",
+      "query": "先查个人信息再改卡片管理",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_89bc7cb1d76c",
+        "intent_scene_3646999bf1ab"
+      ],
+      "note": "先...再切分；查+改"
+    },
+    {
+      "case_id": "rsi_t118",
+      "query": "工银豆明细和云保管都在哪看",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_1f79f45400d0",
+        "intent_scene_2411e62b99d7"
+      ],
+      "note": "和...都在哪切分"
+    },
+    {
+      "case_id": "rsi_t119",
+      "query": "账户解控顺便看下用卡场景",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_87d56c7a00f5",
+        "intent_scene_8047124f47ee"
+      ],
+      "note": "顺便切分"
+    },
+    {
+      "case_id": "rsi_t120",
+      "query": "补发信用卡对账单然后查信用卡账单",
+      "difficulty": "hard",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_b8848ed81676",
+        "intent_scene_26c3aeb00dd2"
+      ],
+      "note": "然后切分；信用卡混淆对"
+    },
+    {
+      "case_id": "rsi_t121",
+      "query": "查无感支付顺便改支付限额",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_15361316be64",
+        "intent_scene_a9441ceac5eb"
+      ],
+      "note": "顺便切分；查+改"
+    },
+    {
+      "case_id": "rsi_t122",
+      "query": "申请信用卡和查申请信用卡有什么区别",
+      "difficulty": "hard",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_0b562ec2c297",
+        "intent_scene_a2e2bdd8ba60"
+      ],
+      "note": "和切分；办vs查混淆对"
+    },
+    {
+      "case_id": "rsi_t123",
+      "query": "查电子银行限额调整再改电子银行限额",
+      "difficulty": "hard",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_3ea4909b344b",
+        "intent_scene_6f34a01e743b"
+      ],
+      "note": "再切分；查vs改混淆对"
+    },
+    {
+      "case_id": "rsi_t201",
+      "query": "查限额",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246",
+        "intent_scene_bd510ce3a896",
+        "intent_scene_3ea4909b344b"
+      ],
+      "note": "模糊→应澄清(A5)：支付限额/转账限额/电子银行限额"
+    },
+    {
+      "case_id": "rsi_t202",
+      "query": "改限额",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_a9441ceac5eb",
+        "intent_scene_6f34a01e743b"
+      ],
+      "note": "模糊→应澄清(A5)：改支付限额/改电子银行限额"
+    },
+    {
+      "case_id": "rsi_t203",
+      "query": "看工资",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c",
+        "intent_scene_bb9a6e5e3c29",
+        "intent_scene_aab1ae1c7bb8"
+      ],
+      "note": "模糊→应澄清(A5)：工资单详情/电子工资单/薪管家"
+    },
+    {
+      "case_id": "rsi_t204",
+      "query": "查卡的信息",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_6c1ecb75af6e",
+        "intent_scene_8b5cbccc6189",
+        "intent_scene_8d8ac3ad0543",
+        "intent_scene_8047124f47ee"
+      ],
+      "note": "模糊→应澄清(A5)：品牌/权益/等级/用卡场景"
+    },
+    {
+      "case_id": "rsi_t205",
+      "query": "网点的事",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889",
+        "intent_scene_c708a42ad245",
+        "intent_scene_85ec8930276c"
+      ],
+      "note": "模糊→应澄清(A5)：预约/办理/详情"
+    },
+    {
+      "case_id": "rsi_t206",
+      "query": "信用卡的事",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_26c3aeb00dd2",
+        "intent_scene_0b562ec2c297",
+        "intent_scene_a2e2bdd8ba60",
+        "intent_scene_b8848ed81676"
+      ],
+      "note": "模糊→应澄清(A5)：账单/办理/申请/对账单"
+    },
+    {
+      "case_id": "rsi_t207",
+      "query": "民生服务",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_2f16422c606e",
+        "intent_scene_c1417ff51ba9",
+        "intent_scene_b9008f7a65ef"
+      ],
+      "note": "模糊→应澄清(A5)：生活缴费/社保/公积金"
+    },
+    {
+      "case_id": "rsi_t208",
+      "query": "财富的事",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_d3f387c1c789",
+        "intent_scene_0a2960320c7d",
+        "intent_scene_944deca197d6"
+      ],
+      "note": "模糊→应澄清(A5)：积存贵金属/资产规划/财富交易"
+    },
+    {
+      "case_id": "rsi_t209",
+      "query": "查协议",
+      "difficulty": "medium",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_6a745c136274",
+        "intent_scene_5f59a0964846"
+      ],
+      "note": "模糊→应澄清(A5)：我的协议/委托代扣"
+    },
+    {
+      "case_id": "rsi_t210",
+      "query": "限额还是额度",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246",
+        "intent_scene_6e4e6cdfd5a5"
+      ],
+      "note": "混淆对→应澄清：支付限额/查额度"
+    },
+    {
+      "case_id": "rsi_t211",
+      "query": "我要查单子",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c",
+        "intent_scene_26c3aeb00dd2",
+        "intent_scene_b8848ed81676",
+        "intent_scene_3405c7c47392"
+      ],
+      "note": "模糊→应澄清(A5)：工资单/信用卡账单/对账单/电子回单"
+    },
+    {
+      "case_id": "rsi_t212",
+      "query": "帮我办一下",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_0b562ec2c297",
+        "intent_scene_c708a42ad245"
+      ],
+      "note": "模糊→应澄清(A5)：办信用卡/办网点预约"
+    },
+    {
+      "case_id": "rsi_t213",
+      "query": "查下明细",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c",
+        "intent_scene_1f79f45400d0",
+        "intent_scene_a28dd7c3b71b",
+        "intent_scene_944deca197d6"
+      ],
+      "note": "模糊→应澄清(A5)：工资单明细/工银豆明细/明细打印/财富交易明细"
+    },
+    {
+      "case_id": "rsi_t214",
+      "query": "支付的事怎么弄",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_15361316be64",
+        "intent_scene_80232b4c2246",
+        "intent_scene_a9441ceac5eb"
+      ],
+      "note": "模糊→应澄清(A5)：无感支付/支付限额/改支付限额"
+    },
+    {
+      "case_id": "rsi_t215",
+      "query": "查存的钱",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_972c9e53bf71",
+        "intent_scene_d3f387c1c789"
+      ],
+      "note": "模糊→应澄清(A5)：存贷利率/积存贵金属"
+    },
+    {
+      "case_id": "rsi_t216",
+      "query": "办卡",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_0b562ec2c297",
+        "intent_scene_3646999bf1ab"
+      ],
+      "note": "模糊→应澄清(A5)：办信用卡/改卡片管理"
+    },
+    {
+      "case_id": "rsi_t217",
+      "query": "查绿色那个",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_834864f4854f"
+      ],
+      "note": "模糊→应澄清(A5)：绿色空间"
+    },
+    {
+      "case_id": "rsi_t218",
+      "query": "打印的事",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_a28dd7c3b71b",
+        "intent_scene_3405c7c47392"
+      ],
+      "note": "模糊→应澄清(A5)：明细打印/电子回单"
+    },
+    {
+      "case_id": "rsi_t219",
+      "query": "帮我查下账户",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_89bc7cb1d76c",
+        "intent_scene_87d56c7a00f5",
+        "intent_scene_6a745c136274"
+      ],
+      "note": "模糊→应澄清(A5)：个人信息/账户解控/我的协议"
+    },
+    {
+      "case_id": "rsi_t220",
+      "query": "查下扣款",
+      "difficulty": "hard",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_5f59a0964846",
+        "intent_scene_2f16422c606e"
+      ],
+      "note": "模糊→应澄清(A5)：委托代扣/生活缴费"
+    },
+    {
+      "case_id": "rsi_g089",
+      "query": "结售汇功能怎么找？",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_d48cd4515379"
+      ],
+      "note": "口语化问法"
+    },
+    {
+      "case_id": "rsi_g090",
+      "query": "支付限额设置在哪？",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "同义替换+路径省略"
+    },
+    {
+      "case_id": "rsi_g091",
+      "query": "信用卡申请入口有吗？",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_a2e2bdd8ba60"
+      ],
+      "note": "口语化+入口替代"
+    },
+    {
+      "case_id": "rsi_g092",
+      "query": "网点预约服务怎么进？",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889"
+      ],
+      "note": "加服务后缀，路径语义完整"
+    },
+    {
+      "case_id": "rsi_g093",
+      "query": "查一下金融助手里的查额度",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_6e4e6cdfd5a5"
+      ],
+      "note": "嵌套修饰+口语化"
+    },
+    {
+      "case_id": "rsi_g094",
+      "query": "薪管家工资单详情在哪看？",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "跨层级路径组合"
+    },
+    {
+      "case_id": "rsi_g095",
+      "query": "工银无感支付开通前能看看说明不？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_15361316be64"
+      ],
+      "note": "意图内新增动作意图但未触发变更"
+    },
+    {
+      "case_id": "rsi_g096",
+      "query": "补发对账单的页面怎么进？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_b8848ed81676"
+      ],
+      "note": "用“页面”替代“在哪里看”，去样例化"
+    },
+    {
+      "case_id": "rsi_g097",
+      "query": "账户管理里查申请进度的路径是啥？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_ad491c487d7e"
+      ],
+      "note": "显式引用路径关键词，非样例措辞"
+    },
+    {
+      "case_id": "rsi_g098",
+      "query": "电子银行转账限额能查吗？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_3ea4909b344b"
+      ],
+      "note": "用场景化表达替代术语"
+    },
+    {
+      "case_id": "rsi_g099",
+      "query": "我的协议内容能预览吗？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_6a745c136274"
+      ],
+      "note": "动词+宾语结构改写，脱离样例模板"
+    },
+    {
+      "case_id": "rsi_g100",
+      "query": "客户专享版薪管家在哪？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_aab1ae1c7bb8"
+      ],
+      "note": "复用样例修饰词但重组句式"
+    },
+    {
+      "case_id": "rsi_g101",
+      "query": "生活缴费功能在民生服务里吗？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_2f16422c606e"
+      ],
+      "note": "反问式路径确认，scope_in内真实变体"
+    },
+    {
+      "case_id": "rsi_g102",
+      "query": "美元兑人民币汇率能查结售汇吗？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_d48cd4515379"
+      ],
+      "note": "混淆scope_out但仍在scope_in边界内"
+    },
+    {
+      "case_id": "rsi_g103",
+      "query": "金融助手里查支付限额和查额度",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "含干扰词但主谓明确指向限额"
+    },
+    {
+      "case_id": "rsi_g104",
+      "query": "帮我查支付限额再看看查额度",
+      "difficulty": "easy",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246",
+        "intent_scene_6e4e6cdfd5a5"
+      ],
+      "note": "并列查询意图"
+    },
+    {
+      "case_id": "rsi_g105",
+      "query": "调整支付限额然后查申请进度",
+      "difficulty": "easy",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_a9441ceac5eb",
+        "intent_scene_ad491c487d7e"
+      ],
+      "note": "变更+查询组合"
+    },
+    {
+      "case_id": "rsi_g106",
+      "query": "看看网点预约顺便查工资单详情",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889",
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "生活服务+财富管理跨域组合"
+    },
+    {
+      "case_id": "rsi_g107",
+      "query": "查薪管家和我的协议",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_aab1ae1c7bb8",
+        "intent_scene_6a745c136274"
+      ],
+      "note": "同属财富/账户管理，易混淆但不同路径"
+    },
+    {
+      "case_id": "rsi_g108",
+      "query": "查电子银行限额调整还要查生活缴费",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_3ea4909b344b",
+        "intent_scene_2f16422c606e"
+      ],
+      "note": "双查询跨大类场景"
+    },
+    {
+      "case_id": "rsi_g109",
+      "query": "查结售汇和查网点预约",
+      "difficulty": "hard",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_d48cd4515379",
+        "intent_scene_b8a428948889"
+      ],
+      "note": "跨财富/网点服务，路径差异大但用户易混"
+    },
+    {
+      "case_id": "rsi_g110",
+      "query": "查申请进度和查我的协议",
+      "difficulty": "hard",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_ad491c487d7e",
+        "intent_scene_6a745c136274"
+      ],
+      "note": "同属账户管理下二级节点，路径邻近"
+    },
+    {
+      "case_id": "rsi_g111",
+      "query": "查补发信用卡对账单和查工资单详情",
+      "difficulty": "hard",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_b8848ed81676",
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "均含‘查XX单’结构，易误判为同类"
+    },
+    {
+      "case_id": "rsi_g112",
+      "query": "我想查下美元兑人民币能换多少",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_d48cd4515379"
+      ],
+      "note": "隐含结售汇语义，未提‘结售汇’词"
+    },
+    {
+      "case_id": "rsi_g113",
+      "query": "财富管理里那个换外币的页面怎么进？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_d48cd4515379"
+      ],
+      "note": "hard-同scope_in内真实变体，省略核心词"
+    },
+    {
+      "case_id": "rsi_g114",
+      "query": "金融助手里付款额度上限查哪？",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "术语替换（上限→限额），场景限定"
+    },
+    {
+      "case_id": "rsi_g115",
+      "query": "付款服务里的限额能看吗？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "hard-路径片段嵌入，非样例措辞"
+    },
+    {
+      "case_id": "rsi_g116",
+      "query": "想办张新卡，流程在哪查？",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_a2e2bdd8ba60"
+      ],
+      "note": "意图泛化表达（办卡→申请信用卡）"
+    },
+    {
+      "case_id": "rsi_g117",
+      "query": "菜单里信用卡板块的申卡功能怎么进？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_a2e2bdd8ba60"
+      ],
+      "note": "hard-路径结构化描述，无样例关键词"
+    },
+    {
+      "case_id": "rsi_g118",
+      "query": "生活服务里排号功能在哪？",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889"
+      ],
+      "note": "同义替换（预约→排号），场景限定"
+    },
+    {
+      "case_id": "rsi_g119",
+      "query": "网点预约服务的提前占位功能能查吗？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889"
+      ],
+      "note": "hard-‘提前占位’为‘提前排号’真实口语变体"
+    },
+    {
+      "case_id": "rsi_g120",
+      "query": "工资单明细能看吗？",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "同义词替换（详情→明细）"
+    },
+    {
+      "case_id": "rsi_g121",
+      "query": "企业服务里的电子工资单内容在哪查？",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "路径强化+内容指代"
+    },
+    {
+      "case_id": "rsi_g122",
+      "query": "薪管家下的工资单详情页怎么进？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "hard-三级路径嵌套，非样例结构"
+    },
+    {
+      "case_id": "rsi_g123",
+      "query": "顺便查下网点预约，然后看看薪管家",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889",
+        "intent_scene_aab1ae1c7bb8"
+      ],
+      "note": "顺承关系+两独立QUERY意图"
+    },
+    {
+      "case_id": "rsi_g124",
+      "query": "还要查我的协议和生活缴费",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_6a745c136274",
+        "intent_scene_2f16422c606e"
+      ],
+      "note": "并列意图，无歧义连接词"
+    },
+    {
+      "case_id": "rsi_g125",
+      "query": "帮我查申请进度，和电子银行限额调整",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_ad491c487d7e",
+        "intent_scene_3ea4909b344b"
+      ],
+      "note": "账户管理下双QUERY意图"
+    },
+    {
+      "case_id": "rsi_g126",
+      "query": "再查一下工银无感支付，然后查补发信用卡对账单",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_15361316be64",
+        "intent_scene_b8848ed81676"
+      ],
+      "note": "跨场景双QUERY意图"
+    },
+    {
+      "case_id": "rsi_g127",
+      "query": "顺便看看结售汇和工资单详情",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_d48cd4515379",
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "财富管理下双QUERY意图"
+    },
+    {
+      "case_id": "rsi_g128",
+      "query": "还要查支付限额和修改支付限额",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246",
+        "intent_scene_a9441ceac5eb"
+      ],
+      "note": "同一路径下QUERY+CHANGE意图"
+    },
+    {
+      "case_id": "rsi_g129",
+      "query": "查一下查额度和电子银行限额调整",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_6e4e6cdfd5a5",
+        "intent_scene_3ea4909b344b"
+      ],
+      "note": "支付/账户双路径额度类意图"
+    },
+    {
+      "case_id": "rsi_g130",
+      "query": "支付限额和查额度有啥区别？",
+      "difficulty": "medium",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246",
+        "intent_scene_6e4e6cdfd5a5"
+      ],
+      "note": "支付管理下相邻功能，语义边界近"
+    },
+    {
+      "case_id": "rsi_g131",
+      "query": "申请信用卡和申请进度是一个东西吗？",
+      "difficulty": "medium",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_a2e2bdd8ba60",
+        "intent_scene_ad491c487d7e"
+      ],
+      "note": "均含‘申请’，路径不同易混淆"
+    },
+    {
+      "case_id": "rsi_g132",
+      "query": "薪管家和工资单详情有什么关系？",
+      "difficulty": "medium",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_aab1ae1c7bb8",
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "薪管家包含工资单详情，层级易歧义"
+    },
+    {
+      "case_id": "rsi_g133",
+      "query": "支付限额设置上限是多少？",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "限额+疑问词组合"
+    },
+    {
+      "case_id": "rsi_g134",
+      "query": "金融助手里付款额度能查吗？",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "平台+服务+动词变体"
+    },
+    {
+      "case_id": "rsi_g135",
+      "query": "信用卡菜单下的申卡功能怎么打开？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_a2e2bdd8ba60"
+      ],
+      "note": "路径+动作动词重构"
+    },
+    {
+      "case_id": "rsi_g136",
+      "query": "网点预约要提前多久？",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889"
+      ],
+      "note": "预约+时间属性问法"
+    },
+    {
+      "case_id": "rsi_g137",
+      "query": "网点预约服务的查看入口是？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889"
+      ],
+      "note": "全路径术语+入口指代"
+    },
+    {
+      "case_id": "rsi_g138",
+      "query": "工资单明细能看上个月的吗？",
+      "difficulty": "easy",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "明细+时间限定口语化"
+    },
+    {
+      "case_id": "rsi_g139",
+      "query": "企业服务里的工资条详情在哪？",
+      "difficulty": "medium",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "同义词替换+路径前置"
+    },
+    {
+      "case_id": "rsi_g140",
+      "query": "薪管家电子工资单点开后看什么？",
+      "difficulty": "hard",
+      "intent_shape": "single_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c"
+      ],
+      "note": "子路径依赖+操作后状态描述"
+    },
+    {
+      "case_id": "rsi_g141",
+      "query": "修改支付限额然后查一下申请进度",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_a9441ceac5eb",
+        "intent_scene_ad491c487d7e"
+      ],
+      "note": "变更+查询组合"
+    },
+    {
+      "case_id": "rsi_g142",
+      "query": "看看工银无感支付顺便查下生活缴费",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_15361316be64",
+        "intent_scene_2f16422c606e"
+      ],
+      "note": "服务类并列查询"
+    },
+    {
+      "case_id": "rsi_g143",
+      "query": "查一下网点预约和薪管家",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_b8a428948889",
+        "intent_scene_aab1ae1c7bb8"
+      ],
+      "note": "民生+财富双场景"
+    },
+    {
+      "case_id": "rsi_g144",
+      "query": "帮我查工资单详情还要查我的协议",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_640308d0ad6c",
+        "intent_scene_6a745c136274"
+      ],
+      "note": "账户相关双查询"
+    },
+    {
+      "case_id": "rsi_g145",
+      "query": "查额度和支付限额",
+      "difficulty": "medium",
+      "intent_shape": "multi_intent",
+      "expected_intents": [
+        "intent_scene_6e4e6cdfd5a5",
+        "intent_scene_80232b4c2246"
+      ],
+      "note": "支付管理下易混双查询"
+    },
+    {
+      "case_id": "rsi_g146",
+      "query": "申请信用卡和补发信用卡对账单",
+      "difficulty": "medium",
+      "intent_shape": "ambiguous_intent",
+      "expected_intents": [
+        "intent_scene_a2e2bdd8ba60",
+        "intent_scene_b8848ed81676"
+      ],
+      "note": "同属信用卡模块边界近"
+    }
+  ]
+}

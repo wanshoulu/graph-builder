@@ -1,0 +1,269 @@
+{
+  "manifest_version": "v1",
+  "updated_at": "2026-11-08T04:48:54.000Z",
+  "active_default": "intent-graph-v2.1-p2-batch903",
+  "rollback_default": "intent-graph-v2.1-p0",
+  "versioning_policy": {
+    "format": "intent-graph-v{major}.{minor}-{stage}",
+    "stages": {
+      "augmented": "legacy migration plus evaluation-regression augmented runtime graph",
+      "p0": "schema and metadata cleanup only; no semantic or recall-text changes",
+      "p1": "ASK/DO/QUERY boundary cleanup and high-frequency semantic issue fixes",
+      "p2": "evaluation backflow cleanup, business validation, and overfitting-risk cleanup"
+    },
+    "compatibility_rule": "P0 must not change candidate text or ranking logic. P1+ batches must run fixed regression sets and keep comparison reports."
+  },
+  "versions": [
+    {
+      "version_id": "intent-graph-v2.1-augmented",
+      "version_name": "AI Harbor Intent Graph v2.1 Augmented",
+      "stage": "augmented",
+      "status": "rollback_available",
+      "graph_file": "data/graphs/intent-graph-v2-augmented.json",
+      "viz_file": "data/graphs/intent-graph-v2-augmented-graph.json",
+      "source": "legacy graph + eval regression augmentation + governance relations",
+      "notes": [
+        "Raw augmented graph. It still has P0-level schema debt such as incomplete ontology.edge_types, stale summary fields, and lightweight edge metadata.",
+        "Kept as rollback graph for the P0 active default."
+      ]
+    },
+    {
+      "version_id": "intent-graph-v2.1-p0",
+      "version_name": "AI Harbor Intent Graph v2.1 P0 Clean",
+      "stage": "p0_schema_clean",
+      "status": "rollback_available",
+      "graph_file": "data/graphs/intent-graph-v2-schema-normalized.json",
+      "clean_alias_file": "data/graphs/intent-graph-v2-clean-p0.json",
+      "viz_file": "data/graphs/intent-graph-v2-clean-p0-graph.json",
+      "schema_file": "data/graphs/intent-graph-v2-schema.json",
+      "audit_file": "data/graphs/intent-graph-v2-schema-audit.json",
+      "source_version_id": "intent-graph-v2.1-augmented",
+      "changes": [
+        "Recomputed summary.",
+        "Completed ontology.edge_types.",
+        "Materialized edge_id / relation_category / status / version / owner."
+      ],
+      "verification": {
+        "no_model_smoke": "7/7 same as v2.1-augmented",
+        "embedding_llm_smoke": "3/3 same as v2.1-augmented"
+      }
+    },
+    {
+      "version_id": "intent-graph-v2.1-p1-batch2",
+      "version_name": "AI Harbor Intent Graph v2.1 P1 Batch2",
+      "stage": "p1_boundary_cleanup_batch2",
+      "status": "rollback_available",
+      "graph_file": "data/graphs/intent-graph-v2.1-p1-batch2.json",
+      "viz_file": "data/graphs/intent-graph-v2.1-p1-batch2-graph.json",
+      "source_version_id": "intent-graph-v2.1-p0",
+      "changes": [
+        "Added explicit user-facing leaves for 基金收益, 网点排队情况, 短信提醒.",
+        "Added explicit user-facing leaves for 银行卡解绑 and 银行卡挂失.",
+        "Validated with intent-boundary-p1 full regression 55/55."
+      ],
+      "verification": {
+        "intent_boundary_p1": "55/55 pass",
+        "evaluator_version": "intent-evaluator-v2.1-p1",
+        "audit_json": "data/evals/intent-boundary-p1-audit.json",
+        "audit_markdown": "data/evals/intent-boundary-p1-audit.md"
+      },
+      "release_status": "rollback_available"
+    },
+    {
+      "version_id": "intent-graph-v2.1-p1-batch5-pruned",
+      "version_name": "AI Harbor Intent Graph v2.1 P1 Batch5 Pruned",
+      "stage": "p1_safe_attach_and_prune_batch5",
+      "status": "rollback_available",
+      "graph_file": "data/graphs/intent-graph-v2.1-p1-batch5-pruned.json",
+      "viz_file": "data/graphs/intent-graph-v2.1-p1-batch5-pruned-graph.json",
+      "source_version_id": "intent-graph-v2.1-p1-batch4-safe",
+      "changes": [
+        "Safely attached 472 orphan eval leaves only when parent aggregate, action, and unique business object all satisfied graph rules.",
+        "Removed the remaining 470 unattached orphan intents so inspection focuses on structurally compliant nodes only."
+      ],
+      "verification": {
+        "orphan_attachment_audit": "472 safe attach, 470 pruned",
+        "evaluator_version": "intent-evaluator-v2.1-p1-batch5-pruned"
+      },
+      "release_status": "superseded_by_batch6"
+    },
+    {
+      "version_id": "intent-graph-v2.1-p1-batch6",
+      "version_name": "AI Harbor Intent Graph v2.1 P1 Batch6",
+      "stage": "p1_schema_debt_parent_attachment_batch6",
+      "status": "rollback_available",
+      "graph_file": "data/graphs/intent-graph-v2.1-p1-batch6.json",
+      "viz_file": "data/graphs/intent-graph-v2.1-p1-batch6-graph.json",
+      "source_version_id": "intent-graph-v2.1-p1-batch5-pruned",
+      "changes": [
+        "Attached the remaining three executable leaves with missing parent_intent_id to compliant existing parent aggregates.",
+        "Changed evaluator action-source priority to prefer graph standard fields task_binding.action and identity.intent_type before source_legacy.",
+        "Added schema debt audit gate; batch6 schema debt audit is 0."
+      ],
+      "verification": {
+        "schema_debt_audit": "0 debt signals",
+        "schema_debt_audit_json": "data/graphs/intent-graph-v2.1-p1-batch6-schema-debt-audit.json",
+        "schema_debt_audit_markdown": "data/graphs/intent-graph-v2.1-p1-batch6-schema-debt-audit.md",
+        "intent_boundary_p1": "55/55 pass",
+        "intent_boundary_p1_json": "data/evals/intent-boundary-p1-batch6-audit.json",
+        "intent_boundary_p1_markdown": "data/evals/intent-boundary-p1-batch6-audit.md",
+        "evaluator_version": "intent-evaluator-v2.1-p1-batch6"
+      },
+      "release_status": "superseded_by_batch7"
+    },
+    {
+      "version_id": "intent-graph-v2.1-p1-batch7",
+      "version_name": "AI Harbor Intent Graph v2.1 P1 Batch7",
+      "stage": "p1_action_object_boundary_batch7",
+      "status": "rollback_available",
+      "graph_file": "data/graphs/intent-graph-v2.1-p1-batch7.json",
+      "viz_file": "data/graphs/intent-graph-v2.1-p1-batch7-graph.json",
+      "source_version_id": "intent-graph-v2.1-p1-batch6",
+      "changes": [
+        "Removed duplicate transfer leaves for business-object management pages when compliant query/change leaves already exist.",
+        "Converted 汇款明细 from a transfer execution leaf to 查询汇款明细.",
+        "Removed transfer transaction slots from 修改转账限额 and 修改转账提醒.",
+        "Removed runtime silent suspicious-transfer candidate filtering from evaluator; graph boundary debt is now audited instead."
+      ],
+      "verification": {
+        "schema_debt_audit": "0 debt signals",
+        "schema_debt_audit_json": "data/graphs/intent-graph-v2.1-p1-batch7-schema-debt-audit.json",
+        "schema_debt_audit_markdown": "data/graphs/intent-graph-v2.1-p1-batch7-schema-debt-audit.md",
+        "transfer_boundary_audit": "0 debt signals",
+        "transfer_boundary_audit_json": "data/graphs/intent-graph-v2.1-p1-batch7-transfer-boundary-audit.json",
+        "transfer_boundary_audit_markdown": "data/graphs/intent-graph-v2.1-p1-batch7-transfer-boundary-audit.md",
+        "intent_transfer_boundary_p1": "6/6 pass",
+        "intent_transfer_boundary_p1_json": "data/evals/intent-transfer-boundary-p1-batch7-audit.json",
+        "intent_transfer_boundary_p1_markdown": "data/evals/intent-transfer-boundary-p1-batch7-audit.md",
+        "intent_boundary_p1": "55/55 pass",
+        "intent_boundary_p1_json": "data/evals/intent-boundary-p1-batch7-audit.json",
+        "intent_boundary_p1_markdown": "data/evals/intent-boundary-p1-batch7-audit.md",
+        "evaluator_version": "intent-evaluator-v2.1-p1-batch7"
+      },
+      "release_status": "superseded_by_batch8"
+    },
+    {
+      "version_id": "intent-graph-v2.1-p1-batch8",
+      "version_name": "AI Harbor Intent Graph v2.1 P1 Batch8",
+      "stage": "p1_balance_and_payee_boundary_batch8",
+      "status": "rollback_available",
+      "graph_file": "data/graphs/intent-graph-v2.1-p1-batch8.json",
+      "viz_file": "data/graphs/intent-graph-v2.1-p1-batch8-graph.json",
+      "source_version_id": "intent-graph-v2.1-p1-batch7",
+      "changes": [
+        "Normalized ???? leaves to ???? for generic balance queries.",
+        "Restricted ???? recall to explicit ??/e?? expressions only.",
+        "Removed invalid ?????? executable eval-gap leaf.",
+        "Evaluator adds generic suspicious payee ambiguity confirmation for typo/glued recipient names."
+      ],
+      "verification": {
+        "schema_debt_audit": "0 debt signals",
+        "schema_debt_audit_json": "data/graphs/intent-graph-v2.1-p1-batch8-schema-debt-audit.json",
+        "schema_debt_audit_markdown": "data/graphs/intent-graph-v2.1-p1-batch8-schema-debt-audit.md",
+        "transfer_boundary_audit": "0 debt signals",
+        "transfer_boundary_audit_json": "data/graphs/intent-graph-v2.1-p1-batch8-transfer-boundary-audit.json",
+        "transfer_boundary_audit_markdown": "data/graphs/intent-graph-v2.1-p1-batch8-transfer-boundary-audit.md",
+        "evaluator_version": "intent-evaluator-v2.1-p1-batch8"
+      },
+      "release_status": "superseded_by_batch9"
+    },
+    {
+      "version_id": "intent-graph-v2.1-p1-batch9",
+      "version_name": "AI Harbor Intent Graph v2.1 P1 Batch9",
+      "stage": "p1_graph_ownership_cleanup_batch9",
+      "status": "active_default",
+      "graph_file": "data/graphs/intent-graph-v2.1-p1-batch9.json",
+      "viz_file": "data/graphs/intent-graph-v2.1-p1-batch9-graph.json",
+      "source_version_id": "intent-graph-v2.1-p1-batch8",
+      "changes": [
+        "Moved auto-repayment and bind-phone ownership fixes back into the graph instead of relying on evaluator-side repair.",
+        "Removed the repay-style auto-repayment leaf and strengthened the correct change-style auto-repayment leaf.",
+        "Tightened phone-receipt aliases so receiving-account binding wording is owned by bind-phone.",
+        "Fixed enterprise account-opening progress ownership so enterprise开户进度 routes to 申请进度.",
+        "Evaluator runtime ownership boundary was clarified: graph fields stay authoritative while ask/query/guide remain runtime consumption decisions."
+      ],
+      "verification": {
+        "ownership_baseline_50": "50/50 pass",
+        "ownership_baseline_50_json": "data/evals/intent-ownership-baseline-50-audit.json",
+        "ownership_baseline_50_markdown": "data/evals/intent-ownership-baseline-50-audit.md",
+        "intent_boundary_p1": "55/55 pass",
+        "intent_boundary_p1_json": "data/evals/intent-boundary-p1-audit.json",
+        "intent_boundary_p1_markdown": "data/evals/intent-boundary-p1-audit.md",
+        "synthetic_generalization_30": "25/30 pass",
+        "synthetic_generalization_30_json": "data/evals/intent-generalization-synthetic-30-audit.json",
+        "synthetic_generalization_30_markdown": "data/evals/intent-generalization-synthetic-30-audit.md",
+        "evaluator_version": "intent-evaluator-v2.1-p1-batch9"
+      },
+      "release_status": "superseded_by_batch10"
+    },
+    {
+      "version_id": "intent-graph-v2.1-p1-batch10",
+      "version_name": "AI Harbor Intent Graph v2.1 P1 Batch10",
+      "stage": "p1_generalization_cleanup_batch10",
+      "status": "active_default",
+      "graph_file": "data/graphs/intent-graph-v2.1-p1-batch10.json",
+      "viz_file": "data/graphs/intent-graph-v2.1-p1-batch10-graph.json",
+      "source_version_id": "intent-graph-v2.1-p1-batch9",
+      "changes": [
+        "Added transfer-record ASK/QUERY paraphrases so “转账记录是什么意思/最近的汇款记录” no longer fall into generic transfer clarification.",
+        "Strengthened bind-phone ownership for “把收款账户绑到手机号上” and further excluded this wording from 手机号收款 leaves.",
+        "Renamed the credit-card due query display to 信用卡待还金额 and added 应还/待还 paraphrases for holdout-style queries.",
+        "Evaluator runtime now recognizes sequential composite boundaries such as “先查余额再转账” and treats “去哪里操作” phrasing as guide-style consumption."
+      ],
+      "verification": {
+        "evaluator_version": "intent-evaluator-v2.1-p1-batch9"
+      },
+      "release_status": "candidate_inspection"
+    },
+    {
+      "version_id": "intent-graph-v2.1-p2-batch901",
+      "version_name": "AI Harbor Intent Graph intent-graph-v2.1-p2-batch901",
+      "stage": "rsi_evolution_candidate",
+      "status": "candidate",
+      "graph_file": "data/graphs/intent-graph-v2.1-p2-batch901.json",
+      "source_version_id": "intent-graph-v2.1-p1-batch10",
+      "changes": [
+        "RSI pipeline P-da01be59 / patch 7ec2b89559141e87",
+        "acceptance=pass",
+        "graph_ops_applied=0",
+        "engine_suggestions=1",
+        "source_defect_repair: removed=3, repaired=0"
+      ]
+    },
+    {
+      "version_id": "intent-graph-v2.1-cbjh-20261108",
+      "version_name": "AI Harbor Intent Graph intent-graph-v2.1-cbjh-20261108",
+      "stage": "p2_candidate",
+      "status": "candidate",
+      "graph_file": "data/graphs/intent-graph-v2.1-cbjh-20261108.json",
+      "source_version_id": "intent-graph-v2.1-cbjh-20261108",
+      "changes": [
+        "Expert manual modeling"
+      ]
+    },
+    {
+      "version_id": "intent-graph-v2.1-p2-batch903",
+      "version_name": "AI Harbor Intent Graph intent-graph-v2.1-p2-batch903",
+      "stage": "p2_candidate",
+      "status": "active_default",
+      "graph_file": "data/graphs/intent-graph-v2.1-p2-batch903.json",
+      "source_version_id": "intent-graph-v2.1-p2-batch903",
+      "changes": [
+        "功能树 xlsx（2237 行）直转换：1811 叶子/427 聚合/4202 边；知识/评测零重叠；schema v4.1 零错误"
+      ],
+      "viz_file": "data/graphs/intent-graph-v2.1-p2-batch903-graph.json",
+      "name": "建行手机银行功能场景图谱（功能树 xlsx 直转换）",
+      "release_status": "active_default"
+    }
+  ],
+  "current_summary": {
+    "leaf_intent_count": 1811,
+    "executable_intent_count": 767,
+    "knowledge_intent_count": 813,
+    "aggregate_intent_count": 427,
+    "edge_count": 4202,
+    "runtime_candidate_count": 1580,
+    "runtime_candidate_excluded_count": 0,
+    "source_issue_distribution": {}
+  }
+}

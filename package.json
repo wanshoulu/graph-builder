@@ -1,13 +1,16 @@
 {
   "name": "graph-builder",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": false,
-  "description": "图谱知识构建工具链（独立部署版）：模板驱动校验 + Excel 知识摄入 + 图谱资产管理 + 单文件前端工作台，零数据库、零 CDN",
+  "description": "图谱知识构建 + RSI 意图进化工具链（独立部署版）：模板驱动校验、知识摄入、图谱资产管理、Agent+Skill 闭环与独立前端，零数据库、零 CDN",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
-    "test:contract": "node --test tests/knowledge-intake-contract.test.js tests/intent-graph-template.test.js tests/x6-graph-template-validator.test.js"
+    "test:core": "node --test tests/intent-graph-template.test.js tests/knowledge-intake*.test.js tests/org-graph-*.test.js tests/x6-graph-template-validator.test.js",
+    "test:rsi": "node --test tests/rsi-*.test.js",
+    "test:contract": "node --test tests/knowledge-intake-contract.test.js tests/intent-graph-template.test.js tests/x6-graph-template-validator.test.js",
+    "build:web": "cd web && npm install && npm run build"
   },
   "engines": {
     "node": ">=18"

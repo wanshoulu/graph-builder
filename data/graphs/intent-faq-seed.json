@@ -1,0 +1,137 @@
+{
+  "version": "faq-seed-v0.1",
+  "description": "Small generated FAQ seed for validating ask-intent knowledge binding in the intent evaluator.",
+  "items": [
+    {
+      "faq_id": "faq_transfer_limit_what_is",
+      "display_name": "转账限额",
+      "intent_names": ["转账限额"],
+      "action_codes": ["ask"],
+      "aliases": ["限额", "转账额度", "转账上限"],
+      "questions": ["什么是转账限额", "转账限额是什么", "转账限额是什么意思", "转账限额规则是什么"],
+      "answer": "转账限额是银行对账户通过手机银行等渠道办理转账时设置的单笔、单日或累计金额上限。具体限额会受账户类型、认证方式、收款对象、风险策略和银行规则影响，请以手机银行页面展示为准。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "查询转账限额", "query": "查转账限额" },
+        { "label": "调整转账限额", "query": "设置转账限额" }
+      ],
+      "source": "seed_generated"
+    },
+    {
+      "faq_id": "faq_transfer_agreement_what_is",
+      "display_name": "转账协议",
+      "intent_names": ["转账协议"],
+      "action_codes": ["ask"],
+      "aliases": ["协议", "转账服务协议", "转账条款"],
+      "questions": ["什么是转账协议", "转账协议是什么", "转账协议是什么意思"],
+      "answer": "转账协议通常指用户与银行或相关服务约定的转账业务规则、授权范围或服务条款。不同转账方式的协议内容可能不同，请以办理页面展示的协议文本为准。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "查看转账协议", "query": "转账协议是什么" },
+        { "label": "发起转账", "query": "我要转账" }
+      ],
+      "source": "seed_generated"
+    },
+    {
+      "faq_id": "faq_transfer_remittance_what_is",
+      "display_name": "转账汇款",
+      "intent_names": ["转账汇款"],
+      "action_codes": ["ask"],
+      "aliases": ["转账", "汇款", "转账汇款功能"],
+      "questions": ["什么是转账汇款", "啥是转账汇款", "转账汇款是啥", "转账汇款是什么意思"],
+      "answer": "转账汇款是通过手机银行向本人或他人账户发起资金划转的服务。实际可用方式可能包括行内转账、跨行转账、手机号转账或跨境汇款等，具体入口、限额和到账规则以手机银行页面展示为准。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "发起转账", "query": "我要转账" },
+        { "label": "查询转账限额", "query": "查转账限额" }
+      ],
+      "source": "seed_generated"
+    },
+    {
+      "faq_id": "faq_balance_query_what_is",
+      "display_name": "余额查询",
+      "intent_names": ["余额查询"],
+      "action_codes": ["ask"],
+      "aliases": ["余额", "账户余额", "银行卡余额"],
+      "questions": ["什么是余额查询", "余额查询是什么", "账户余额是什么"],
+      "answer": "余额查询用于查看账户当前资金情况，常见展示包括账户余额、可用余额、冻结金额等字段。不同账户类型展示内容可能不同，请以手机银行页面展示为准。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "查询银行卡余额", "query": "查银行卡余额" }
+      ],
+      "source": "seed_generated"
+    },
+    {
+      "faq_id": "faq_credit_card_due_what_is",
+      "display_name": "待还款",
+      "intent_names": ["待还款", "信用卡待还"],
+      "action_codes": ["ask"],
+      "aliases": ["信用卡待还", "应还款", "本期待还", "未还金额"],
+      "questions": ["什么是信用卡待还", "信用卡待还是什么", "待还款是什么", "信用卡待还款是什么意思"],
+      "answer": "信用卡待还款是当前账单或还款周期内仍需偿还的金额，可能包括本期账单待还、最低还款额或其他应还项目，具体以信用卡账单页面展示为准。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "查询信用卡待还", "query": "查信用卡待还" },
+        { "label": "信用卡还款", "query": "还信用卡" }
+      ],
+      "source": "seed_generated"
+    },
+    {
+      "faq_id": "faq_transfer_record_what_is",
+      "display_name": "转账记录",
+      "intent_names": ["转账记录"],
+      "action_codes": ["ask"],
+      "aliases": ["转账明细", "汇款记录", "交易记录"],
+      "questions": ["什么是转账记录", "转账记录是什么", "转账明细是什么"],
+      "answer": "转账记录用于查看已发起或已完成转账交易的历史信息，通常包括交易时间、金额、收款方和处理状态等内容，展示范围以页面规则为准。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "查询转账记录", "query": "查转账记录" }
+      ],
+      "source": "seed_generated"
+    },
+    {
+      "faq_id": "faq_transfer_reminder_what_is",
+      "display_name": "转账提醒",
+      "intent_names": ["转账提醒"],
+      "action_codes": ["ask"],
+      "aliases": ["转账通知", "汇款提醒", "交易提醒"],
+      "questions": ["什么是转账提醒", "转账提醒是什么"],
+      "answer": "转账提醒是与转账相关的通知或提示服务，可用于提醒交易状态、预约转账或相关风险信息。具体提醒方式和范围以手机银行页面规则为准。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "查看转账提醒", "query": "转账提醒是什么" }
+      ],
+      "source": "seed_generated"
+    },
+    {
+      "faq_id": "faq_credit_card_bill_what_is",
+      "display_name": "信用卡账单",
+      "intent_names": ["信用卡账单"],
+      "action_codes": ["ask"],
+      "aliases": ["账单", "本期账单", "信用卡账单明细"],
+      "questions": ["什么是信用卡账单", "信用卡账单是什么", "信用卡账单包含什么"],
+      "answer": "信用卡账单是银行按账单周期汇总展示的信用卡消费、还款、费用和应还金额等信息。账单字段和统计口径以信用卡账单页面展示为准。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "查询信用卡账单", "query": "查信用卡账单" }
+      ],
+      "source": "seed_generated"
+    },
+    {
+      "faq_id": "faq_login_password_what_is",
+      "display_name": "登录密码",
+      "intent_names": ["登录密码"],
+      "action_codes": ["ask"],
+      "aliases": ["手机银行密码", "登录口令"],
+      "questions": ["什么是登录密码", "登录密码是什么", "手机银行登录密码是什么"],
+      "answer": "登录密码是用户进入手机银行时用于身份校验的凭证之一。涉及密码找回、修改或重置时，应按手机银行安全校验流程办理。",
+      "answer_policy": "direct_answer_with_related_actions",
+      "related_actions": [
+        { "label": "修改登录密码", "query": "修改登录密码" },
+        { "label": "找回登录密码", "query": "忘记登录密码" }
+      ],
+      "source": "seed_generated"
+    }
+  ]
+}

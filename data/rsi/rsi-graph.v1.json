@@ -1,0 +1,255 @@
+{
+  "meta": {
+    "graphId": "rsi-park-intents",
+    "version": "v1",
+    "domain": "智慧园区服务助手",
+    "schemaNote": "与生产意图图谱 v2 系同构（identity / semantic_definition / retrieval_profile / decision_policy），仅保留 RSI 闭环演示所需字段",
+    "created_at": "2026-10-02",
+    "owner": "intent-rsi-lab"
+  },
+  "intent_nodes": [
+    {
+      "identity": {
+        "intent_id": "park_parking_query",
+        "intent_name": "车位查询",
+        "intent_type": "ASK",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "查询自己的车辆停放位置或空余车位",
+        "description": "用户想查询车辆停放位置、寻车或了解园区空余车位情况。",
+        "scope_in": ["车位查询", "查车位", "停车位查询"],
+        "scope_out": ["车位缴费", "月卡办理", "物业费缴纳"],
+        "confusable_intents": ["park_payment"],
+        "disambiguation_hints": ["用户找车或找空位时选本意图；涉及缴费、扣费时选费用缴纳。"]
+      },
+      "retrieval_profile": {
+        "utterance_view": ["车位查询", "查车位", "停车位查询"],
+        "semantic_view": ["查询车辆停放位置", "查看园区空余车位"],
+        "object_view": ["车位", "停车"],
+        "action_view": ["查询", "查"]
+      },
+      "decision_policy": {
+        "default_decision": "answer",
+        "clarify_questions": []
+      }
+    },
+    {
+      "identity": {
+        "intent_id": "park_payment",
+        "intent_name": "费用缴纳",
+        "intent_type": "DO",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "缴纳园区相关费用",
+        "description": "园区相关费用的查询与缴纳。",
+        "scope_in": ["费用缴纳", "缴费"],
+        "scope_out": ["车位查询", "月卡办理"],
+        "confusable_intents": ["park_parking_query"],
+        "disambiguation_hints": []
+      },
+      "retrieval_profile": {
+        "utterance_view": ["费用缴纳", "缴费", "交费"],
+        "semantic_view": ["缴纳园区费用"],
+        "object_view": ["费用", "缴费"],
+        "action_view": ["缴纳", "交", "付"]
+      },
+      "decision_policy": {
+        "default_decision": "execute",
+        "clarify_questions": []
+      }
+    },
+    {
+      "identity": {
+        "intent_id": "park_access_card",
+        "intent_name": "门禁卡办理",
+        "intent_type": "DO",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "办理或补办园区门禁卡",
+        "description": "为园区员工办理、补办门禁卡或门禁权限开通。",
+        "scope_in": ["门禁卡办理", "办门禁卡"],
+        "scope_out": ["访客登记"],
+        "confusable_intents": ["park_visitor"],
+        "disambiguation_hints": []
+      },
+      "retrieval_profile": {
+        "utterance_view": ["门禁卡办理", "办门禁卡", "补办门禁卡"],
+        "semantic_view": ["办理园区门禁卡"],
+        "object_view": ["门禁", "门禁卡"],
+        "action_view": ["办理", "补办", "申请"]
+      },
+      "decision_policy": {
+        "default_decision": "execute",
+        "clarify_questions": []
+      }
+    },
+    {
+      "identity": {
+        "intent_id": "park_visitor",
+        "intent_name": "访客登记",
+        "intent_type": "DO",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "为来访客人做入园登记",
+        "description": "为来访客人登记入园，生成访客通行码。",
+        "scope_in": ["访客登记", "访客预约"],
+        "scope_out": ["门禁卡办理"],
+        "confusable_intents": ["park_access_card"],
+        "disambiguation_hints": []
+      },
+      "retrieval_profile": {
+        "utterance_view": ["访客登记", "访客预约", "访客入园"],
+        "semantic_view": ["为访客登记入园"],
+        "object_view": ["访客"],
+        "action_view": ["登记", "预约"]
+      },
+      "decision_policy": {
+        "default_decision": "execute",
+        "clarify_questions": []
+      }
+    },
+    {
+      "identity": {
+        "intent_id": "park_repair",
+        "intent_name": "报修提交",
+        "intent_type": "DO",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "提交设施报修工单",
+        "description": "对办公区或公共设施故障提交报修。",
+        "scope_in": ["报修", "提交报修"],
+        "scope_out": [],
+        "confusable_intents": [],
+        "disambiguation_hints": []
+      },
+      "retrieval_profile": {
+        "utterance_view": ["报修", "提交报修", "设施报修"],
+        "semantic_view": ["报修空调", "报修灯坏了", "工位报修"],
+        "object_view": ["报修", "维修"],
+        "action_view": ["提交", "报"]
+      },
+      "decision_policy": {
+        "default_decision": "execute",
+        "clarify_questions": []
+      }
+    },
+    {
+      "identity": {
+        "intent_id": "park_meeting_room",
+        "intent_name": "会议室预订",
+        "intent_type": "DO",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "预订会议室",
+        "description": "预订园区会议室或查询会议室占用情况。",
+        "scope_in": ["会议室预订", "订会议室"],
+        "scope_out": ["食堂"],
+        "confusable_intents": [],
+        "disambiguation_hints": []
+      },
+      "retrieval_profile": {
+        "utterance_view": ["会议室预订", "订会议室", "预定会议室"],
+        "semantic_view": ["预订会议室", "会议室占用查询"],
+        "object_view": ["会议室"],
+        "action_view": ["预订", "预定", "订"]
+      },
+      "decision_policy": {
+        "default_decision": "execute",
+        "clarify_questions": []
+      }
+    },
+    {
+      "identity": {
+        "intent_id": "park_shuttle",
+        "intent_name": "班车查询",
+        "intent_type": "ASK",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "查询园区班车时刻",
+        "description": "查询园区班车线路与发车时刻。",
+        "scope_in": ["班车查询", "班车时刻"],
+        "scope_out": [],
+        "confusable_intents": [],
+        "disambiguation_hints": []
+      },
+      "retrieval_profile": {
+        "utterance_view": ["班车查询", "查班车", "班车时刻表"],
+        "semantic_view": ["查询班车发车时间"],
+        "object_view": ["班车"],
+        "action_view": ["查询", "查"]
+      },
+      "decision_policy": {
+        "default_decision": "answer",
+        "clarify_questions": []
+      }
+    },
+    {
+      "identity": {
+        "intent_id": "park_canteen",
+        "intent_name": "食堂菜单",
+        "intent_type": "ASK",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "查看食堂今日菜单",
+        "description": "查询园区食堂今日菜品与营业时间。",
+        "scope_in": ["食堂菜单", "今天食堂吃什么"],
+        "scope_out": [],
+        "confusable_intents": [],
+        "disambiguation_hints": []
+      },
+      "retrieval_profile": {
+        "utterance_view": ["食堂菜单", "今天食堂吃什么", "食堂菜谱"],
+        "semantic_view": ["查询食堂今日菜品"],
+        "object_view": ["食堂", "菜单"],
+        "action_view": ["查看", "查"]
+      },
+      "decision_policy": {
+        "default_decision": "answer",
+        "clarify_questions": []
+      }
+    },
+    {
+      "identity": {
+        "intent_id": "park_gym",
+        "intent_name": "健身房预约",
+        "intent_type": "DO",
+        "intent_level": "leaf",
+        "domain": "园区服务"
+      },
+      "semantic_definition": {
+        "user_goal": "预约园区健身房或课程",
+        "description": "预约园区健身房时段或健身课程。",
+        "scope_in": ["健身房预约", "约健身"],
+        "scope_out": ["会议室预订"],
+        "confusable_intents": [],
+        "disambiguation_hints": []
+      },
+      "retrieval_profile": {
+        "utterance_view": ["健身房预约", "约健身", "健身课预约"],
+        "semantic_view": ["预约健身房时段"],
+        "object_view": ["健身房", "健身"],
+        "action_view": ["预约", "约"]
+      },
+      "decision_policy": {
+        "default_decision": "execute",
+        "clarify_questions": []
+      }
+    }
+  ]
+}

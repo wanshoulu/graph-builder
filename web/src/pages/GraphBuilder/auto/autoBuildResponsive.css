@@ -1,0 +1,16 @@
+@media (max-width: 767px) {
+  .auto-build-page {
+    height: auto !important;
+    min-height: calc(100vh - 48px);
+  }
+
+  .auto-build-pane {
+    flex: none !important;
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .auto-build-agent-pane {
+    min-height: 620px;
+  }
+}

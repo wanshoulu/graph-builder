@@ -5,27 +5,40 @@
 | 依赖 | 版本 | 说明 |
 | --- | --- | --- |
 | Node.js | ≥ 18（开发验证 22.x） | 唯一硬依赖 |
-| Python | 3.x（可选） | 仅重新生成 Excel 模板时需要（openpyxl） |
-| 模型 Key | 可选 | 不配也能跑全量测试与离线链路 |
+| Python | 3.x（可选） | 重新生成 Excel 模板需要 openpyxl；RSI Agent 需要 3.11 + `services/rsi-agent/requirements.txt` |
+| 模型 Key | 可选 | 不配也能跑全量测试与离线链路；RSI 的有效基线/采纳结论需要密钥 |
 
 ```bash
-npm install    # 仅 4 个运行时依赖：xlsx / formidable / jsonwebtoken / mammoth / pdf-parse
+npm install    # 5 个运行时依赖：xlsx / formidable / jsonwebtoken / mammoth / pdf-parse
 npm start      # :3013，浏览器打开 / 或 curl /api/health 自检
+               # RSI V2 工作台 /intent-rsi · V1 实验台 /tools/intent-rsi-lab.html
 ```
 
 ## 2. 测试（全部离线，不需要任何 API Key）
 
-```bash
-# 全量：127 个用例（node:test 内置运行器）
-npm test
-# 等价：node --test tests/*.test.js
+1.1 起分三层口径，如实列出：
 
-# 契约回归锁（最重要的一组）
-npm run test:contract
+```bash
+npm run test:core    # 127 / 127 全绿：建图侧 10 个测试文件，CI 门禁用这个
+npm run test:rsi     # RSI 18 个测试文件：194 用例，181 通过 / 13 失败（继承源仓）
+npm test             # 全量 321 用例：308 通过 / 13 失败
+npm run test:contract # 契约回归锁（最重要的一组）
 # tests/knowledge-intake-contract.test.js：
 #   正向：摄入合入产物必须 0 校验错误
 #   反向：修复前的漂移输出必须仍然报错（防"放宽校验求通过"）
 ```
+
+**13 个 RSI 失败不是剥离引入的**：源单体跑同一批测试也是 181/13，失败名单逐条一致。根因是运行时后来加了「`rules` 决策模式必须注入 `propose` 服务」的早期校验（`routes/rsi-production-runtime.js:954`），而 7 个测试 fixture 仍显式传 `propose: undefined` 走 LLM 路径；其余是断言与新版测量策略的数值差异。另有一例时序相关用例偶发 flaky。修它需要改写测试语义，本次不做业务改动。
+
+Python 侧：`python -m py_compile services/rsi-agent/app/*.py` 已通过；`services/rsi-agent/tests/test_tools_contract.py` 需要 `httpx` + pytest（本机未装）。
+
+前端改 `web/src/` 后重建产物：
+
+```bash
+npm run build:web    # = cd web && npm install && npm run build
+```
+
+> 仓库附带的 `web/dist` 是历史预构建产物，API 前缀为 `/ontomind/wiki/api`，由 `server.js` 兼容层归一化；源码 `web/src/pages/IntentRsiEvolution/rsiShared.tsx` 已改为 `BASE="/api"`。重建后兼容分支可删。
 
 测试套件构成：
 
@@ -36,6 +49,9 @@ npm run test:contract
 | x6-graph-template-validator.test.js | 校验器三段管线单元 |
 | intent-graph-template.test.js | 主模板自洽性 |
 | org-graph-*.test.js（5 个） | 资产解析、分块、文档分诊、草稿历史、抽取续跑 |
+| rsi-*.test.js（18 个） | 提案契约、策略/学习/测量、运行时门禁、评分子进程、任务存储、Agent 模式（含 13 个历史失败） |
+
+`tests/rsi-task-storage.test.js` 用 `INTENT_RSI_DIR` 指向临时目录；RSI 测试产生的 `.tmp-tests/` 已 gitignore，跑完 `git status` 应保持干净。
 
 ## 3. 代码放在哪
 

@@ -1,15 +1,18 @@
 # API 参考
 
-基础地址：`http://127.0.0.1:3013`（`PORT` / `HOST` 可改）。前端页面与架构图同样由该服务托管：`/tools/*`、`/docs/*`；根路径 302 到 `/tools/index.html`。
+基础地址：`http://127.0.0.1:3013`（`PORT` / `HOST` 可改）。前端页面、SPA 构建产物与架构图同样由该服务托管：`/tools/*`、`/docs/*`、`/assets/*`；`/intent-rsi` 等非 API 路径回退到 `web/dist/index.html`；根路径 302 到 `/tools/index.html`。历史构建产物写死的 `/ontomind/wiki/api/*` 会在分发前被归一化到 `/api/*`。
 认证：`SKIP_AUTH=true`（默认开发模式）免认证；生产模式带 `Authorization: Bearer <JWT>`。
-通用响应：`{ "success": true, "data": ... }` 或 `{ "success": false, "error": { "code", "message" } }`。
+通用响应：`{ "ok": true, ... }` 或 `{ "ok": false, "error": "..." }`；部分路由族沿用 `{success, data}` / `{success, error}` 壳，以各端点实际返回为准。
 
 ## 系统端点
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/healthz` | 健康检查 `{ok, service, time}` |
+| GET | `/healthz`、`/api/health` | 健康检查：服务版本、端口、6 组 API 前缀、`rsiAgent` 地址、`spa` 是否已构建 |
+| GET | `/api/graph/data?id=demo` | 展示页图谱数据，读 `data/graphs/{id}.json`（id 仅允许字母数字 `_` `-`） |
 | GET | `/docs/*` | 仓库 docs 静态资源 |
+| GET | `/assets/*` | `web/dist/assets/` 静态资源（React SPA 构建产物） |
+| GET | `/ontomind/wiki/api/*` | 兼容层：归一化到 `/api/*`，供历史 `web/dist` 的 RSI 请求使用 |
 
 ---
 
@@ -28,40 +31,12 @@
 | POST | `/batches/{id}/expand-utterances` | AI 扩问补全 |
 | POST | `/batches/{id}/node-review` | AI 节点审查 |
 | POST | `/batches/{id}/check-conflicts` | 冲突检测 |
-| POST | `/batches/{id}/merge` | 批次合并 |
-| POST | `/batches/{id}/preview-apply` | **预检**：内存合入草稿→真实模板校验，不落盘 |
-| POST | `/batches/{id}/apply` | 应用到草稿（自动快照，可回滚） |
-| POST | `/batches/{id}/rollback` | 回滚本次 apply |
-| GET | `/batches/{id}/revisions` | 修订历史 |
-
-### preview-apply / apply 响应要点
-
-```json
-{
-  "batchId": "ki-2026xxxx-xxxx",
-  "applied": true,
-  "saved": true,
-  "rollbackable": true,
-  "stats": { "aggregatesCreated": 3, "intentsCreated": 1, "edgesCreated": 3, "skipped": [] },
-  "validation": { "valid": true, "errors": [] }
-}
-```
-
-`validation.valid=false` 时 **apply 被阻断**（服务端强制，不信任前端）。
-
-### Excel 格式（三工作表）
-
-| 工作表 | 必填列 |
-|--------|--------|
-| `1-业务功能分类` | 功能全路径（`父/子` 斜杠分级，需先父后子）、功能名称（=路径末段）、业务描述（≥10字）、客户分类（枚举）、安全分级（L1-L4）、责任部门、状态（启用/停用） |
-| `2-意图清单` | 意图名称、所属功能全路径（须已登记）、业务意图类型（查询/办理/管理/咨询/投诉/营销/取消/转账/还款）、业务描述、答案形态（话术答复/数据卡片/跳转办理/转人工）、热度（P0/P1/P2）、状态（草稿/生效/停用）；选填执行模式（read-execute-读执行 等4枚举） |
-| `3-说法库` | 意图标识、说法类型、说法文本、来源、状态 |
 
 ---
 
 ## Org Graph — 图谱资产 `/api/org-graph/*`
 
-> 资产（asset）= 一份模板绑定的图谱实例。内置 13 张模板、五类图谱（意图/组织人力/客户风控/领域知识/通用），全部端点对任何模板通用；上传模板 + 注册即可接入新图谱类型，无专用端点。
+> 资产（asset）= 一份模板绑定的图谱实例。内置 13 张业务模板 + 1 张 RSI 引擎 schema 基准、五类图谱（意图/组织人力/客户风控/领域知识/通用），全部端点对任何模板通用；上传模板 + 注册即可接入新图谱类型，无专用端点。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -99,7 +74,7 @@ const report = validateGraph(template, graphDocument);   // 参数顺序：templ
 // report.valid: boolean; report.errors: [{code, path, message}]
 ```
 
-### 主要错误码
+### 主要错误码（摄入与资产）
 
 | 错误码 | 含义 |
 |--------|------|
@@ -111,3 +86,101 @@ const report = validateGraph(template, graphDocument);   // 参数顺序：templ
 | `ORG_GRAPH_ROUTE_NOT_FOUND` | 路径不存在 |
 | `ORG_GRAPH_DOCUMENT_REQUIRED` | publish 缺 document |
 | `MISSING_KEY` | 模型 key 未配置（AI 功能） |
+
+---
+
+## Intent Graph — 编辑器与自动建图
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET/POST | `/api/intent-graph/*` | 版本列表、schema、加载、校验、创建、导出 |
+| POST | `/api/intent-graph-autobuild/*` | 候选、生成、任务、合并（自动建图） |
+| POST | `/api/intent-graph/release` | 发布桥接（归 autobuild 路由族） |
+
+---
+
+## Intent RSI — 意图进化 `/api/intent-rsi/*`
+
+> 完整链路、决策模式与设计取舍见 [RSI V2 架构说明](intent-rsi-v2-architecture.md)。本表是端点清单。
+> **任务化约定**：所有写请求必须带 `taskId`（query / body）或 `X-RSI-Task-Id` 请求头，否则返回 400「任务写请求必须提供 taskId 或 X-RSI-Task-Id」；且该任务必须已由 `POST /tasks/create` 创建，否则返回 404「任务不存在」。干净 clone 首次 `GET /state` 会自动从种子初始化 `default` 任务。
+
+### 状态与只读查询
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/state` | 全局状态：当前版本、题库切分、基线、目标、策略台账、成绩轨迹、档案、校准状态 |
+| GET | `/bases` | 候选底图（种子 / 快照 / 图谱版本清单） |
+| GET | `/optimization-capabilities` | 多路径优化能力注册表（targets / methods / defaults / features） |
+| GET | `/asset-lineage` | 资产谱系 DAG（bundle 摘要 + parents 边集） |
+| GET | `/strategy` | 策略记忆摘要（胜率、算子、失败族、杠杆） |
+| GET | `/goal` | 当前达标目标与缺口归因 |
+| GET | `/case-review` | 用例复核视图 |
+| GET | `/tasks` | 任务列表（含只读的 `park` 参考记录） |
+| GET | `/park-history` | 园区引擎调参轨迹 |
+| GET | `/run-trace` | 运行轨迹（需带对应 run 参数；无匹配时 404） |
+| GET | `/export` | 导出当前任务状态与档案 |
+
+### 评测与提案
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/baseline` | 跑当前基线（spawn `scripts/rsi-engine-score.js`，成绩带引擎指纹） |
+| POST | `/propose` | 生成改进提案 |
+| POST | `/manual-proposal` | 手工提交提案 |
+| POST | `/evaluate-proposal` | 评测单个提案（走四关门禁） |
+| POST | `/bundle-evaluate` | 融合候选评测 |
+| POST | `/engine-param-search` | 引擎参数候选搜索 |
+| POST | `/adopt` | 采纳通过门禁的提案，落版本链 |
+| POST | `/reject` | 拒绝提案 |
+| POST | `/rollback` | 回滚到历史版本 |
+| POST | `/calibrate` | 引擎校准（spawn 校准子进程） |
+| POST | `/park-calibrate` | 园区引擎校准 |
+| POST | `/reset` | 重置当前任务 |
+| POST | `/split-preview` | 题库切分预览 |
+| POST | `/gen-cases` | 生成/补充评测题 |
+| POST | `/import-snapshot` / `/import-graph-file` / `/import-eval-dataset` | 导入快照、图谱文件、评测题库 |
+| POST | `/switch-base` | 切换底图 |
+
+### 自动进化（SSE 长连接，`server.requestTimeout=30min`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/auto-evolve` | 启动自动进化；`decisionMode` 可为 `rules` / `model` / `agent`；响应 `text/event-stream` |
+| POST | `/auto-evolve-resume` | 从断点恢复（带 `runId`） |
+| POST | `/auto-evolve-stop` | 请求停止（不因前端断连而自动停止） |
+| GET | `/preflight` | 启动前检查 |
+| GET | `/candidate-diff` | 候选差异 |
+| POST | `/goal-update` | 更新达标目标 |
+
+### 任务管理
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/tasks/create` | 新建任务 `{name, description?, base?}`，返回 task id |
+| POST | `/tasks/switch` | 切换活动任务 `{id}` |
+| POST | `/tasks/update` | 改名称/说明/归档状态 |
+| POST | `/tasks/delete` | 删除任务（`park` 只读任务不可删） |
+
+### Agent 工具桥（供 Python rsi-agent 回读，只读）
+
+| 路径 | 说明 |
+|------|------|
+| `/agent/weaknesses` | 当前失败族与错题摘要 |
+| `/agent/badcases` | 坏例明细 |
+| `/agent/search` | 意图检索 |
+| `/agent/intent` | 单意图详情 |
+| `/agent/probe` | 反事实探针：真应用草案 + 引擎复测 |
+
+> 无运行中的 Agent 代次时工具桥返回 500「Agent 工具桥未开放（无运行中的 Agent 代次）」，属预期降级。
+
+### RSI 侧典型响应与降级
+
+| 场景 | 表现 |
+|------|------|
+| 未带 taskId 的写请求 | 400 `任务写请求必须提供 taskId 或 X-RSI-Task-Id` |
+| 引用不存在的任务 | 404 `任务不存在: <id>` |
+| 无模型密钥跑 `/baseline` | 400「模型或召回通道调用失败/降级，本次测量不作为方案收益或无收益的证据」；评分子进程仍能跑完打分，但证据被门禁作废 |
+| `rules` 模式未注入 propose 服务 | 400「rules 决策模式需要注入 propose 服务」 |
+| 无 Agent 代次访问 `/agent/*` | 500「Agent 工具桥未开放」 |
+
+Python Agent 自身端点（`http://127.0.0.1:18132`）：`/health`、`/v1/skills/{task_type}`、`/v1/rsi/status`、`/v1/rsi/prompt-current`、`/v1/rsi/optimize-prompt`、`/v1/rsi/analyze`、`/v1/rsi/experience/{record,search,recent}`、`/v1/tasks/{propose,attribute}`。

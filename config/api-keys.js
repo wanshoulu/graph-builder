@@ -45,6 +45,15 @@ const API_ROUTES = {
     getKey: () => process.env.QWEN_KEY,
     provider: 'qwen',
   },
+  // RSI 评测引擎默认对话路由（INTENT_LLM_ROUTE 默认 qwen3.7-flash）。
+  // 缺这条会让 scripts/rsi-engine-score.js 在 require 时抛 TypeError。
+  'qwen3.7-flash': {
+    host: 'dashscope.aliyuncs.com',
+    path: '/compatible-mode/v1/chat/completions',
+    model: 'qwen3.7-flash',
+    getKey: () => process.env.QWEN_KEY,
+    provider: 'qwen',
+  },
   'qwen-vl': {
     host: 'dashscope.aliyuncs.com',
     path: '/compatible-mode/v1/chat/completions',
