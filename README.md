@@ -1,6 +1,8 @@
-# graph-builder — 模板驱动的知识图谱构建工具链 + RSI 意图进化实验台
+<p align="center">
+<img src="docs/images/hero-workbench.png" alt="graph-builder 统一工作台：知识导入 / 自动建图 / 辅助建图 / 图谱评测 / RSI 进化 / 图谱管理" width="880">
+</p>
 
-![graph-builder 统一工作台（OntoMind 图谱构建 SPA）：知识导入 / 自动建图 / 辅助建图 / 图谱评测 / RSI 进化 / 图谱管理](docs/screenshots/spa-workbench.png)
+# graph-builder — 模板驱动的知识图谱构建工具链 + RSI 意图进化实验台
 
 ## 项目简介
 
@@ -8,7 +10,7 @@
 
 - **问题域**：① 知识图谱的「建库」环节——业务填报到图谱的转换常是一次性黑盒脚本，非法数据静默入图，填错之后没有版本也没有回滚；② 图谱建好之后「准不准、怎么改」——靠人工复盘日志改提示词、补说法，改进没有对照、没有复测、没有留痕。
 - **方案机制**：**模板驱动校验**（规则声明在模板 JSON，不写死在代码）、**三段校验管线**（骨架 → 字段 → 条件必填）、**预检 → 应用 → 回滚**、**版本链发布**（v1→v2→… 只读可追溯）；进化侧是 **RSI 四关测量门禁**（练习题初筛 → 防回退 → 隐藏考 → 生产引擎复核）、**引擎指纹**（跨口径成绩不可比）与 **Agent + Skill 决策层**（V2，Python 进程内的 openjiuwen DeepAgent + SKILL.prompt + 5 个 HTTP 工具）。
-- **交付物**：`server.js` 单服务入口、7 组 API 路由族、14 张模板、6 个单文件工具页 + 1 个 React SPA 统一工作台、独立 Python Agent 服务、测试套件、24 张架构图与 7 张真实运行截图。
+- **交付物**：`server.js` 单服务入口、7 组 API 路由族、14 张模板、6 个单文件工具页 + 1 个 React SPA 统一工作台、独立 Python Agent 服务、测试套件、24 张架构图与 8 张真实运行截图（hero + 7 张）。
 - **状态**：本项目从 AI Harbor / OntoMind 单体剥离，为独立部署版（当前 1.1）。默认监听 `127.0.0.1:3013` 且 `SKIP_AUTH=true`，面向本机/内网开箱体验；**不是生产就绪的多租户服务**，对外暴露前必须换认证与访问控制（见[已知限制](#已知限制)）。RSI 的 Python Agent 是可选进程，不启动它时 `rules`/`model` 决策模式与全部只读界面仍可用。
 
 > 写法参考（实调原文）：[Ollama](https://github.com/ollama/ollama) 的「2 行跑起来 + 链接优先」、[Mermaid](https://github.com/mermaid-js/mermaid) 的「示例/截图先行」、[Prometheus](https://github.com/prometheus/prometheus) 的「一段简介 + 加粗机制名清单 + 架构图 + 多条安装路径」，系统型骨架沿用本工具链原有的入口对照表与按目标导航。
@@ -196,7 +198,9 @@
 
 ## RSI 意图进化：V2 是 Agent + Skill，不是 Node 调度层
 
-![RSI V2 工作台：任务管理、自动进化、候选对比与成绩轨迹](docs/screenshots/rsi-v2-workbench.png)
+<p align="center">
+<img src="docs/images/rsi-evolution.png" alt="RSI V2 工作台：识别优化任务管理" width="760">
+</p>
 
 **先纠正一个容易看错的结论**：`routes/intent-rsi.js`（202 KB）和 20 个 `rsi-*.js` 是**调度 / 持久化 / 测量 / 门禁层**，不是推理主体。V2 的提案大脑在 `services/rsi-agent/`——一个 Python 进程里的 openjiuwen DeepAgent，SKILL 正文作为 `system_prompt` 注入，5 个 HTTP 工具回读 Node 状态。V1 才是 Node 内 `rules|model` 决策 + 轻量打分。
 
@@ -227,7 +231,9 @@ flowchart LR
 
 > 完整链路、端点契约、环境变量、部署拓扑与已知限制见 [RSI V2 架构说明](docs/intent-rsi-v2-architecture.md)；9 份历史设计与审计文档见 `docs/intent-rsi-*.md`。
 
-![RSI V1 实验台：四步流程、题库与盲测题统计、运行日志](docs/screenshots/rsi-v1-lab.png)
+<p align="center">
+<img src="docs/screenshots/rsi-v1-lab.png" alt="RSI V1 实验台：四步流程、题库与盲测题统计、运行日志" width="760">
+</p>
 
 ## 摄入流水线
 
@@ -263,7 +269,9 @@ cd graph-builder && npm install && npm start
 
 打开 <http://127.0.0.1:3013/> —— 根路径 302 到统一工作台 `/auto-build`（辅助导航在 `/tools/index.html`）。改端口用 `PORT=4013 npm start`；需要 AI 辅助时 `cp .env.example .env` 填 `DEEPSEEK_KEY` 等（不填也能跑，见[常见问题](#常见问题)）。
 
-![AI 辅助建图（/builder）：载入草稿后 354 节点 / 849 边，支持逐节点 AI 审核与校验](docs/screenshots/spa-builder.png)
+<p align="center">
+<img src="docs/images/builder-canvas.png" alt="AI 辅助建图：载入草稿后 354 节点 / 849 边" width="760">
+</p>
 
 ### 打开 RSI 意图进化
 
@@ -385,7 +393,9 @@ graph-builder/
 | 图谱评测 | `/tools/graph-eval.html` | 评测明细统计与对比 | 无（纯前端） |
 | 知识图谱展示 | `/tools/wiki-graph.html` | 按类型着色、层级过滤、节点详情 | `/api/graph/data`、`/api/org-graph/*` |
 
-![意图图谱编辑器：模板开始、自动构建、加载已有版本与空白草稿四种入口](docs/screenshots/editor-v1.png)
+<p align="center">
+<img src="docs/screenshots/editor-v1.png" alt="意图图谱编辑器：模板开始、自动构建、加载已有版本与空白草稿四种入口" width="760">
+</p>
 
 **独立化改造清单**：默认端口 `3013`；根路径 302 到统一工作台 `/auto-build`；`/tools/`、`/docs/`、`/assets/`、`/data/graphs/` 静态映射并做路径穿越防护；SPA 非 API 路径兜底回 `web/dist/index.html`；`/ontomind/wiki/api/*` 归一化到 `/api/*`；`server.requestTimeout=30min` 支撑 SSE 长任务；`vis-network` / `G6` / `d3` 全部本地化；`/favicon.ico` 与 `/vite.svg` 返回 204。
 
@@ -446,7 +456,7 @@ graph-builder/
 - [部署指南](docs/deployment.md) — 环境变量、Python Agent、Docker、Nginx 同源反代、生产清单
 - `docs/intent-rsi-*.md` — 9 份 RSI 设计/评审/审计报告（overview、joint-evolution、product-redesign、audit-2026-10-19 等）
 - [docs/diagrams/](docs/diagrams/) — 24 张架构图：工具链 5 张 + V4 规范 19 张
-- [docs/screenshots/](docs/screenshots/) — 7 张真实运行截图（2x PNG，浅色主题）：统一工作台、AI 辅助建图、raw-API 工作台、门户、编辑器、RSI V2 工作台、RSI V1 实验台
+- [docs/images/](docs/images/) 与 [docs/screenshots/](docs/screenshots/) — 真实运行截图（1422×854 @2x，浅色主题）：hero 统一工作台、AI 辅助建图、图谱管理、RSI 进化，及 raw-API 工作台、门户、编辑器、RSI V1 实验台
 
 ## 版本
 
