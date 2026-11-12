@@ -29,7 +29,15 @@ const MENU_ITEMS = [
   { key: '/auto-build', icon: <ClusterOutlined />, label: '自动建图' },
   { key: '/builder', icon: <ApartmentOutlined />, label: '辅助建图' },
   { key: '/evaluation', icon: <ExperimentOutlined />, label: '图谱评测' },
-  { key: '/intent-rsi', icon: <RiseOutlined />, label: 'RSI 进化' },
+  {
+    key: '/intent-rsi',
+    icon: <RiseOutlined />,
+    label: '意图进化',
+    children: [
+      { key: '/intent-rsi', label: 'V2 工作台（Agent+Skill）' },
+      { key: '/tools/intent-rsi-lab.html', label: 'V1 实验台（规则模式）', external: true },
+    ],
+  },
   { key: '/management', icon: <AuditOutlined />, label: '图谱管理' },
 ];
 

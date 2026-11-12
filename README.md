@@ -84,7 +84,7 @@
 | 5 分钟把它跑起来，亲手走一遍建图→发布 | [快速开始](#快速开始) |
 | 我打开浏览器就能用，不想先读 API | [独立前端](#独立前端)（`/tools/index.html`） |
 | 看懂 RSI V2 为什么是 Agent + Skill、Node JS 在做什么 | [RSI 意图进化](#rsi-意图进化v2-是-agent--skill不是-node-调度层) 或 [RSI V2 架构说明](docs/intent-rsi-v2-architecture.md) |
-| 用错题反馈自动改进意图图谱 | [RSI V2 工作台](#rsi-意图进化v2-是-agent--skill不是-node-调度层)（`/intent-rsi`） |
+| 用错题反馈自动改进意图图谱（**两套工具**） | [RSI V2 工作台](#rsi-意图进化v2-是-agent--skill不是-node-调度层)（`/intent-rsi`，Agent + Skill）/ [RSI V1 实验台](#rsi-意图进化v2-是-agent--skill不是-node-调度层)（`/tools/intent-rsi-lab.html`，规则模式） |
 | 看懂六条建图入口各落在哪些端点上 | 本页[开头建图方式表](#) 或 [API 参考](docs/api.md) |
 | 看懂「导入→评审→预检→应用→发布」落在哪些代码上 | [系统架构与技术方案](docs/architecture.md) §4–§5 |
 | 理解模板怎么约束数据、我的行为什么被拒 | [架构文档 §6 模板驱动校验](docs/architecture.md#6-模板驱动校验核心机制) |

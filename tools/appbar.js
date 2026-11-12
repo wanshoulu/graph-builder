@@ -2,16 +2,15 @@
  * 图谱应用统一顶栏注入脚本（单文件应用页共用，无框架依赖）。
  * 用法：在页面 <body> 起始处插入 <div id="gb-appbar"></div> 并引入本脚本（或内联）。
  * 设计基调与 web SPA（antd #2878b5）一致；品牌为 graph-builder，不含平台名。
- * 「工作台」链接默认指向 SPA builder 工作台（/builder）；部署在子路径时，
+ * 「工作台」链接默认指向 SPA 统一工作台（/auto-build）；部署在子路径时，
  * 在引入本脚本前设置 window.GB_HOME = '/your-spa-base/' 即可覆盖。
  */
 (function () {
   'use strict';
-  var HOME = (typeof window.GB_HOME === 'string' && window.GB_HOME) || '/builder';
+  var HOME = (typeof window.GB_HOME === 'string' && window.GB_HOME) || '/auto-build';
   var APPS = [
-    { href: '/tools/knowledge-qa.html', label: '知识问答' },
-    { href: '/tools/credit-risk-agent.html', label: '信贷风控' },
-    { href: '/tools/schedule-agent.html', label: '日程管理' },
+    { href: '/intent-rsi', label: 'V2 进化工作台' },
+    { href: '/tools/intent-rsi-lab.html', label: 'V1 实验台' },
   ];
   var mount = document.getElementById('gb-appbar');
   if (!mount) return;
@@ -30,7 +29,7 @@
     '<path d="M4 4L14 4M4 4L9 14M14 4L9 14" stroke="#2878b5" stroke-width="1.2"/></svg>' +
     '<span>graph-builder</span></a>' +
     '<span class="gb-sep"></span>' +
-    '<a class="gb-tab" href="' + HOME + '">工作台</a>' +
+    '<a class="gb-tab" href="' + HOME + '">统一工作台</a>' +
     '<span class="gb-sep"></span>' +
     links +
     '<span class="gb-drawer"></span>';

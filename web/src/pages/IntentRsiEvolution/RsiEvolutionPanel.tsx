@@ -497,7 +497,7 @@ export default function RsiEvolutionPanel({ initialGraphKey = "bank", taskId, on
   return (
     <div>
       <Toolbar extra={graphSelector} />
-      <Typography.Paragraph type="secondary">业务图谱：{state.baseGraph.label} · 当前实验版本 {state.currentVersion} · 共 {caseCount} 道评测题目</Typography.Paragraph>
+      <Typography.Paragraph type="secondary">业务图谱：{state.baseGraph.label} · 当前实验版本 {state.currentVersion} · 共 {caseCount} 道评测题目 · <Typography.Link href="/tools/intent-rsi-lab.html" target="_blank">打开 V1 实验台（规则模式，原始 API 视图）</Typography.Link></Typography.Paragraph>
       <Tabs activeKey={section} onChange={chooseSection} items={[{ key: 'overview', label: '任务概览' }, { key: 'runs', label: '运行记录' }, { key: 'candidates', label: '改进方案' }, { key: 'data', label: '评测题目' }, { key: 'results', label: '成果与交付' }, { key: 'settings', label: '设置' }]} />
       {section === 'overview' && <>
       <RsiTaskOverview state={state} baselineCurrent={baselineCurrent} pendingCount={pendingReviewCount} adoptableCount={passedCount} busy={busy} onAction={onFlowAction} onSection={chooseSection} />
