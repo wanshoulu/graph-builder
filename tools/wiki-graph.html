@@ -6,16 +6,16 @@
 <!-- vis-network 9.x 由 JS 注入样式，无独立 CSS；库文件本地化，无外网依赖 -->
 <script src="vendor/vis-network.min.js"></script>
 <style>
-:root{--bg:#0d1117;--panel:#11161d;--line:#21262d;--text:#e6edf3;--muted:#9da7b3;--blue:#58a6ff;--green:#3fb950;--amber:#d29922;--red:#f85149}
+:root{--bg:#f4f6f8;--panel:#ffffff;--line:#e5e7eb;--text:#1f2937;--muted:#6b7280;--blue:#2878b5;--green:#16a34a;--amber:#d97706;--red:#dc2626}
 body{margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:Microsoft YaHei,Arial,sans-serif}
 #app{display:flex;width:100vw;height:100vh}
 #main{position:relative;flex:1;min-width:0;background:var(--bg)}
-#mynetwork{width:100%;height:100%;background:var(--bg);border-right:1px solid #30363d;overflow:auto}
-#side{width:420px;background:var(--panel);border-left:1px solid #30363d;display:flex;flex-direction:column;overflow:hidden}
-#sideHeader{padding:14px 16px;border-bottom:1px solid #30363d;font-weight:700;font-size:15px;background:var(--panel);color:var(--text);flex-shrink:0;display:flex;align-items:center;gap:8px}
+#mynetwork{width:100%;height:100%;background:var(--bg);border-right:1px solid #e5e7eb;overflow:auto}
+#side{width:420px;background:var(--panel);border-left:1px solid #e5e7eb;display:flex;flex-direction:column;overflow:hidden}
+#sideHeader{padding:14px 16px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:15px;background:var(--panel);color:var(--text);flex-shrink:0;display:flex;align-items:center;gap:8px}
 #sideBody{overflow:auto;flex:1;padding:12px}
 #topbar{position:absolute;top:12px;left:12px;z-index:20;display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;max-width:calc(100% - 280px)}
-.panel{background:rgba(13,17,23,0.94);border:1px solid #30363d;border-radius:8px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.35)}
+.panel{background:rgba(255,255,255,0.96);border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px;box-shadow:0 8px 24px rgba(15,23,42,0.12)}
 #stats{min-width:280px}
 #stats .title{font-weight:700;margin-bottom:6px}
 #stats .line{margin:3px 0;font-size:13px;color:#d0d7de}
@@ -24,35 +24,35 @@ body{margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family
 #controls label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--text)}
 #controls input[type=range]{width:100px}
 #searchWrap{position:absolute;top:12px;right:12px;z-index:20;display:flex;gap:8px}
-#search{background:var(--panel);border:1px solid #30363d;color:var(--text);padding:9px 12px;border-radius:8px;width:240px}
-.toolbtn{background:var(--panel);border:1px solid #30363d;color:var(--text);border-radius:8px;padding:9px 12px;cursor:pointer;font-size:13px;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+#search{background:var(--panel);border:1px solid #e5e7eb;color:var(--text);padding:9px 12px;border-radius:8px;width:240px}
+.toolbtn{background:var(--panel);border:1px solid #e5e7eb;color:var(--text);border-radius:8px;padding:9px 12px;cursor:pointer;font-size:13px;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
 .toolbtn:hover{border-color:var(--blue)}
-#loadingBar{position:absolute;inset:0;z-index:18;background:rgba(13,17,23,.78);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;transition:opacity .35s;pointer-events:none}
+#loadingBar{position:absolute;inset:0;z-index:18;background:rgba(244,246,248,.85);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;transition:opacity .35s;pointer-events:none}
 #loadingBar.hidden{opacity:0;visibility:hidden}
-.progress-wrap{width:min(420px,42vw);height:8px;border-radius:999px;background:var(--line);border:1px solid #30363d;overflow:hidden}
+.progress-wrap{width:min(420px,42vw);height:8px;border-radius:999px;background:var(--line);border:1px solid #e5e7eb;overflow:hidden}
 #bar{height:100%;width:0;background:var(--blue);transition:width .12s}
-#ptext{font-size:12px;color:#c9d1d9}
+#ptext{font-size:12px;color:#374151}
 
 /* Node detail */
 .node-title{font-size:15px;font-weight:700;margin-bottom:4px;color:var(--text)}
 .node-type{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;margin-bottom:10px}
-.node-type.技术细节{background:#1a1d2e;color:var(--blue)}
-.node-type.具体算法{background:#1a2e1d;color:var(--green)}
-.node-type.基础理论{background:#2e1a1a;color:var(--amber)}
-.node-type.应用场景{background:#1e1a2e;color:#a371f7}
+.node-type.技术细节{background:#e8f1f8;color:var(--blue)}
+.node-type.具体算法{background:#eaf6ee;color:var(--green)}
+.node-type.基础理论{background:#fdf3e3;color:var(--amber)}
+.node-type.应用场景{background:#f3edfb;color:#7c3aed}
 .node-section{margin-top:12px}
 .node-section h4{font-size:12px;font-weight:700;color:var(--muted);margin:0 0 6px;text-transform:uppercase;letter-spacing:.3px}
-.node-def{font-size:13px;line-height:1.7;color:#c9d1d9}
-.concept-tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#1a1d2e;border:1px solid #30363d;margin:2px 4px 2px 0;font-size:11px;color:var(--blue)}
-.kp-item{font-size:12px;line-height:1.6;color:#c9d1d9;padding:3px 0;padding-left:12px;border-left:2px solid #30363d;margin:4px 0}
-.formula-block{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;margin:6px 0}
+.node-def{font-size:13px;line-height:1.7;color:#374151}
+.concept-tag{display:inline-block;padding:2px 8px;border-radius:999px;background:#1a1d2e;border:1px solid #e5e7eb;margin:2px 4px 2px 0;font-size:11px;color:var(--blue)}
+.kp-item{font-size:12px;line-height:1.6;color:#374151;padding:3px 0;padding-left:12px;border-left:2px solid #e5e7eb;margin:4px 0}
+.formula-block{background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:10px;margin:6px 0}
 .formula-block .f-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
 .formula-block .f-latex{font-size:13px;color:var(--blue);padding:4px 0}
 .formula-block .f-expl{font-size:11px;color:var(--muted)}
-.problem-block{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;margin:6px 0}
+.problem-block{background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:10px;margin:6px 0}
 .problem-block .p-q{font-size:13px;font-weight:600;margin-bottom:4px}
-.problem-block .p-a{font-size:12px;color:#c9d1d9;line-height:1.5}
-.question-block{font-size:12px;color:#c9d1d9;padding:6px 0;border-bottom:1px solid var(--line)}
+.problem-block .p-a{font-size:12px;color:#374151;line-height:1.5}
+.question-block{font-size:12px;color:#374151;padding:6px 0;border-bottom:1px solid var(--line)}
 .question-block .q-q{font-weight:600;margin-bottom:2px}
 .question-block .q-a{color:var(--green)}
 
@@ -110,8 +110,8 @@ var currentColorMode = 'level';
 var ASSET_MODE = false;
 var ASSET_ID = '';
 
-var LEVEL_COLORS = ['#58a6ff','#3fb950','#d29922','#f85149','#a371f7','#79c0ff','#56d364','#e3b341','#ff7b72','#d2a8ff','#7ee787','#f0883e','#db6d28','#768390'];
-var TYPE_COLORS = { '基础理论':'#d29922','技术细节':'#58a6ff','具体算法':'#3fb950','应用场景':'#a371f7','人物':'#f85149','概念':'#79c0ff' };
+var LEVEL_COLORS = ['#2878b5','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#65a30d','#ca8a04','#e11d48','#9333ea','#059669','#ea580c','#b45309','#64748b'];
+var TYPE_COLORS = { '基础理论':'#d97706','技术细节':'#2878b5','具体算法':'#16a34a','应用场景':'#7c3aed','人物':'#dc2626','概念':'#0891b2' };
 var TYPE_LABELS = {};
 
 // ── 图谱资产桥接（?asset=xxx&version=active版本|draft）：直接复用本工具渲染 org-graph 资产 ──
@@ -125,7 +125,7 @@ function loadOrgGraphAsset(assetId, version){
     var doc = rs[1].data || rs[1];
 
     // 模板配色/中文标签注入（缺省色板兜底），保证所有图谱在此工具下风格统一
-    var palette = ['#58a6ff','#3fb950','#d29922','#f85149','#a371f7','#79c0ff','#56d364','#e3b341','#ff7b72','#d2a8ff','#7ee787','#f0883e','#db6d28','#39c5cf'];
+    var palette = ['#2878b5','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2','#65a30d','#ca8a04','#e11d48','#9333ea','#059669','#ea580c','#b45309','#0ea5e9'];
     TYPE_LABELS = {};
     var fieldLabels = {};
     (template.node_types || []).forEach(function(t, i){
@@ -528,7 +528,7 @@ function buildNetwork(){
     var src = e.source;
     var tgt = e.target;
     var key = src + '|||' + tgt;
-    if (!edgeSet.has(key)) { edgeSet.add(key); var ev = { from: src, to: tgt, color: { color: e.type === 'parent' ? '#5a6a80' : '#3a6090', highlight: '#58a6ff' } }; if (e.typeLabel) ev.title = e.typeLabel; visEdges.push(ev); }
+    if (!edgeSet.has(key)) { edgeSet.add(key); var ev = { from: src, to: tgt, color: { color: e.type === 'parent' ? '#94a3b8' : '#2878b5', highlight: '#2878b5' } }; if (e.typeLabel) ev.title = e.typeLabel; visEdges.push(ev); }
   });
 
   var container = document.getElementById('mynetwork');
@@ -536,8 +536,8 @@ function buildNetwork(){
   var options = {
     physics: { enabled: true, solver: 'barnesHut', barnesHut: { gravitationalConstant: -3000, centralGravity: 0.2, springLength: 120, springConstant: 0.02, damping: 0.05 }, stabilization: { enabled: false } },
     interaction: { hover: true, tooltipDelay: 150, zoomView: true, dragView: true },
-    nodes: { shape: 'dot', size: 8, font: { size: 11, color: '#c9d1d9', face: 'Microsoft YaHei' }, color: { background: '#58a6ff', border: '#30363d', highlight: { border: '#fff', background: '#58a6ff' } } },
-    edges: { color: { color: '#5a6a80', highlight: '#58a6ff' }, width: 1.2, smooth: { type: 'continuous' } }
+    nodes: { shape: 'dot', size: 8, font: { size: 11, color: '#c9d1d9', face: 'Microsoft YaHei' }, color: { background: '#2878b5', border: '#e5e7eb', highlight: { border: '#fff', background: '#2878b5' } } },
+    edges: { color: { color: '#94a3b8', highlight: '#2878b5' }, width: 1.2, smooth: { type: 'continuous' } }
   };
   // 预置坐标布局（树形/径向/分栏）：关物理引擎，节点坐标由 presetPos 指定
   if (presetPos) {

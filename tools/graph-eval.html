@@ -4,101 +4,101 @@
 <meta charset="utf-8">
 <title>意图评测 | graph-builder</title>
 <style>
-*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#0d1117;color:#e6edf3;font-family:"Microsoft YaHei",Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#f4f6f8;color:#1f2937;font-family:"Microsoft YaHei",Arial,sans-serif}
 #app{display:flex;width:100vw;height:100vh}
-#sidebar{width:360px;background:#11161d;border-right:1px solid #30363d;display:flex;flex-direction:column;flex-shrink:0}
-#sidebarHeader{padding:14px 16px;border-bottom:1px solid #30363d}
-#sidebarHeader h2{margin:0 0 4px;font-size:16px;font-weight:700;color:#f0f6fc}
-#sidebarHeader p{margin:0;font-size:11px;color:#9da7b3}
-#config{padding:12px;border-bottom:1px solid #30363d}
+#sidebar{width:360px;background:#ffffff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;flex-shrink:0}
+#sidebarHeader{padding:14px 16px;border-bottom:1px solid #e5e7eb}
+#sidebarHeader h2{margin:0 0 4px;font-size:16px;font-weight:700;color:#1f2937}
+#sidebarHeader p{margin:0;font-size:11px;color:#6b7280}
+#config{padding:12px;border-bottom:1px solid #e5e7eb}
 .cfg-row{margin-bottom:10px}
-.cfg-row label{display:block;font-size:12px;color:#9da7b3;margin-bottom:4px}
-.cfg-row input,.cfg-row select{width:100%;background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:8px 10px;border-radius:6px;font-size:13px}
+.cfg-row label{display:block;font-size:12px;color:#6b7280;margin-bottom:4px}
+.cfg-row input,.cfg-row select{width:100%;background:#f8fafc;border:1px solid #e5e7eb;color:#1f2937;padding:8px 10px;border-radius:6px;font-size:13px}
 .cfg-row input[type="checkbox"]{width:auto;margin-right:6px}
 .cfg-row.inline{display:flex;align-items:center;gap:8px}
-#mainTabs{display:flex;border-bottom:1px solid #30363d;flex-shrink:0}
-.mainTab{flex:1;padding:10px;border:0;background:#0d1117;color:#9da7b3;cursor:pointer;font-weight:700;font-size:13px}
-.mainTab.active{color:#f0f6fc;background:#161b22;border-bottom:2px solid #58a6ff}
+#mainTabs{display:flex;border-bottom:1px solid #e5e7eb;flex-shrink:0}
+.mainTab{flex:1;padding:10px;border:0;background:#f8fafc;color:#6b7280;cursor:pointer;font-weight:700;font-size:13px}
+.mainTab.active{color:#1f2937;background:#ffffff;border-bottom:2px solid #2878b5}
 #testPanel{flex:1;overflow-y:auto;padding:12px}
-#testPanel textarea{width:100%;min-height:70px;resize:vertical;background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:10px;border-radius:6px;font-size:13px;margin-bottom:10px}
+#testPanel textarea{width:100%;min-height:70px;resize:vertical;background:#f8fafc;border:1px solid #e5e7eb;color:#1f2937;padding:10px;border-radius:6px;font-size:13px;margin-bottom:10px}
 #testPanel .btn-row{display:flex;gap:8px;margin-bottom:10px}
-.btn{background:#21262d;border:1px solid #30363d;color:#e6edf3;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px}
-.btn:hover{border-color:#58a6ff}
-.btn.primary{background:#1f3a5f;border-color:#58a6ff;color:#58a6ff}
+.btn{background:#ffffff;border:1px solid #e5e7eb;color:#1f2937;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px}
+.btn:hover{border-color:#2878b5}
+.btn.primary{background:#2878b5;border-color:#2878b5;color:#2878b5}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .progress{margin-top:10px}
-.progress-bar{height:6px;background:#21262d;border-radius:3px;overflow:hidden}
-.progress-inner{height:100%;background:#58a6ff;transition:width .3s}
-.progress-text{font-size:12px;color:#9da7b3;margin-top:4px}
+.progress-bar{height:6px;background:#ffffff;border-radius:3px;overflow:hidden}
+.progress-inner{height:100%;background:#2878b5;transition:width .3s}
+.progress-text{font-size:12px;color:#6b7280;margin-top:4px}
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-#topbar{padding:12px 16px;border-bottom:1px solid #30363d;background:#11161d;display:flex;gap:12px;align-items:center;flex-shrink:0}
-#topbar h1{margin:0;font-size:16px;font-weight:700;color:#f0f6fc;flex:1}
+#topbar{padding:12px 16px;border-bottom:1px solid #e5e7eb;background:#ffffff;display:flex;gap:12px;align-items:center;flex-shrink:0}
+#topbar h1{margin:0;font-size:16px;font-weight:700;color:#1f2937;flex:1}
 #stats{display:flex;gap:16px}
 .stat{text-align:center}
-.stat b{display:block;font-size:20px;color:#58a6ff}
-.stat span{font-size:11px;color:#9da7b3}
-.stat.success b{color:#3fb950}
-.stat.error b{color:#f85149}
+.stat b{display:block;font-size:20px;color:#2878b5}
+.stat span{font-size:11px;color:#6b7280}
+.stat.success b{color:#16a34a}
+.stat.error b{color:#dc2626}
 #content{flex:1;overflow-y:auto;padding:16px}
-.section{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;margin-bottom:12px}
-.section h3{margin:0 0 10px;font-size:14px;font-weight:700;color:#f0f6fc;padding-bottom:8px;border-bottom:1px solid #30363d}
+.section{background:#ffffff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.section h3{margin:0 0 10px;font-size:14px;font-weight:700;color:#1f2937;padding-bottom:8px;border-bottom:1px solid #e5e7eb}
 .row{display:flex;padding:6px 0;font-size:13px}
-.label{color:#9da7b3;min-width:100px;flex-shrink:0}
-.value{color:#e6edf3;word-break:break-all;flex:1}
-.value.match{color:#3fb950}
-.value.mismatch{color:#f85149}
-.tag{display:inline-block;background:#21262d;color:#9da7b3;padding:2px 8px;border-radius:4px;margin:2px;font-size:11px}
-.tag.action{background:#1f3a5f;color:#58a6ff}
-.tag.match{background:#1a3d2e;color:#3fb950}
-.tag.mismatch{background:#3d1a1a;color:#f85149}
+.label{color:#6b7280;min-width:100px;flex-shrink:0}
+.value{color:#1f2937;word-break:break-all;flex:1}
+.value.match{color:#16a34a}
+.value.mismatch{color:#dc2626}
+.tag{display:inline-block;background:#ffffff;color:#6b7280;padding:2px 8px;border-radius:4px;margin:2px;font-size:11px}
+.tag.action{background:#2878b5;color:#2878b5}
+.tag.match{background:#eaf6ee;color:#16a34a}
+.tag.mismatch{background:#3d1a1a;color:#dc2626}
 .step-indicator{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
-.step{padding:4px 10px;border-radius:4px;font-size:11px;background:#21262d;color:#9da7b3}
-.step.done{background:#1a3d2e;color:#3fb950}
+.step{padding:4px 10px;border-radius:4px;font-size:11px;background:#ffffff;color:#6b7280}
+.step.done{background:#eaf6ee;color:#16a34a}
 .bar-chart{margin-top:8px}
 .bar-row{display:flex;align-items:center;margin:4px 0;font-size:12px}
-.bar-label{width:120px;flex-shrink:0;color:#9da7b3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar-wrap{flex:1;height:14px;background:#21262d;border-radius:3px;overflow:hidden;min-width:60px}
+.bar-label{width:120px;flex-shrink:0;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-wrap{flex:1;height:14px;background:#ffffff;border-radius:3px;overflow:hidden;min-width:60px}
 .bar-inner{height:100%;border-radius:3px}
-.bar-num{width:50px;text-align:right;color:#9da7b3;flex-shrink:0;padding-left:8px}
+.bar-num{width:50px;text-align:right;color:#6b7280;flex-shrink:0;padding-left:8px}
 #caseList{max-height:350px;overflow-y:auto}
-.case-item{background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px;margin-bottom:8px;cursor:pointer}
-.case-item:hover{border-color:#58a6ff}
-.case-item.error{border-color:#f8514940}
-.case-q{font-size:13px;color:#e6edf3;margin-bottom:4px}
+.case-item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:10px;margin-bottom:8px;cursor:pointer}
+.case-item:hover{border-color:#2878b5}
+.case-item.error{border-color:#dc262640}
+.case-q{font-size:13px;color:#1f2937;margin-bottom:4px}
 .case-meta{display:flex;gap:6px;flex-wrap:wrap;font-size:11px}
-.empty{text-align:center;color:#9da7b3;padding:30px;font-size:14px}
-.history-item{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer}
-.history-item:hover{border-color:#58a6ff}
-.history-title{font-size:14px;font-weight:700;color:#f0f6fc;margin-bottom:6px}
-.history-meta{display:flex;gap:12px;font-size:12px;color:#9da7b3}
+.empty{text-align:center;color:#6b7280;padding:30px;font-size:14px}
+.history-item{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer}
+.history-item:hover{border-color:#2878b5}
+.history-title{font-size:14px;font-weight:700;color:#1f2937;margin-bottom:6px}
+.history-meta{display:flex;gap:12px;font-size:12px;color:#6b7280}
 .filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.filter-row select,.filter-row input{background:#0d1117;border:1px solid #30363d;color:#e6edf3;padding:6px 10px;border-radius:6px;font-size:12px}
+.filter-row select,.filter-row input{background:#f8fafc;border:1px solid #e5e7eb;color:#1f2937;padding:6px 10px;border-radius:6px;font-size:12px}
 .error-case-list{max-height:500px;overflow-y:auto}
-.error-case{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .2s}
-.error-case:hover{border-color:#58a6ff;transform:translateX(4px)}
-.error-case.selected{border-color:#58a6ff;background:#161b22}
+.error-case{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.error-case:hover{border-color:#2878b5;transform:translateX(4px)}
+.error-case.selected{border-color:#2878b5;background:#ffffff}
 .error-case-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.error-case-query{font-size:14px;color:#f0f6fc;flex:1}
+.error-case-query{font-size:14px;color:#1f2937;flex:1}
 .error-case-tags{display:flex;gap:4px}
 .error-case-body{display:flex;gap:16px;font-size:12px}
 .error-case-true,.error-case-pred{flex:1}
-.error-case-label{color:#9da7b3;margin-bottom:4px}
-.error-case-value{color:#e6edf3}
-.error-case-value.wrong{color:#f85149}
-.attribution{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;margin-top:12px}
-.attribution h4{margin:0 0 12px;font-size:14px;color:#f0f6fc}
-.attribution-item{margin-bottom:10px;padding:10px;background:#161b22;border-radius:6px}
-.attribution-title{font-size:13px;font-weight:700;color:#d29922;margin-bottom:6px}
-.attribution-content{font-size:12px;color:#9da7b3;line-height:1.6}
+.error-case-label{color:#6b7280;margin-bottom:4px}
+.error-case-value{color:#1f2937}
+.error-case-value.wrong{color:#dc2626}
+.attribution{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-top:12px}
+.attribution h4{margin:0 0 12px;font-size:14px;color:#1f2937}
+.attribution-item{margin-bottom:10px;padding:10px;background:#ffffff;border-radius:6px}
+.attribution-title{font-size:13px;font-weight:700;color:#d97706;margin-bottom:6px}
+.attribution-content{font-size:12px;color:#6b7280;line-height:1.6}
 .candidate-list{margin-top:8px}
-.candidate-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#0d1117;border-radius:4px;margin-bottom:4px;font-size:12px}
-.candidate-score{min-width:50px;color:#58a6ff}
-.candidate-name{flex:1;color:#e6edf3}
-.candidate-source{color:#9da7b3;font-size:11px}
+.candidate-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#f8fafc;border-radius:4px;margin-bottom:4px;font-size:12px}
+.candidate-score{min-width:50px;color:#2878b5}
+.candidate-name{flex:1;color:#1f2937}
+.candidate-source{color:#6b7280;font-size:11px}
 .tbl{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
-.tbl th{text-align:left;padding:5px 8px;color:#9da7b3;font-weight:600;border-bottom:1px solid #30363d}
-.tbl td{padding:4px 8px;border-bottom:1px solid #1a1d2e;vertical-align:top}
-.tbl tr:hover td{background:#1a1d2e}
+.tbl th{text-align:left;padding:5px 8px;color:#6b7280;font-weight:600;border-bottom:1px solid #e5e7eb}
+.tbl td{padding:4px 8px;border-bottom:1px solid #e8f1f8;vertical-align:top}
+.tbl tr:hover td{background:#e8f1f8}
 </style>
 </head>
 <body>
@@ -123,7 +123,7 @@
 </div>
 <div class="cfg-row">
 <button class="btn primary" id="loadBtn">加载意图图谱</button>
-<span id="loadStatus" style="font-size:12px;color:#9da7b3;margin-left:8px"></span>
+<span id="loadStatus" style="font-size:12px;color:#6b7280;margin-left:8px"></span>
 </div>
 </div>
 <div id="mainTabs">
@@ -140,7 +140,7 @@
 </div>
 </div>
 <div id="batchTab" class="tab-panel" style="display:none">
-<p style="font-size:12px;color:#9da7b3;margin:0 0 8px">导入JSON格式测试用例：{"q":"query","t":"目标意图","td":"目标域"}</p>
+<p style="font-size:12px;color:#6b7280;margin:0 0 8px">导入JSON格式测试用例：{"q":"query","t":"目标意图","td":"目标域"}</p>
 <textarea id="batchInput" placeholder='[{"q": "查信用卡账单", "t": "信用卡账单", "td": "信用卡"}]'></textarea>
 <div class="btn-row">
 <button class="btn primary" id="runBatchBtn">批量评测</button>
@@ -263,13 +263,13 @@ async function loadBundle(){
     }
     
     status.textContent = `已加载 ${NODES_DB.length} 节点`;
-    status.style.color = '#3fb950';
+    status.style.color = '#16a34a';
     
     await loadEmbeddingCache();
     loadHistory();
   }catch(e){
     status.textContent = '加载失败: ' + e.message;
-    status.style.color = '#f85149';
+    status.style.color = '#dc2626';
   }
 }
 
@@ -499,13 +499,13 @@ function showAttribution(idx){
     for(let i = 0; i < Math.min(candidates.length, 5); i++){
       const cand = candidates[i];
       const isTarget = cand.node_name === c.true;
-      attributionHtml += `<div class="candidate-item" style="${isTarget?'border:1px solid #3fb950':''}">
+      attributionHtml += `<div class="candidate-item" style="${isTarget?'border:1px solid #16a34a':''}">
         <span class="candidate-score">${(cand.score*100).toFixed(0)}%</span>
         <span class="candidate-name">${esc(cand.node_name)} ${isTarget?'✓':''}</span>
         <span class="candidate-source">${esc(cand.source||'')}</span>
       </div>`;
       if(cand.matched_terms?.length){
-        attributionHtml += `<div style="margin-left:58px;margin-bottom:4px;font-size:11px;color:#9da7b3">匹配词: ${cand.matched_terms.map(t=>esc(t)).join(', ')}</div>`;
+        attributionHtml += `<div style="margin-left:58px;margin-bottom:4px;font-size:11px;color:#6b7280">匹配词: ${cand.matched_terms.map(t=>esc(t)).join(', ')}</div>`;
       }
     }
     
@@ -542,16 +542,16 @@ function renderHistoryReport(data){
   
   // 基础统计卡片
   html += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">`;
-  html += `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#58a6ff">${s.total?.toLocaleString()||'-'}</div><div style="font-size:12px;color:#9da7b3">总用例数</div></div>`;
-  html += `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#3fb950">${s.exact_accuracy?.toFixed(2)||'-'}%</div><div style="font-size:12px;color:#9da7b3">精确准确率</div></div>`;
-  html += `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#3fb950">${s.relaxed_accuracy?.toFixed(2)||'-'}%</div><div style="font-size:12px;color:#9da7b3">宽松准确率</div></div>`;
-  html += `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#d29922">${s.avg_latency_ms?.toFixed(0)||'-'}ms</div><div style="font-size:12px;color:#9da7b3">平均延迟</div></div>`;
+  html += `<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#2878b5">${s.total?.toLocaleString()||'-'}</div><div style="font-size:12px;color:#6b7280">总用例数</div></div>`;
+  html += `<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#16a34a">${s.exact_accuracy?.toFixed(2)||'-'}%</div><div style="font-size:12px;color:#6b7280">精确准确率</div></div>`;
+  html += `<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#16a34a">${s.relaxed_accuracy?.toFixed(2)||'-'}%</div><div style="font-size:12px;color:#6b7280">宽松准确率</div></div>`;
+  html += `<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:#d97706">${s.avg_latency_ms?.toFixed(0)||'-'}ms</div><div style="font-size:12px;color:#6b7280">平均延迟</div></div>`;
   html += `</div>`;
   
   // 错误类型分布
   if(s.error_types){
-    html += `<div style="margin-bottom:16px"><b style="color:#9da7b3;font-size:12px">错误类型分布</b><div class="bar-chart">`;
-    const errorTypes = [['ok','正确','#3fb950'],['no_prediction','无预测结果','#f85149'],['clarify_wrong_top','澄清但top错误','#d29922'],['same_domain_wrong_node','同域不同节点','#58a6ff'],['wrong_domain','域错误','#f85149']];
+    html += `<div style="margin-bottom:16px"><b style="color:#6b7280;font-size:12px">错误类型分布</b><div class="bar-chart">`;
+    const errorTypes = [['ok','正确','#16a34a'],['no_prediction','无预测结果','#dc2626'],['clarify_wrong_top','澄清但top错误','#d97706'],['same_domain_wrong_node','同域不同节点','#2878b5'],['wrong_domain','域错误','#dc2626']];
     const errTotal = Object.values(s.error_types).reduce((a,b)=>a+b,0);
     for(const [key, label, color] of errorTypes){
       const count = s.error_types[key] || 0;
@@ -564,10 +564,10 @@ function renderHistoryReport(data){
   // 业务域准确率 - 按准确率升序
   if(s.domain_accuracy){
     const domains = Object.entries(s.domain_accuracy).sort((a,b)=>a[1].exact_pct-b[1].exact_pct);
-    html += `<div style="margin-bottom:16px"><b style="color:#9da7b3;font-size:12px">业务域准确率 (按准确率升序，共${domains.length}个域)</b><div class="bar-chart" style="max-height:300px;overflow-y:auto">`;
+    html += `<div style="margin-bottom:16px"><b style="color:#6b7280;font-size:12px">业务域准确率 (按准确率升序，共${domains.length}个域)</b><div class="bar-chart" style="max-height:300px;overflow-y:auto">`;
     domains.forEach(([name, d]) => {
       const pct = d.exact_pct;
-      const color = pct >= 95 ? '#3fb950' : pct >= 80 ? '#d29922' : '#f85149';
+      const color = pct >= 95 ? '#16a34a' : pct >= 80 ? '#d97706' : '#dc2626';
       html += `<div class="bar-row"><span class="bar-label" title="${esc(name)}">${esc(name)}</span><div class="bar-wrap"><div class="bar-inner" style="width:${pct}%;background:${color}"></div></div><span class="bar-num">${pct.toFixed(1)}% (${d.exact}/${d.total})</span></div>`;
     });
     html += '</div></div>';
@@ -798,12 +798,12 @@ async function runSingleTest(){
 
 function renderPipelineDebug(debug, result){
   var html = '';
-  var colors = {sparse:'#3fb950',dense:'#bc8cff',cross:'#d29922'};
+  var colors = {sparse:'#16a34a',dense:'#9333ea',cross:'#d97706'};
 
   // ── Stage 1: Pre-Understand ──
   var s1 = debug.step1 || {};
   html += '<div class="section"><h3>🔍 Stage 1: Pre-Understand 预理解</h3>';
-  html += '<div style="font-size:12px;color:#9da7b3;line-height:1.8">';
+  html += '<div style="font-size:12px;color:#6b7280;line-height:1.8">';
   html += '动作提示: ' + (s1.explicitActionHints||[]).map(function(h){return '<span class="tag">'+esc(h)+'</span>';}).join(' ') + '<br>';
   html += '对象提示: ' + (s1.explicitObjectHints||[]).map(function(h){return '<span class="tag">'+esc(h)+'</span>';}).join(' ') + '<br>';
   html += 'Broad: ' + (s1.isBroad?'是':'否') + ' | 多意图: ' + (s1.isMultiIntent?'是':'否');
@@ -822,12 +822,12 @@ function renderPipelineDebug(debug, result){
       var barW = Math.round(n.score * 100);
       var srcLabel = {sparse:'词法',dense:'向量',cross:'交叉'}[n.source]||n.source;
       html += '<tr><td>'+(i+1)+'</td><td><b>'+esc(n.name)+'</b></td><td>'+esc(n.domain||'')+'</td>'+
-        '<td><span style="display:inline-block;width:'+barW+'px;height:4px;background:'+(colors[n.source]||'#58a6ff')+';border-radius:2px;vertical-align:middle;margin-right:4px"></span>'+(n.score*100).toFixed(1)+'%</td>'+
-        '<td><span class="tag" style="background:'+(colors[n.source]||'#21262d')+'20;color:'+(colors[n.source]||'#9da7b3')+'">'+srcLabel+'</span></td>'+
-        '<td style="color:#9da7b3;font-size:11px">'+esc(n.matchKeyword||'')+'</td></tr>';
+        '<td><span style="display:inline-block;width:'+barW+'px;height:4px;background:'+(colors[n.source]||'#2878b5')+';border-radius:2px;vertical-align:middle;margin-right:4px"></span>'+(n.score*100).toFixed(1)+'%</td>'+
+        '<td><span class="tag" style="background:'+(colors[n.source]||'#ffffff')+'20;color:'+(colors[n.source]||'#6b7280')+'">'+srcLabel+'</span></td>'+
+        '<td style="color:#6b7280;font-size:11px">'+esc(n.matchKeyword||'')+'</td></tr>';
     });
     html += '</table>';
-  }else{html += '<div style="color:#9da7b3;font-size:12px">无召回节点</div>';}
+  }else{html += '<div style="color:#6b7280;font-size:12px">无召回节点</div>';}
   html += '</div>';
 
   // ── Stage 3: Reduce ──

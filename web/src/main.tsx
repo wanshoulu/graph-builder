@@ -31,18 +31,6 @@ const MENU_ITEMS = [
   { key: '/evaluation', icon: <ExperimentOutlined />, label: '图谱评测' },
   { key: '/intent-rsi', icon: <RiseOutlined />, label: 'RSI 进化' },
   { key: '/management', icon: <AuditOutlined />, label: '图谱管理' },
-  {
-    key: 'apps',
-    icon: <MessageOutlined />,
-    label: '单文件工具页',
-    children: [
-      { key: '/tools/index.html', label: '工具门户' },
-      { key: '/tools/workbench.html', label: '图谱构建工作台' },
-      { key: '/tools/graph-intent-visual.html', label: '意图图谱画布' },
-      { key: '/tools/graph-eval.html', label: '意图评测' },
-      { key: '/tools/intent-rsi-lab.html', label: 'RSI V1 实验台' },
-    ],
-  },
 ];
 
 function Shell({ children }: { children: React.ReactNode }) {

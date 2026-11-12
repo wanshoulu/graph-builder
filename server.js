@@ -45,6 +45,8 @@ const { handleIntentGraphEditorRequest } = require('./routes/intent-graph-editor
 const { handleIntentGraphAutobuildRequest } = require('./routes/intent-graph-autobuild');
 const { handleIntentRsiRequest } = require('./routes/intent-rsi');
 const { handleGraphBuilderToolsRequest } = require('./routes/graph-builder-tools');
+const { evaluateIntent, handleIntentEvaluate, handleIntentEvaluateMulti, getIntentEvaluatorStatus } = require('./routes/intent-evaluator-v2');
+const { listEvaluationGraphs, resolveEngineTarget, applyEngineTargetOptions } = require('./routes/intent-evaluator-graphs');
 
 const PORT = Number(process.env.PORT || 3013);
 const HOST = process.env.HOST || '127.0.0.1';
@@ -86,6 +88,25 @@ const MIME = {
 function sendJson(res, status, obj) {
   res.writeHead(status, { 'Content-Type': 'application/json;charset=utf-8' });
   res.end(JSON.stringify(obj));
+}
+
+/** 意图评测端点用：读 JSON 请求体（上限 5MB，与单体一致） */
+function parseRequestBody(req, limit = 5 * 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > limit) { reject(new Error('body too large')); req.destroy(); return; }
+      chunks.push(c);
+    });
+    req.on('end', () => {
+      if (!chunks.length) return resolve({});
+      try { resolve(JSON.parse(Buffer.concat(chunks).toString('utf8'))); }
+      catch (e) { reject(e); }
+    });
+    req.on('error', reject);
+  });
 }
 
 function serveFile(res, filePath) {
@@ -153,7 +174,8 @@ const server = http.createServer((req, res) => {
       ok: true, service: 'graph-builder', version: '1.1.0',
       port: PORT, time: new Date().toISOString(),
       routes: ['/api/knowledge-intake/*', '/api/org-graph/*', '/api/intent-graph/*',
-        '/api/intent-graph-autobuild/*', '/api/intent-rsi/*', '/api/graph-builder/tools/*', '/api/graph/data'],
+        '/api/intent-graph-autobuild/*', '/api/intent-rsi/*', '/api/graph-builder/tools/*',
+        '/api/intent-evaluate/*', '/api/graph/data'],
       rsiAgent: process.env.RSI_AGENT_URL || 'http://rsi-agent:18132',
       spa: fs.existsSync(path.join(WEB_DIST, 'index.html')),
     });
@@ -181,6 +203,28 @@ const server = http.createServer((req, res) => {
   // 逐节点/逐边 AI 字段审核（SPA builder 的 AI 辅助面板用）
   if (p.startsWith('/api/graph-builder/tools/')) return handleGraphBuilderToolsRequest(req, res);
   if (p === '/api/graph/data') return serveGraphData(res, u.searchParams);
+
+  // 意图评测工具（SPA 图谱评测页用，对齐单体 server.js 行为；仅 v2 引擎通道，无 bank/TuGraph 运行时）
+  if (p === '/api/intent-evaluate/graphs' && req.method === 'GET') {
+    try { return sendJson(res, 200, listEvaluationGraphs()); }
+    catch (e) { return sendJson(res, 500, { error: e.message }); }
+  }
+  if (p === '/api/intent-evaluate' && req.method === 'POST') {
+    return handleIntentEvaluate(req, res, { sendJSON: sendJson, parseRequestBody });
+  }
+  if (p === '/api/intent-evaluate-multi' && req.method === 'POST') {
+    return handleIntentEvaluateMulti(req, res, { sendJSON: sendJson, parseRequestBody });
+  }
+  if (p === '/api/intent-evaluate/status' && req.method === 'GET') {
+    try {
+      const target = resolveEngineTarget(u.searchParams.get('graph') || '');
+      const status = getIntentEvaluatorStatus();
+      return sendJson(res, 200, Object.assign({}, status, {
+        engine: target.engine,
+        graph: target.graph ? { id: target.graph.id } : null,
+      }));
+    } catch (e) { return sendJson(res, 500, { error: e.message }); }
+  }
 
   // 历史 dist 保留的单体工具页链接统一回落门户，避免点进去 404。
   // 源码 web/src/main.tsx 已换成本仓页面，重新 npm run build 后本段可删。

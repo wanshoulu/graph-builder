@@ -291,7 +291,7 @@ export function AssetDetailDrawer({ asset, onClose, onChanged }: AssetDetailDraw
           <Statistic title="active 版本" value={latest.version} valueStyle={{ fontSize: 18 }} />
           <Statistic title="规模" valueRender={() => <Text>{latest.stats.nodes} 节点 / {latest.stats.edges} 边</Text>} valueStyle={{ fontSize: 14 }} />
           <div>
-            <Text type="secondary" style={{ fontSize: 12 }}>消费端 graphId（knowledge-qa 当前使用）</Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>消费端 graphId</Text>
             <div><Text copyable code style={{ fontSize: 12 }}>{latest.graphId}</Text></div>
             <Text type="secondary" style={{ fontSize: 12 }}>发布于 {new Date(latest.publishedAt).toLocaleString('zh-CN')}</Text>
           </div>
