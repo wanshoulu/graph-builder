@@ -8,7 +8,7 @@
 
 - **问题域**：① 知识图谱的「建库」环节——业务填报到图谱的转换常是一次性黑盒脚本，非法数据静默入图，填错之后没有版本也没有回滚；② 图谱建好之后「准不准、怎么改」——靠人工复盘日志改提示词、补说法，改进没有对照、没有复测、没有留痕。
 - **方案机制**：**模板驱动校验**（规则声明在模板 JSON，不写死在代码）、**三段校验管线**（骨架 → 字段 → 条件必填）、**预检 → 应用 → 回滚**、**版本链发布**（v1→v2→… 只读可追溯）；进化侧是 **RSI 四关测量门禁**（练习题初筛 → 防回退 → 隐藏考 → 生产引擎复核）、**引擎指纹**（跨口径成绩不可比）与 **Agent + Skill 决策层**（V2，Python 进程内的 openjiuwen DeepAgent + SKILL.prompt + 5 个 HTTP 工具）。
-- **交付物**：`server.js` 单服务入口、6 组 API 路由族、14 张模板、7 个单文件工具页 + 1 个 React SPA、独立 Python Agent 服务、测试套件、24 张架构图与 7 张真实运行截图。
+- **交付物**：`server.js` 单服务入口、7 组 API 路由族、14 张模板、6 个单文件工具页 + 1 个 React SPA 统一工作台、独立 Python Agent 服务、测试套件、24 张架构图与 7 张真实运行截图。
 - **状态**：本项目从 AI Harbor / OntoMind 单体剥离，为独立部署版（当前 1.1）。默认监听 `127.0.0.1:3013` 且 `SKIP_AUTH=true`，面向本机/内网开箱体验；**不是生产就绪的多租户服务**，对外暴露前必须换认证与访问控制（见[已知限制](#已知限制)）。RSI 的 Python Agent 是可选进程，不启动它时 `rules`/`model` 决策模式与全部只读界面仍可用。
 
 > 写法参考（实调原文）：[Ollama](https://github.com/ollama/ollama) 的「2 行跑起来 + 链接优先」、[Mermaid](https://github.com/mermaid-js/mermaid) 的「示例/截图先行」、[Prometheus](https://github.com/prometheus/prometheus) 的「一段简介 + 加粗机制名清单 + 架构图 + 多条安装路径」，系统型骨架沿用本工具链原有的入口对照表与按目标导航。
@@ -178,13 +178,13 @@
 
 一次请求的路径：
 
-1. **① 接入** — `server.js` 把 `req.url` 解析为 `req.pathname`（与原宿主单体一致的契约），按前缀分发给 6 组路由处理器，各自检查自己的前缀并自证"归不归我管"。`/ontomind/wiki/api/*` 在分发前被归一化成 `/api/*`（历史 `web/dist` 的兼容层）。
+1. **① 接入** — `server.js` 把 `req.url` 解析为 `req.pathname`（与原宿主单体一致的契约），按前缀分发给 7 组路由处理器，各自检查自己的前缀并自证"归不归我管"。`/ontomind/wiki/api/*` 在分发前被归一化成 `/api/*`（历史 `web/dist` 的兼容层）。
 2. **② 适配** — `routes/` 解析参数 / multipart / JSON body，调用 tools 层，统一 `{ok, ...}` 或 `{ok:false, error}` 响应壳。
 3. **③ 落盘** — 全部状态落 `data/` 下的 JSON 文件；模板只读，草稿/版本/批次/RSI 状态经既定写入路径落盘。
 
 | 层 | 承载 | 关键点 |
 | --- | --- | --- |
-| 入口 | `server.js` | pathname 预解析、6 组路由分发 + RSI 前缀兼容层、`/assets/` SPA 托管、根路径 302、`/healthz`、docs 静态（含路径穿越防护）、`requestTimeout=30min`（SSE 长任务） |
+| 入口 | `server.js` | pathname 预解析、7 组路由分发 + RSI 前缀兼容层、`/assets/` SPA 托管、根路径 302、`/healthz`、docs 静态（含路径穿越防护）、`requestTimeout=30min`（SSE 长任务） |
 | 路由层 | `routes/knowledge-intake.js`（约 3800 行）、`routes/org-graph.js`（约 2400 行）、`routes/intent-graph*.js`、`routes/intent-rsi.js`（202 KB） | 摄入、图谱资产、编辑器、自动建图与 RSI 意图进化的全部端点 |
 | 运行时层 | `routes/rsi-production-runtime.js`（175 KB）+ 20 个 `rsi-*.js` | 进化循环、策略台账、测量策略、资产谱系、门禁；**无第三方 npm 依赖** |
 | 引擎层 | `routes/intent-evaluator-v2.js`（274 KB）、`scripts/rsi-engine-score.js` | 打分由独立子进程执行，Node 通过 `spawn` 传 `--graph/--cases/--out`；离线确定性引擎可跑，在线通道需密钥 |
@@ -287,7 +287,7 @@ RSI_AGENT_API_BASE_URL=http://127.0.0.1:3013/api/intent-rsi/agent \
 
 ### 跑起来后你会看到
 
-1. `curl http://127.0.0.1:3013/api/health` 返回 `{"ok":true,"service":"graph-builder",...}` 与 6 组 API 前缀、`rsiAgent` 地址、`spa` 是否已构建。
+1. `curl http://127.0.0.1:3013/api/health` 返回 `{"ok":true,"service":"graph-builder",...}` 与 7 组 API 前缀、`rsiAgent` 地址、`spa` 是否已构建。
 2. `curl http://127.0.0.1:3013/api/org-graph/assets` 返回意图图谱等资产清单（模板版本、节点/边类型齐全）。
 3. 浏览器打开 `/tools/workbench.html?autoload=1` 自动载入草稿，点「① 三段校验」→「② 质量报告」→「③ 保存草稿」→「④ 发布版本」，每一步的响应与请求日志都在页面上。
 4. `curl -F "file=@docs/intent-graph-excel-template.xlsx" http://127.0.0.1:3013/api/knowledge-intake/import` 得到批次号——用模板里自带的示例行即可走通 Excel 摄入审核流；其余五条见开头建图方式表。
@@ -332,7 +332,7 @@ Python 侧 `services/rsi-agent/app/*.py` 已通过 `python -m py_compile`；`tes
 
 ```
 graph-builder/
-├── server.js                    # 入口：6 组路由分发 + RSI 前缀兼容层 + SPA 托管 + 根路径 302
+├── server.js                    # 入口：7 组路由分发 + RSI 前缀兼容层 + SPA 托管 + 根路径 302
 ├── config/api-keys.js           # 模型路由注册表（含 RSI 评测默认 qwen3.7-flash）
 ├── middleware/auth.js           # JWT 认证（SKIP_AUTH=true 免登录，默认开发模式）
 ├── routes/
@@ -452,7 +452,8 @@ graph-builder/
 
 | 版本 | 说明 |
 |------|------|
-| **独立部署版 1.1**（当前） | 并入 RSI V2 完整链路（Node 调度层 20 模块 + 评测引擎 + Python Agent+Skill + V1/V2 前端 + 种子）；6 组 API；补齐 `template.intent.v2.json`，模板漂移检测 `ok:true`；4 页无头浏览器实测 0 异常 / 0 HTTP≥400；核心测试 127/127 |
+| **独立部署版 1.1.1**（当前） | 对齐 Harbor 最新版代码（org-graph +7 端点 / intake +460 行 / tools 7 文件 / 模板新命名 / 11 资产真实数据 21MB / active 评测图谱）；根路径 302 到统一工作台 `/auto-build`；`/api/graph-builder/tools/*` 逐节点 AI 审核挂载；主题统一浅色；7 组 API；SPA 六页实测 0 异常；测试 328 pass（14 fail 为源仓既有历史债） |
+| **独立部署版 1.1** | 并入 RSI V2 完整链路（Node 调度层 20 模块 + 评测引擎 + Python Agent+Skill + V1/V2 前端 + 种子）；6 组 API；补齐 `template.intent.v2.json`，模板漂移检测 `ok:true`；4 页无头浏览器实测 0 异常 / 0 HTTP≥400；核心测试 127/127 |
 | **独立部署版 1.0** | 自 AI Harbor / OntoMind 剥离出可独立运行的前端与 4 组路由；默认 :3013、零 CDN；127 测试全绿；5 张真实截图 |
 | **工具链 1.0** | 自 ai-harbor 单体独立成库（GitCode 版，纯 API）；修复 4 处摄入↔模板契约漂移；E2E 全链路验证 |
 | 图谱规范 V4.1 | 功能节点 + 意图场景模型；skillBinding 一等公民；V4 适配器契约；Excel 一体化导入 |

@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+
 /**
  * API Keys — 模型路由注册表（单一事实来源）
  *
@@ -135,6 +137,40 @@ const API_ROUTES = {
     model: 'doubao-lite-32k',
     getKey: () => process.env.VOLCANO_KEY,
     provider: 'volcano',
+  },
+  // 内部模型网关 — Docker / 生产环境使用，通过 graph-builder 自身或宿主网关调用 LLM
+  // （对齐源仓；容器内 dashscope.aliyuncs.com 不可达时可走内部 HTTP 网关）
+  'internal-gateway-chat': {
+    host: process.env.AI_HARBOR_INTERNAL_URL || 'http://127.0.0.1:3013',
+    path: '/api/ai-bank/v1/internal/model/v1/chat/completions',
+    model: 'qwen3.7-flash',
+    getKey: () => {
+      const token = process.env.AI_BANK_AGENT_RUNTIME_TOKEN;
+      if (token) return token;
+      const tokenFile = process.env.AI_BANK_AGENT_RUNTIME_TOKEN_FILE;
+      if (tokenFile) {
+        try { return fs.readFileSync(tokenFile, 'utf-8').trim(); } catch (e) { /* fallthrough */ }
+      }
+      return process.env.QWEN_KEY || '';
+    },
+    provider: 'internal-gateway',
+  },
+  'internal-gateway-embedding': {
+    host: process.env.AI_HARBOR_INTERNAL_URL || 'http://127.0.0.1:3013',
+    path: '/api/ai-bank/v1/internal/model/v1/embeddings',
+    model: 'qwen3.7-text-embedding-flash',
+    getKey: () => {
+      const token = process.env.AI_BANK_AGENT_RUNTIME_TOKEN;
+      if (token) return token;
+      const tokenFile = process.env.AI_BANK_AGENT_RUNTIME_TOKEN_FILE;
+      if (tokenFile) {
+        try { return fs.readFileSync(tokenFile, 'utf-8').trim(); } catch (e) { /* fallthrough */ }
+      }
+      return process.env.QWEN_KEY || '';
+    },
+    provider: 'internal-gateway',
+    dim: 1024,
+    batchSize: 10,
   },
 };
 
